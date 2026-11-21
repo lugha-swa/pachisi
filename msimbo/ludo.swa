@@ -1,0 +1,255 @@
+husisha { maktaba/kumbukumbu.swa }
+husisha { maktaba/mfuatano.swa }
+
+// ludo.swa -- mchezo wa Ludo kwa Android, ulioandikwa kwa Swa.
+//
+// Hatua ya kwanza: NativeActivity hupakia maktaba hii (bin/swa --arm64-maktaba)
+// na kuita `anza`. Tunasajili vitendo vya dirisha na vya mguso; dirisha
+// likiwa tayari, ubao huchorwa moja kwa moja kwenye pikseli za dirisha
+// (ANativeWindow), bila GPU. Kila mguso hupitisha zamu kwa mchezaji anayefuata.
+
+nje "libandroid.so" {
+    n32 dirisha_weka_umbo(n8* dirisha, n32 upana, n32 urefu, n32 umbo) = "ANativeWindow_setBuffersGeometry";
+    n32 dirisha_funga(n8* dirisha, n8* chombo, n8* mipaka) = "ANativeWindow_lock";
+    n32 dirisha_onyesha(n8* dirisha) = "ANativeWindow_unlockAndPost";
+    n8* kitanzi_cha_uzi() = "ALooper_forThread";
+    w0 foleni_unganisha(n8* foleni, n8* kitanzi, n32 kitambulisho, n8* kazi, n8* data) = "AInputQueue_attachLooper";
+    w0 foleni_tenganisha(n8* foleni) = "AInputQueue_detachLooper";
+    n32 foleni_chukua(n8* foleni, n8** tukio) = "AInputQueue_getEvent";
+    n32 foleni_kabla(n8* foleni, n8* tukio) = "AInputQueue_preDispatchEvent";
+    w0 foleni_maliza(n8* foleni, n8* tukio, n32 limeshughulikiwa) = "AInputQueue_finishEvent";
+    n32 tukio_aina(n8* tukio) = "AInputEvent_getType";
+    n32 mguso_kitendo(n8* tukio) = "AMotionEvent_getAction";
+}
+
+nje "liblog.so" {
+    n32 kumbukumbu(n32 kipaumbele, n8* lebo, n8* ujumbe) = "__android_log_write";
+}
+
+// rangi: RGBA_8888, baiti R G B A -> neno la biti 32 (0xAABBGGRR) kama n32
+n32 NYEKUNDU = 0;
+n32 KIJANI = 0;
+n32 MANJANO = 0;
+n32 SAMAWATI = 0;
+n32 NYEKUNDU_HAFIFU = 0;
+n32 KIJANI_HAFIFU = 0;
+n32 MANJANO_HAFIFU = 0;
+n32 SAMAWATI_HAFIFU = 0;
+n32 NYEUPE = 0;
+n32 MANDHARI = 0;
+n32 MSTARI = 0;
+
+// vigeu vya ulimwengu vyenye usemi huwekwa wakati wa kuanza
+w0 andaa_rangi() {
+    NYEKUNDU = 0 - 13681962;
+    KIJANI = 0 - 12020178;
+    MANJANO = 0 - 14633748;
+    SAMAWATI = 0 - 4298714;
+    NYEKUNDU_HAFIFU = 0 - 6247696;
+    KIJANI_HAFIFU = 0 - 5253206;
+    MANJANO_HAFIFU = 0 - 6888968;
+    SAMAWATI_HAFIFU = 0 - 1326171;
+    NYEUPE = 0 - 985094;
+    MANDHARI = 0 - 15263202;
+    MSTARI = 0 - 10851208;
+}
+
+n8* dirisha_hili = 0;
+n8* foleni_hii = 0;
+n32 zamu = 0;              // 0 nyekundu, 1 kijani, 2 manjano, 3 samawati
+
+// jiometri ya ubao (hukokotolewa kila mchoro)
+n32* pikseli = 0;
+n32 hatua = 0;             // pikseli kwa kila mstari wa skrini
+n32 upana_wa_skrini = 0;
+n32 urefu_wa_skrini = 0;
+n32 seli = 0;
+n32 ubao_x = 0;
+n32 ubao_y = 0;
+
+w0 mstatili(n32 x, n32 y, n32 upana, n32 urefu, n32 rangi) {
+    kama (x < 0) { upana = upana + x; x = 0; }
+    kama (y < 0) { urefu = urefu + y; y = 0; }
+    kama (x + upana > upana_wa_skrini) { upana = upana_wa_skrini - x; }
+    kama (y + urefu > urefu_wa_skrini) { urefu = urefu_wa_skrini - y; }
+    n32 j = 0;
+    wakati (j < urefu) {
+        n32 mwanzo = (y + j) * hatua + x;
+        n32 i = 0;
+        wakati (i < upana) { pikseli[mwanzo + i] = rangi; i = i + 1; }
+        j = j + 1;
+    }
+}
+
+// seli moja ya njia: mpaka wa pikseli 1 na ndani ya rangi
+w0 seli_ya_njia(n32 safu, n32 safu_wima, n32 rangi) {
+    n32 x = ubao_x + safu_wima * seli;
+    n32 y = ubao_y + safu * seli;
+    mstatili(x, y, seli, seli, MSTARI);
+    mstatili(x + 1, y + 1, seli - 2, seli - 2, rangi);
+}
+
+w0 duara(n32 cx, n32 cy, n32 nusu, n32 rangi) {
+    n32 kipenyo = nusu * 2;
+    n32 j = 0;
+    wakati (j <= kipenyo) {
+        n32 dy = j - nusu;
+        n32 i = 0;
+        wakati (i <= kipenyo) {
+            n32 dx = i - nusu;
+            kama (dx * dx + dy * dy <= nusu * nusu) {
+                n32 x = cx + dx;
+                n32 y = cy + dy;
+                kama (x >= 0 && y >= 0 && x < upana_wa_skrini && y < urefu_wa_skrini) { pikseli[y * hatua + x] = rangi; }
+            }
+            i = i + 1;
+        }
+        j = j + 1;
+    }
+}
+
+// nyumba ya mchezaji: mraba wa seli 6, ndani nyeupe, kete nne
+w0 nyumba(n32 safu, n32 safu_wima, n32 rangi) {
+    n32 x = ubao_x + safu_wima * seli;
+    n32 y = ubao_y + safu * seli;
+    mstatili(x, y, seli * 6, seli * 6, rangi);
+    mstatili(x + seli, y + seli, seli * 4, seli * 4, NYEUPE);
+    duara(x + seli * 2, y + seli * 2, seli * 2 / 5, rangi);
+    duara(x + seli * 4, y + seli * 2, seli * 2 / 5, rangi);
+    duara(x + seli * 2, y + seli * 4, seli * 2 / 5, rangi);
+    duara(x + seli * 4, y + seli * 4, seli * 2 / 5, rangi);
+}
+
+n32 rangi_ya(n32 mchezaji, n32 hafifu) {
+    kama (mchezaji == 0) { kama (hafifu) { rudisha NYEKUNDU_HAFIFU; } rudisha NYEKUNDU; }
+    kama (mchezaji == 1) { kama (hafifu) { rudisha KIJANI_HAFIFU; } rudisha KIJANI; }
+    kama (mchezaji == 2) { kama (hafifu) { rudisha MANJANO_HAFIFU; } rudisha MANJANO; }
+    kama (hafifu) { rudisha SAMAWATI_HAFIFU; }
+    rudisha SAMAWATI;
+}
+
+w0 chora_ubao() {
+    mstatili(0, 0, upana_wa_skrini, urefu_wa_skrini, MANDHARI);
+    n32 dogo = upana_wa_skrini;
+    kama (urefu_wa_skrini < dogo) { dogo = urefu_wa_skrini; }
+    seli = dogo * 92 / 100 / 15;
+    n32 ubao = seli * 15;
+    ubao_x = (upana_wa_skrini - ubao) / 2;
+    ubao_y = (urefu_wa_skrini - ubao) / 2;
+    mstatili(ubao_x - 4, ubao_y - 4, ubao + 8, ubao + 8, MSTARI);
+    mstatili(ubao_x, ubao_y, ubao, ubao, NYEUPE);
+
+    // njia: msalaba wa seli 3 kwa upana
+    n32 i = 0;
+    wakati (i < 15) {
+        n32 j = 6;
+        wakati (j < 9) {
+            kama (i < 6 || i > 8) { seli_ya_njia(i, j, NYEUPE); seli_ya_njia(j, i, NYEUPE); }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    // safu za nyumbani na seli za kuanzia
+    i = 1;
+    wakati (i < 6) {
+        seli_ya_njia(7, i, rangi_ya(0, zamu != 0));
+        seli_ya_njia(i, 7, rangi_ya(1, zamu != 1));
+        seli_ya_njia(7, 14 - i, rangi_ya(2, zamu != 2));
+        seli_ya_njia(14 - i, 7, rangi_ya(3, zamu != 3));
+        i = i + 1;
+    }
+    seli_ya_njia(6, 1, rangi_ya(0, zamu != 0));
+    seli_ya_njia(1, 8, rangi_ya(1, zamu != 1));
+    seli_ya_njia(8, 13, rangi_ya(2, zamu != 2));
+    seli_ya_njia(13, 6, rangi_ya(3, zamu != 3));
+
+    // nyumba nne: ya mwenye zamu ina rangi kamili, nyingine hafifu
+    nyumba(0, 0, rangi_ya(0, zamu != 0));
+    nyumba(0, 9, rangi_ya(1, zamu != 1));
+    nyumba(9, 9, rangi_ya(2, zamu != 2));
+    nyumba(9, 0, rangi_ya(3, zamu != 3));
+
+    // katikati: pembetatu nne zinazoelekea safu za nyumbani
+    n32 x0 = ubao_x + seli * 6;
+    n32 y0 = ubao_y + seli * 6;
+    n32 kati = seli * 3;
+    n32 py = 0;
+    wakati (py < kati) {
+        n32 px = 0;
+        wakati (px < kati) {
+            n32 a = px * 2 - kati;
+            n32 b = py * 2 - kati;
+            n32 aa = a; kama (aa < 0) { aa = 0 - aa; }
+            n32 bb = b; kama (bb < 0) { bb = 0 - bb; }
+            n32 mchezaji = 0;
+            kama (bb >= aa) { kama (b < 0) { mchezaji = 1; } sivyo { mchezaji = 3; } }
+            sivyo { kama (a < 0) { mchezaji = 0; } sivyo { mchezaji = 2; } }
+            pikseli[(y0 + py) * hatua + x0 + px] = rangi_ya(mchezaji, zamu != mchezaji);
+            px = px + 1;
+        }
+        py = py + 1;
+    }
+}
+
+n8 chombo_cha_dirisha[48];
+
+w0 chora() {
+    kama (dirisha_hili == 0) { rudisha; }
+    dirisha_weka_umbo(dirisha_hili, 0, 0, 1);          // WINDOW_FORMAT_RGBA_8888
+    kama (dirisha_funga(dirisha_hili, chombo_cha_dirisha, 0) != 0) { rudisha; }
+    n32* vipimo = chombo_cha_dirisha;
+    upana_wa_skrini = vipimo[0];
+    urefu_wa_skrini = vipimo[1];
+    hatua = vipimo[2];
+    n8** anwani = chombo_cha_dirisha;       // ANativeWindow_Buffer.bits: baiti 16 = kielekezi cha 3
+    n8* baiti_za_pikseli = anwani[2];
+    pikseli = baiti_za_pikseli;
+    chora_ubao();
+    dirisha_onyesha(dirisha_hili);
+}
+
+// ---------------------------------------------------------------- vitendo vya NativeActivity
+w0 dirisha_limeundwa(n8* shughuli, n8* dirisha) { dirisha_hili = dirisha; chora(); }
+w0 dirisha_chora_tena(n8* shughuli, n8* dirisha) { dirisha_hili = dirisha; chora(); }
+w0 dirisha_limeharibiwa(n8* shughuli, n8* dirisha) { dirisha_hili = 0; }
+
+n32 mguso(n32 kishikio, n32 matukio, n8* data) {
+    n8* tukio = 0;
+    wakati (foleni_hii != 0 && foleni_chukua(foleni_hii, &tukio) >= 0) {
+        kama (foleni_kabla(foleni_hii, tukio) != 0) { endelea; }
+        n32 limeshughulikiwa = 0;
+        kama (tukio_aina(tukio) == 2) {                    // AINPUT_EVENT_TYPE_MOTION
+            kama ((mguso_kitendo(tukio) & 255) == 0) {      // AMOTION_EVENT_ACTION_DOWN
+                zamu = (zamu + 1) % 4;
+                chora();
+            }
+            limeshughulikiwa = 1;
+        }
+        foleni_maliza(foleni_hii, tukio, limeshughulikiwa);
+    }
+    rudisha 1;
+}
+
+w0 foleni_imeundwa(n8* shughuli, n8* foleni) {
+    foleni_hii = foleni;
+    foleni_unganisha(foleni, kitanzi_cha_uzi(), 1, &mguso, 0);
+}
+w0 foleni_imeharibiwa(n8* shughuli, n8* foleni) {
+    foleni_tenganisha(foleni);
+    foleni_hii = 0;
+}
+
+// ANativeActivity_onCreate(shughuli, hali_iliyohifadhiwa, ukubwa): shughuli->callbacks iko
+// kwenye umbali 0; kila kitendo ni sloti ya baiti 8 (android/native_activity.h)
+n32 anza(n8* shughuli, n8* hali_iliyohifadhiwa, n64 ukubwa) {
+    andaa_rangi();
+    n64* sh = shughuli;
+    n64* vitendo = sh[0];
+    vitendo[7] = &dirisha_limeundwa;       // onNativeWindowCreated
+    vitendo[9] = &dirisha_chora_tena;      // onNativeWindowRedrawNeeded
+    vitendo[10] = &dirisha_limeharibiwa;   // onNativeWindowDestroyed
+    vitendo[11] = &foleni_imeundwa;        // onInputQueueCreated
+    vitendo[12] = &foleni_imeharibiwa;     // onInputQueueDestroyed
+    kumbukumbu(4, "ludo", "Ludo ya Swa imeanza");
+    rudisha 0;
+}
