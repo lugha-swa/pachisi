@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ludo ya Swa: hakuna Java; NativeActivity hupakia libswa.so na kuita anza -->
+<!-- Pachisi ya Swa: hakuna Java; NativeActivity hupakia libswa.so na kuita anza -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="io.github.lugha_swa.ludo"
+    package="io.github.lugha_swa.pachisi"
     android:versionCode="1"
     android:versionName="0.0.1">
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36" />
     <application
-        android:label="Ludo"
+        android:label="Pachisi"
         android:hasCode="false"
         android:extractNativeLibs="false">
         <activity
