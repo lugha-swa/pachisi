@@ -1,0 +1,160 @@
+husisha { maktaba/kumbukumbu.swa }
+husisha { maktaba/mfuatano.swa }
+husisha { msimbo/mantiki.swa }
+
+// mantiki_jaribio.swa -- michezo mingi ya kompyuta dhidi ya kompyuta kwa kete
+// za mbegu isiyobadilika. Baada ya kila hatua: kila pauni iko -1..71, seli ya
+// njia ina pauni 2 tu na za rangi moja, njia ya nyumbani ina 2 tu kwa seli.
+// Kila mchezo lazima umalizike na mshindi. Matokeo ni sawa kwenye kila lengo
+// (x86-64, mtafsiri, ARM64) kwa sababu kete ni za mbegu.
+
+n64 mbegu = 20261121;
+n32 kete_zilizopangwa[8];
+n32 kete_ijayo = -1;              // >= 0: kete_nasibu hutoa kete_zilizopangwa kwanza
+n32 kete_nasibu() {
+    kama (kete_ijayo >= 0) {
+        n32 k = kete_zilizopangwa[kete_ijayo];
+        kete_ijayo = kete_ijayo + 1;
+        rudisha k;
+    }
+    mbegu = (mbegu * 6364136223846793005 + 1442695040888963407) & 9223372036854775807;
+    n32 x = (mbegu >> 33) % 6;
+    rudisha x + 1;
+}
+
+n32 makosa = 0;
+w0 kosa(n8* ujumbe_wa_kosa, n32 mchezo) {
+    kama (makosa < 10) { andika("KOSA mchezo %d: %s\n", mchezo, ujumbe_wa_kosa); }
+    makosa = makosa + 1;
+}
+
+w0 kagua(n32 mchezo) {
+    n32 k = 0;
+    wakati (k < 16) {
+        n32 m = k / 4;
+        kama (kiti_kipo[m]) {
+            n32 p = pauni[k];
+            kama (p < -1 || p > 71) { kosa("pauni nje ya mipaka", mchezo); }
+            kama (p >= 0 && p <= 63) {
+                n32 a = mahali_kamili(m, p);
+                n32 idadi = wenye_seli(a);
+                kama (idadi > 2) { kosa("seli ina pauni zaidi ya 2", mchezo); }
+                n32 rangi_tofauti = 0;
+                n32 x = 0;
+                wakati (x < 16) {
+                    n32 mx = x / 4;
+                    kama (kiti_kipo[mx] && pauni[x] >= 0 && pauni[x] <= 63 && mahali_kamili(mx, pauni[x]) == a && mx != m) { rangi_tofauti = 1; }
+                    x = x + 1;
+                }
+                kama (rangi_tofauti) { kosa("rangi mbili kwenye seli moja", mchezo); }
+            }
+        }
+        k = k + 1;
+    }
+}
+
+// ---------------------------------------------------------------- hali maalum
+w0 tarajia(n32 kweli, n8* jina) {
+    kama (kweli) { andika("  sawa: %s\n", jina); } sivyo { andika("  KOSA: %s\n", jina); makosa = makosa + 1; }
+}
+
+// mchezo wa wachezaji 4 wa binadamu; mwenye zamu 0 ana hatua (a, b)
+w0 tayarisha(n32 a, n32 b) {
+    andaa_mchezo(4, 0);
+    zamu = 0;
+    idadi_ya_hatua = 0;
+    ongeza_hatua(a, 1);
+    ongeza_hatua(b, 1);
+    hali_ya_zamu = HALI_SOGEZA;
+}
+
+w0 hali_maalum() {
+    andika("hali maalum:\n");
+    // 5 huingiza pauni, kisha kete ya pili huisogeza
+    tayarisha(5, 2);
+    sogeza(0, 0);
+    tarajia(pauni[0] == 0 && idadi_ya_hatua == 1 && hatua[0] == 2, "5 huingiza, 2 inabaki");
+    sogeza(0, 0);
+    tarajia(pauni[0] == 2 && hali_ya_zamu == HALI_RUSHA && zamu == 1, "2 husogeza pauni iliyoingia, zamu inapita");
+    // jumla ya 5 (1 + 4) huingiza pauni kwa kete zote mbili
+    tayarisha(1, 4);
+    tarajia(lengo_la_hatua(0, 0, 0) == 0, "1 + 4 huruhusu kuingia");
+    sogeza(0, 0);
+    tarajia(pauni[0] == 0 && hali_ya_zamu == HALI_RUSHA, "kuingia kwa jumla hutumia kete zote");
+    // kula: pauni ya manjano kwenye seli isiyo salama hurudi kiotani, mlaji hupata 20
+    // (manjano hupita seli hii: ni hatua ya 47 kwenye njia yake)
+    tayarisha(3, 6);
+    pauni[0] = 10;
+    pauni[8] = mahali_kamili(0, 13) - mahali_kamili(2, 0);
+    kama (pauni[8] < 0) { pauni[8] = pauni[8] + 68; }
+    tarajia(pauni[8] <= MWISHO_WA_NJIA && mahali_kamili(2, pauni[8]) == mahali_kamili(0, 13) && ni_seli_salama(mahali_kamili(0, 13)) == 0, "seli ya kula si salama na iko njiani kwa manjano");
+    sogeza(0, 0);
+    tarajia(pauni[8] == KIOTANI && pauni[0] == 13, "manjano imeliwa");
+    tarajia(idadi_ya_hatua == 2 && hatua[1] == 20, "zawadi ya hatua 20");
+    // seli salama yenye mpinzani: haiwezi kutua
+    tayarisha(4, 6);
+    n32 salama = 5;                                      // seli salama ya kwanza iliyo mbele ya hatua 4
+    wakati (salama < 40 && ni_seli_salama(mahali_kamili(0, salama)) == 0) { salama = salama + 1; }
+    pauni[0] = salama - 4;
+    pauni[4] = mahali_kamili(0, salama) - mahali_kamili(1, 0);
+    kama (pauni[4] < 0) { pauni[4] = pauni[4] + 68; }
+    tarajia(lengo_la_hatua(0, 0, 0) == HAIWEZEKANI, "hauli kwenye seli salama");
+    // kizuizi: pauni mbili za kijani huzuia kupita
+    tayarisha(6, 6);
+    pauni[0] = 20;
+    n32 kz = mahali_kamili(0, 23) - mahali_kamili(1, 0);
+    kama (kz < 0) { kz = kz + 68; }
+    pauni[4] = kz;
+    pauni[5] = kz;
+    tarajia(lengo_la_hatua(0, 0, 0) == HAIWEZEKANI, "kizuizi huzuia kupita");
+    // nyumbani kunahitaji namba kamili, na hupata 10
+    tayarisha(6, 3);
+    pauni[0] = 68;
+    pauni[1] = 0;                                        // pauni ya pili inaweza kutumia zawadi
+    tarajia(lengo_la_hatua(0, 0, 0) == HAIWEZEKANI, "6 inazidi nyumbani");
+    tarajia(lengo_la_hatua(0, 0, 1) == NYUMBANI, "3 hufika nyumbani");
+    sogeza(0, 1);
+    tarajia(pauni[0] == NYUMBANI && hatua[idadi_ya_hatua - 1] == 10, "zawadi ya hatua 10");
+    // pacha tatu: pauni iliyoendelea zaidi hurudi kiotani
+    andaa_mchezo(4, 0);
+    pauni[0] = 30; pauni[1] = 50; pauni[2] = NYUMBANI;
+    kete_zilizopangwa[0] = 2; kete_zilizopangwa[1] = 2;
+    kete_zilizopangwa[2] = 3; kete_zilizopangwa[3] = 3;
+    kete_zilizopangwa[4] = 4; kete_zilizopangwa[5] = 4;
+    kete_ijayo = 0;
+    rusha();
+    wakati (hali_ya_zamu == HALI_SOGEZA) { kompyuta_hatua_moja(); }
+    tarajia(zamu == 0 && hali_ya_zamu == HALI_RUSHA, "pacha ya kwanza: rusha tena");
+    rusha();
+    wakati (hali_ya_zamu == HALI_SOGEZA) { kompyuta_hatua_moja(); }
+    n32 bora_kabla = pauni[0];
+    kama (pauni[1] > bora_kabla && pauni[1] < NYUMBANI) { bora_kabla = pauni[1]; }
+    rusha();
+    tarajia(ujumbe == UJ_PACHA_TATU && zamu == 1, "pacha ya tatu: adhabu na zamu inapita");
+    tarajia(pauni[2] == NYUMBANI && (pauni[0] == KIOTANI || pauni[1] == KIOTANI), "iliyoendelea zaidi imerudi, iliyofika nyumbani haiguswi");
+    kete_ijayo = -1;
+}
+
+n32 anza() {
+    hali_maalum();
+    n32 ushindi[4];
+    ushindi[0] = 0; ushindi[1] = 0; ushindi[2] = 0; ushindi[3] = 0;
+    n32 jumla_ya_zamu = 0;
+    n32 michezo = 120;
+    n32 g = 0;
+    wakati (g < michezo) {
+        andaa_mchezo(2 + g % 3, 1);
+        ni_kompyuta[0] = 1;
+        n32 hatua_za_mchezo = 0;
+        wakati (hali_ya_zamu != HALI_MSHINDI && hatua_za_mchezo < 200000) {
+            kompyuta_hatua_moja();
+            kagua(g);
+            hatua_za_mchezo = hatua_za_mchezo + 1;
+        }
+        kama (mshindi < 0) { kosa("mchezo haukuisha", g); } sivyo { ushindi[mshindi] = ushindi[mshindi] + 1; }
+        jumla_ya_zamu = jumla_ya_zamu + idadi_ya_zamu;
+        g = g + 1;
+    }
+    andika("michezo %d, zamu %d, ushindi: %d %d %d %d, makosa %d\n", michezo, jumla_ya_zamu, ushindi[0], ushindi[1], ushindi[2], ushindi[3], makosa);
+    rudisha makosa;
+}

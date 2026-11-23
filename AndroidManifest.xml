@@ -4,7 +4,7 @@
     package="io.github.lugha_swa.pachisi"
     android:versionCode="1"
     android:versionName="0.0.1">
-    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36" />
+    <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="36" />
     <application
         android:label="Pachisi"
         android:hasCode="false"
@@ -13,7 +13,7 @@
             android:name="android.app.NativeActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:configChanges="orientation|keyboardHidden|screenSize">
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|screenLayout|uiMode|density|navigation|fontScale|locale|layoutDirection">
             <meta-data android:name="android.app.lib_name" android:value="swa" />
             <meta-data android:name="android.app.func_name" android:value="anza" />
             <intent-filter>
