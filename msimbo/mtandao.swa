@@ -1,9 +1,14 @@
 // mtandao.swa -- vyumba vya Wi-Fi: simu moja ni mwenyeji (huendesha kanuni),
 // nyingine hujiunga kwenye mtandao ule ule.
 //
-//   UDP 47474: mwenyeji hutangaza chumba kila sekunde kwa 255.255.255.255:
-//              "PCH1" + nambari ya chumba (baiti 4) + jina (baiti 16)
-//   TCP 47475: wateja huunganisha; mwenyeji hupokea maombi na kutuma hali
+//   UDP 47474: mwenyeji hutangaza chumba kila sekunde kwenye anwani ya
+//              matangazo ya KILA kiolesura chenye matangazo (Wi-Fi, hotspot ya
+//              simu hii, ethernet) -- violesura husomwa kutoka mfumo (getifaddrs)
+//              kila tangazo, kwa hiyo hotspot ikiwashwa baadaye huonekana pia:
+//              "PCH1" + nambari ya chumba (4) + jina (16) + bandari ya mchezo (2)
+//   TCP:       wateja huunganisha kwenye bandari iliyotangazwa; mwenyeji huchagua
+//              bandari ya kwanza iliyo wazi kuanzia 47475. Bandari ya tangazo
+//              pekee ndiyo isiyobadilika: ni mahali pa kukutana.
 //
 // Kila ujumbe wa TCP ni fremu: [aina, kiti, urefu (baiti 2, LE)] + data.
 //   aina 1: hali kutoka kwa mwenyeji (baiti 384: n32[80] + majina 4 x 16)
@@ -26,14 +31,21 @@ nje "libc.so" {
     n32 tundu_chaguo(n32 tundu, n32 ngazi, n32 jina, n8* thamani, n32 urefu) = "setsockopt";
     n32 tundu_udhibiti(n32 tundu, n32 amri, n32 hoja) = "fcntl";
     n32 tundu_funga(n32 tundu) = "close";
+    n32 subiri_matukio(n8* matukio, n64 idadi, n32 muda) = "poll";
+    n32 tundu_soma_chaguo(n32 tundu, n32 ngazi, n32 jina, n8* thamani, n8* urefu) = "getsockopt";
+    n32 orodha_ya_violesura(n8** orodha) = "getifaddrs";
+    w0 achilia_violesura(n8* orodha) = "freeifaddrs";
 }
 
 n32 BANDARI_YA_TANGAZO = 47474;
-n32 BANDARI_YA_MCHEZO = 47475;
+n32 BANDARI_YA_MCHEZO = 47475;     // ya kwanza kujaribiwa; mwenyeji hutangaza aliyopata
+n32 bandari_ya_chumba = 0;
 n32 MSG_DONTWAIT = 64;
 n32 MSG_NOSIGNAL = 16384;
 
-n32 jukumu_la_mtandao = 0;      // 0 hakuna, 1 mwenyeji, 2 mteja, 3 anatafuta
+n32 jukumu_la_mtandao = 0;      // 0 hakuna, 1 mwenyeji, 2 mteja, 3 anatafuta, 4 anaunganisha
+n32 kuunganisha_mwanzo = 0;
+n32 kosa_la_kuunganisha = 0;    // ms ya kosa la mwisho la kujiunga (huonyeshwa sekunde 3)
 n32 tundu_la_tangazo = -1;
 n32 tundu_la_kusikiliza = -1;
 n32 tundu_la_mteja[3];          // mwenyeji: wateja; mteja: [0] ni mwenyeji
@@ -82,6 +94,41 @@ w0 anwani_ya_ipv4(n8* a, n32 ip_juu, n32 bandari) {
 w0 bila_kuzuia(n32 tundu) {
     n32 bendera = tundu_udhibiti(tundu, 3, 0);     // F_GETFL
     tundu_udhibiti(tundu, 4, bendera | 2048);      // F_SETFL, O_NONBLOCK
+}
+
+// violesura vya IPv4 vilivyo hai vyenye matangazo (si loopback, si data ya
+// simu ambayo ni ya nukta-kwa-nukta): Wi-Fi, hotspot, ethernet. struct ifaddrs
+// kwenye 64-bit: ifa_next 0, ifa_flags 16, ifa_addr 24, ifa_netmask 32.
+n32 violesura_n = 0;
+n32 violesura_ip[8];
+n32 violesura_matangazo[8];
+
+n32 ip_ya_anwani(n8* a) {
+    rudisha ((a[4] & 255) << 24) | ((a[5] & 255) << 16) | ((a[6] & 255) << 8) | (a[7] & 255);
+}
+
+w0 soma_violesura() {
+    violesura_n = 0;
+    n8* orodha = 0;
+    kama (orodha_ya_violesura(&orodha) != 0) { rudisha; }
+    n8* p = orodha;
+    wakati (p != 0 && violesura_n < 8) {
+        n8** sehemu = p;
+        n32* bendera_p = p + 16;
+        n32 bendera = bendera_p[0];
+        n8* anwani = sehemu[3];
+        n8* kinyago = sehemu[4];
+        n32 hai = (bendera & 1) != 0 && (bendera & 2) != 0 && (bendera & 8) == 0;   // UP, BROADCAST, si LOOPBACK
+        kama (hai && anwani != 0 && kinyago != 0 && (anwani[0] & 255) == 2) {
+            n32 ip = ip_ya_anwani(anwani);
+            n32 kinyago_ip = ip_ya_anwani(kinyago);
+            violesura_ip[violesura_n] = ip;
+            violesura_matangazo[violesura_n] = ip | (-1 - kinyago_ip);
+            violesura_n = violesura_n + 1;
+        }
+        p = sehemu[0];
+    }
+    achilia_violesura(orodha);
 }
 
 w0 chaguo_moja(n32 tundu, n32 ngazi, n32 jina) {
@@ -145,8 +192,14 @@ w0 mtandao_anza_mwenyeji() {
     tundu_la_kusikiliza = tundu_jipya(2, 1, 0);    // TCP
     kama (tundu_la_kusikiliza < 0) { rudisha; }
     chaguo_moja(tundu_la_kusikiliza, 1, 2);        // SO_REUSEADDR
-    anwani_ya_ipv4(a, 0, BANDARI_YA_MCHEZO);
-    kama (tundu_funga_anwani(tundu_la_kusikiliza, a, 16) != 0) { mtandao_funga(); rudisha; }
+    // bandari ya kwanza iliyo wazi kati ya 10
+    bandari_ya_chumba = BANDARI_YA_MCHEZO;
+    anwani_ya_ipv4(a, 0, bandari_ya_chumba);
+    wakati (tundu_funga_anwani(tundu_la_kusikiliza, a, 16) != 0) {
+        bandari_ya_chumba = bandari_ya_chumba + 1;
+        kama (bandari_ya_chumba >= BANDARI_YA_MCHEZO + 10) { mtandao_funga(); rudisha; }
+        anwani_ya_ipv4(a, 0, bandari_ya_chumba);
+    }
     tundu_sikiliza(tundu_la_kusikiliza, 4);
     bila_kuzuia(tundu_la_kusikiliza);
     tundu_la_tangazo = tundu_jipya(2, 2, 0);       // UDP
@@ -286,13 +339,25 @@ w0 mwenyeji_kila_fremu() {
     n32 sasa = sasa_ms();
     kama (skrini != S_MCHEZO && sasa - tangazo_la_mwisho > 1000) {
         tangazo_la_mwisho = sasa;
-        n8 t[24];
+        n8 t[26];
         t[0] = 80; t[1] = 67; t[2] = 72; t[3] = 49;     // "PCH1"
         nakili(t + 4, nambari_ya_chumba, 4);
         nakili(t + 8, jina_la_mchezaji, 16);
+        t[24] = (bandari_ya_chumba >> 8) & 255;
+        t[25] = bandari_ya_chumba & 255;
         n8 a[16];
-        anwani_ya_ipv4(a, -1, BANDARI_YA_TANGAZO);
-        tundu_tuma_kwa(tundu_la_tangazo, t, 24, 0, a, 16);
+        soma_violesura();
+        n32 v = 0;
+        wakati (v < violesura_n) {
+            anwani_ya_ipv4(a, violesura_matangazo[v], BANDARI_YA_TANGAZO);
+            tundu_tuma_kwa(tundu_la_tangazo, t, 26, 0, a, 16);
+            v = v + 1;
+        }
+        // hakuna kiolesura chenye matangazo kilichopatikana: matangazo ya jumla
+        kama (violesura_n == 0) {
+            anwani_ya_ipv4(a, -1, BANDARI_YA_TANGAZO);
+            tundu_tuma_kwa(tundu_la_tangazo, t, 26, 0, a, 16);
+        }
     }
 }
 
@@ -331,6 +396,10 @@ w0 kutafuta_kila_fremu() {
             }
             kama (kipo < 0 && vyumba_n < 5) { kipo = vyumba_n; vyumba_n = vyumba_n + 1; }
             kama (kipo >= 0) {
+                // bandari ya mchezo iliyotangazwa (tangazo la zamani la baiti 24: ya kwanza)
+                a[2] = (BANDARI_YA_MCHEZO >> 8) & 255;
+                a[3] = BANDARI_YA_MCHEZO & 255;
+                kama (n >= 26) { a[2] = t[24]; a[3] = t[25]; }
                 nakili(vyumba_anwani + kipo * 16, a, 16);
                 n8* j = vyumba_jina + kipo * 24;
                 nakili(j, t + 4, 4);
@@ -380,24 +449,100 @@ w0 mtandao_tuma_sauti(n32 kiti, n8* data, n32 urefu) {
 
 w0 mtandao_ombi(n32 aina, n32 a, n32 b) { tuma_ombi(aina, a, b); }
 
+// kujiunga bila kuzuia: connect hurudi mara moja (EINPROGRESS), kisha kila tiki
+// huangalia kwa poll kama muunganiko umekamilika; sekunde 4 bila jibu ni kosa
 w0 mtandao_jiunge(n32 chumba) {
-    kama (chumba >= vyumba_n) { rudisha; }
+    kama (chumba >= vyumba_n || jukumu_la_mtandao == 4) { rudisha; }
     n8 a[16];
     nakili(a, vyumba_anwani + chumba * 16, 16);
-    a[2] = (BANDARI_YA_MCHEZO >> 8) & 255;
-    a[3] = BANDARI_YA_MCHEZO & 255;
     nakili(nambari_ya_chumba, vyumba_jina + chumba * 24, 4);
     nambari_ya_chumba[4] = 0;
+    n32 t = tundu_jipya(2, 1, 0);
+    kama (t < 0) { kosa_la_kuunganisha = sasa_ms(); rudisha; }
+    bila_kuzuia(t);
+    n32 jibu = tundu_unganisha(t, a, 16);
     tundu_funga(tundu_la_tangazo);
     tundu_la_tangazo = -1;
-    n32 t = tundu_jipya(2, 1, 0);
-    kama (t < 0) { rudisha; }
-    kama (tundu_unganisha(t, a, 16) != 0) { tundu_funga(t); mtandao_anza_kutafuta(); rudisha; }
-    bila_kuzuia(t);
     tundu_la_mteja[0] = t;
     kiasi_cha_mapokezi[0] = 0;
-    jukumu_la_mtandao = 2;
-    tuma_ombi(4, 0, 0);
+    kama (jibu == 0) { jukumu_la_mtandao = 2; tuma_ombi(4, 0, 0); omba_fremu_ijayo(); rudisha; }
+    jukumu_la_mtandao = 4;
+    kuunganisha_mwanzo = sasa_ms();
+    omba_fremu_ijayo();
+}
+
+w0 kuunganisha_kumeshindwa() {
+    tundu_funga(tundu_la_mteja[0]);
+    tundu_la_mteja[0] = -1;
+    kosa_la_kuunganisha = sasa_ms();
+    mtandao_anza_kutafuta();
+    omba_fremu_ijayo();
+}
+
+w0 kuunganisha_kila_fremu() {
+    n32 tukio[2];
+    tukio[0] = tundu_la_mteja[0];
+    tukio[1] = 4 | 8 | 16;                         // POLLOUT, POLLERR, POLLHUP
+    subiri_matukio(tukio, 1, 0);
+    n32 yaliyotokea = (tukio[1] >> 16) & 65535;
+    kama (yaliyotokea != 0) {
+        n32 kosa[1];
+        n32 urefu[1];
+        kosa[0] = -1;
+        urefu[0] = 4;
+        tundu_soma_chaguo(tundu_la_mteja[0], 1, 4, kosa, urefu);    // SOL_SOCKET, SO_ERROR
+        kama (kosa[0] == 0 && (yaliyotokea & 24) == 0) {
+            jukumu_la_mtandao = 2;
+            tuma_ombi(4, 0, 0);
+            omba_fremu_ijayo();
+            rudisha;
+        }
+        kuunganisha_kumeshindwa();
+        rudisha;
+    }
+    kama (sasa_ms() - kuunganisha_mwanzo > 4000) { kuunganisha_kumeshindwa(); }
+}
+
+n32 mtandao_inaunganisha() { rudisha jukumu_la_mtandao == 4; }
+n32 mtandao_kosa_la_kujiunga() { rudisha kosa_la_kuunganisha != 0 && sasa_ms() - kosa_la_kuunganisha < 3000; }
+
+// anwani ya IPv4 ya sockaddr_in kama maandishi "a.b.c.d"
+n8 chombo_cha_anwani[20];
+n8* anwani_kama_maandishi(n8* a) {
+    n32 n = 0;
+    n32 i = 4;
+    wakati (i < 8) {
+        n8* tarakimu = namba_kama_maandishi(a[i] & 255);
+        n32 u = urefu_wa_mfuatano(tarakimu);
+        nakili(chombo_cha_anwani + n, tarakimu, u);
+        n = n + u;
+        kama (i < 7) { chombo_cha_anwani[n] = 46; n = n + 1; }
+        i = i + 1;
+    }
+    chombo_cha_anwani[n] = 0;
+    rudisha chombo_cha_anwani;
+}
+
+n8* mtandao_anwani_ya_chumba(n32 i) { rudisha anwani_kama_maandishi(vyumba_anwani + i * 16); }
+
+// anwani zote za simu hii kwenye mitandao ya karibu, mf. "192.168.43.1 · 192.168.1.10"
+n8 anwani_zangu[96];
+n8* mtandao_anwani_yangu() {
+    soma_violesura();
+    n32 n = 0;
+    n32 v = 0;
+    wakati (v < violesura_n && n < 70) {
+        n8 a[16];
+        anwani_ya_ipv4(a, violesura_ip[v], 0);
+        n8* s = anwani_kama_maandishi(a);
+        n32 u = urefu_wa_mfuatano(s);
+        kama (v > 0) { anwani_zangu[n] = 32; anwani_zangu[n + 1] = 32; n = n + 2; }
+        nakili(anwani_zangu + n, s, u);
+        n = n + u;
+        v = v + 1;
+    }
+    anwani_zangu[n] = 0;
+    rudisha anwani_zangu;
 }
 
 w0 mtandao_dai_kiti(n32 m) {
@@ -486,6 +631,7 @@ w0 mtandao_kila_fremu() {
     kama (jukumu_la_mtandao == 1) { mwenyeji_kila_fremu(); omba_tiki(); }
     kama (jukumu_la_mtandao == 2) { mteja_kila_fremu(); omba_tiki(); }
     kama (jukumu_la_mtandao == 3) { kutafuta_kila_fremu(); omba_tiki(); }
+    kama (jukumu_la_mtandao == 4) { kuunganisha_kila_fremu(); omba_tiki(); }
 }
 
 w0 andaa_mtandao() {

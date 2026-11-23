@@ -22,6 +22,10 @@ w0 mtandao_dai_kiti(n32 kiti);
 w0 mtandao_kila_fremu();
 n32 mtandao_vyumba_idadi();
 n8* mtandao_jina_la_chumba(n32 i);
+n8* mtandao_anwani_ya_chumba(n32 i);
+n8* mtandao_anwani_yangu();
+n32 mtandao_inaunganisha();
+n32 mtandao_kosa_la_kujiunga();
 n32 kiti_changu();
 n8* jina_la_kiti(n32 m);
 n32 mmiliki_wa_kiti(n32 m);
@@ -213,6 +217,8 @@ n8* t(n32 id) {
     kama (id == 73) { kama (e) { rudisha "Play and talk with nearby phones"; } rudisha "Cheza na ongea na simu za karibu"; }
     kama (id == 74) { kama (e) { rudisha "Saved on this phone"; } rudisha "Imehifadhiwa kwenye simu hii"; }
     kama (id == 75) { kama (e) { rudisha "Win rate"; } rudisha "Kiwango cha ushindi"; }
+    kama (id == 76) { kama (e) { rudisha "Could not reach the room"; } rudisha "Chumba hakifikiki"; }
+    kama (id == 77) { kama (e) { rudisha "Connecting..."; } rudisha "Inaunganisha..."; }
     rudisha "";
 }
 
@@ -1577,6 +1583,7 @@ w0 chora_wifi() {
         nakili(kichwa + a + 1, nambari_ya_chumba, 5);
         andika_katikati(kichwa, w / 2, y + pk(48), F_SERIF, T_KICHWA, R_MAANDISHI);
         andika_katikati(t(52), w / 2, y + pk(104), F_KAWAIDA, T_NDOGO, R_HAFIFU);
+        kama (mtandao_ni_mwenyeji()) { andika_katikati(mtandao_anwani_yangu(), w / 2, y + pk(144), F_KAWAIDA, T_NDOGO, R_DOKEZO); y = y + pk(40); }
         y = y + pk(152);
         n32 m = 0;
         wakati (m < 4) {
@@ -1613,6 +1620,9 @@ w0 chora_wifi() {
     andika_kushoto(t(49), x + pk(24), y, F_KAWAIDA, pk(28), R_HAFIFU);
     y = y + pk(32);
     n32 n = mtandao_vyumba_idadi();
+    kama (mtandao_kosa_la_kujiunga()) {
+        andika_katikati(t(76), w / 2, h - pk(200), F_WASTANI, T_WASTANI, R_DHAHABU);
+    }
     kama (n == 0) {
         n32 i = 0;
         wakati (i < 3) {
@@ -1630,7 +1640,10 @@ w0 chora_wifi() {
         mviringo(x, y, u, rh, pk(32), msingi);
         duara(x + pk(56), y + rh / 2, pk(34), R_DUARA);
         aikoni_wifi(x + pk(56), y + rh / 2 - pk(4), pk(34), R_MAANDISHI, R_DUARA);
-        andika_kushoto(mtandao_jina_la_chumba(i), x + pk(112), y + rh / 2, F_KAWAIDA, T_WASTANI, R_MAANDISHI);
+        andika_kushoto(mtandao_jina_la_chumba(i), x + pk(112), y + rh / 2 - pk(18), F_KAWAIDA, T_WASTANI, R_MAANDISHI);
+        n8* chini = mtandao_anwani_ya_chumba(i);
+        kama (mtandao_inaunganisha()) { chini = t(77); }
+        andika_kushoto(chini, x + pk(112), y + rh / 2 + pk(22), F_KAWAIDA, pk(26), R_HAFIFU);
         aikoni_mshale(x + u - pk(48), y + rh / 2, pk(28), R_HAFIFU);
         sajili_kitufe(170 + i, x, y, u, rh);
         y = y + rh + pk(12);
