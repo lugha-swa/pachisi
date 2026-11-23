@@ -12,7 +12,7 @@ JUKWAA=$SDK/platforms/android-36/android.jar
 rm -rf jengo/apk jengo/*.apk
 mkdir -p jengo/apk/lib/arm64-v8a
 "$SWA" --arm64-maktaba msimbo/pachisi.swa > jengo/apk/lib/arm64-v8a/libswa.so
-"$ZANA/aapt2" link -o jengo/msingi.apk --manifest AndroidManifest.xml -I "$JUKWAA"
+"$ZANA/aapt2" link -o jengo/msingi.apk --manifest AndroidManifest.xml -I "$JUKWAA" -A assets -0 ttf
 jar -u -0 -M -f jengo/msingi.apk -C jengo/apk lib
 "$ZANA/zipalign" -P 16 -f 4 jengo/msingi.apk jengo/imepangwa.apk
 "$ZANA/apksigner" sign --ks .funguo/majaribio.keystore --ks-pass file:.funguo/neno \

@@ -1,0 +1,260 @@
+// ubao.swa -- jiometri na mchoro wa ubao wa Pachisi.
+//
+// Gridi ya seli 19 x 19 zisizo sawa: nguzo/safu 8..10 (katikati ya mikono)
+// ni pana (SELI_A), nyingine ni nyembamba (SELI_B = SELI_A / 2), kwa hiyo
+// seli za njia ni mistatili iliyolala kukatiza mkono. Njia ina seli 68 kisaa
+// kuanzia mkono wa kushoto (nyekundu); mkono m huanzia 17 * m.
+
+n32 NJIA_SAFU[68];
+n32 NJIA_WIMA[68];
+
+w0 zungusha_robo(n32* safu, n32* wima) {
+    n32 s = safu[0];
+    safu[0] = wima[0];
+    wima[0] = 18 - s;
+}
+
+w0 andaa_njia() {
+    n32 m = 0;
+    wakati (m < 4) {
+        n32 i = 0;
+        wakati (i < 17) {
+            n32 s = 0;
+            n32 w = 0;
+            kama (i < 8) { s = 10; w = 7 - i; }
+            kama (i == 8) { s = 9; w = 0; }
+            kama (i > 8) { s = 8; w = i - 9; }
+            n32 r = 0;
+            wakati (r < m) { zungusha_robo(&s, &w); r = r + 1; }
+            NJIA_SAFU[m * 17 + i] = s;
+            NJIA_WIMA[m * 17 + i] = w;
+            i = i + 1;
+        }
+        m = m + 1;
+    }
+}
+
+w0 seli_ya_nyumbani(n32 m, n32 h, n32* safu, n32* wima) {
+    safu[0] = 9;
+    wima[0] = h + 1;
+    n32 r = 0;
+    wakati (r < m) { zungusha_robo(safu, wima); r = r + 1; }
+}
+
+n32 ubao_x = 0;
+n32 ubao_y = 0;
+n32 ubao_ukubwa = 0;
+n32 SELI_A = 0;
+n32 SELI_B = 0;
+
+w0 weka_ukubwa_wa_ubao(n32 x, n32 y, n32 upeo) {
+    SELI_B = upeo / 22;
+    SELI_A = SELI_B * 2;
+    ubao_ukubwa = 16 * SELI_B + 3 * SELI_A;
+    ubao_x = x + (upeo - ubao_ukubwa) / 2;
+    ubao_y = y + (upeo - ubao_ukubwa) / 2;
+}
+
+n32 gridi_mahali(n32 c) {
+    kama (c < 8) { rudisha c * SELI_B; }
+    kama (c <= 10) { rudisha 8 * SELI_B + (c - 8) * SELI_A; }
+    rudisha 8 * SELI_B + 3 * SELI_A + (c - 11) * SELI_B;
+}
+n32 gridi_ukubwa(n32 c) {
+    kama (c >= 8 && c <= 10) { rudisha SELI_A; }
+    rudisha SELI_B;
+}
+n32 gridi_kutoka_pikseli(n32 x) {
+    kama (x < 0) { rudisha -1; }
+    kama (x < 8 * SELI_B) { rudisha x / SELI_B; }
+    kama (x < 8 * SELI_B + 3 * SELI_A) { rudisha 8 + (x - 8 * SELI_B) / SELI_A; }
+    n32 c = 11 + (x - 8 * SELI_B - 3 * SELI_A) / SELI_B;
+    kama (c > 18) { rudisha -1; }
+    rudisha c;
+}
+
+n32 kiota_safu(n32 m) { kama (m == 0 || m == 1) { rudisha 0; } rudisha 11; }
+n32 kiota_wima(n32 m) { kama (m == 0 || m == 3) { rudisha 0; } rudisha 11; }
+
+// rangi za ubao (huwekwa na andaa_mandhari kwa hali angavu/giza)
+n32 RANGI_YA_UBAO = 0;
+n32 RANGI_YA_SELI = 0;
+n32 RANGI_YA_NAMBA = 0;
+n32 RANGI_YA_SALAMA = 0;
+
+// pengo kati ya seli: kila seli ni kigae chake chenye pembe za mviringo
+n32 pengo_la_seli() { rudisha 1 + SELI_B / 14; }
+
+w0 seli(n32 s, n32 w, n32 rangi) {
+    n32 g = pengo_la_seli();
+    n32 x = ubao_x + gridi_mahali(w);
+    n32 y = ubao_y + gridi_mahali(s);
+    mviringo(x + g, y + g, gridi_ukubwa(w) - 2 * g, gridi_ukubwa(s) - 2 * g, SELI_B / 5, rangi);
+}
+
+// ---------------------------------------------------------------- mahali pa pauni
+n32 pauni_x = 0;
+n32 pauni_y = 0;
+n32 pauni_nusu = 0;
+
+// katikati ya seli ya pauni ya mchezaji m yenye maendeleo p (j: nafasi kiotani/nyumbani)
+w0 mahali_pa_maendeleo(n32 m, n32 j, n32 p) {
+    pauni_nusu = SELI_B / 2;
+    kama (p == KIOTANI) {
+        n32 kx = ubao_x + gridi_mahali(kiota_wima(m));
+        n32 ky = ubao_y + gridi_mahali(kiota_safu(m));
+        n32 ukubwa = 8 * SELI_B;
+        n32 d = ukubwa / 7;
+        pauni_x = kx + ukubwa / 2 - d + (j % 2) * 2 * d;
+        pauni_y = ky + ukubwa / 2 - d + (j / 2) * 2 * d;
+        pauni_nusu = ukubwa / 10;
+        rudisha;
+    }
+    kama (p >= NYUMBANI) {
+        n32 x0 = ubao_x + gridi_mahali(8);
+        n32 y0 = ubao_y + gridi_mahali(8);
+        n32 kati = 3 * SELI_A;
+        n32 cx = x0 + kati / 2;
+        n32 cy = y0 + kati / 2;
+        kama (m == 0) { cx = x0 + kati / 4; }
+        kama (m == 1) { cy = y0 + kati / 4; }
+        kama (m == 2) { cx = x0 + kati * 3 / 4; }
+        kama (m == 3) { cy = y0 + kati * 3 / 4; }
+        n32 d = kati / 11;
+        kama (j == 0) { cx = cx - d; }
+        kama (j == 1) { cx = cx + d; }
+        kama (j == 2) { cy = cy - d; }
+        kama (j == 3) { cy = cy + d; }
+        pauni_x = cx;
+        pauni_y = cy;
+        pauni_nusu = kati / 15;
+        rudisha;
+    }
+    n32 s = 0;
+    n32 w = 0;
+    kama (p <= MWISHO_WA_NJIA) {
+        n32 a = mahali_kamili(m, p);
+        s = NJIA_SAFU[a];
+        w = NJIA_WIMA[a];
+    } sivyo { seli_ya_nyumbani(m, p - 64, &s, &w); }
+    pauni_x = ubao_x + gridi_mahali(w) + gridi_ukubwa(w) / 2;
+    pauni_y = ubao_y + gridi_mahali(s) + gridi_ukubwa(s) / 2;
+}
+
+// seli iko mlalo (pana kuliko ndefu)? kwa kupanga pauni mbili kando kwa kando
+n32 seli_ni_mlalo(n32 m, n32 p) {
+    kama (p < 0 || p >= NYUMBANI) { rudisha 1; }
+    n32 s = 0;
+    n32 w = 0;
+    kama (p <= MWISHO_WA_NJIA) { n32 a = mahali_kamili(m, p); s = NJIA_SAFU[a]; w = NJIA_WIMA[a]; }
+    sivyo { seli_ya_nyumbani(m, p - 64, &s, &w); }
+    rudisha gridi_ukubwa(w) > gridi_ukubwa(s);
+}
+
+// pauni ya mwenye zamu iliyo kwenye seli (s, w) ya gridi, au -1
+n32 pauni_kwenye_seli(n32 s, n32 w) {
+    n32 j = 0;
+    wakati (j < PAUNI_KWA_MCHEZAJI) {
+        n32 p = pauni[zamu * 4 + j];
+        kama (p == KIOTANI) {
+            n32 ks = kiota_safu(zamu);
+            n32 kw = kiota_wima(zamu);
+            kama (s >= ks && s < ks + 8 && w >= kw && w < kw + 8) { rudisha j; }
+        }
+        kama (p >= 0 && p <= MWISHO_WA_NJIA) {
+            n32 a = mahali_kamili(zamu, p);
+            kama (NJIA_SAFU[a] == s && NJIA_WIMA[a] == w) { rudisha j; }
+        }
+        kama (p > MWISHO_WA_NJIA && p < NYUMBANI) {
+            n32 hs = 0;
+            n32 hw = 0;
+            seli_ya_nyumbani(zamu, p - 64, &hs, &hw);
+            kama (hs == s && hw == w) { rudisha j; }
+        }
+        j = j + 1;
+    }
+    rudisha -1;
+}
+
+// ---------------------------------------------------------------- mchoro wa ubao
+// ubao mzima bila pauni (huchorwa mara moja kwenye akiba)
+w0 chora_ubao() {
+    n32 g = pengo_la_seli();
+    n32 ukingo = SELI_B / 2;
+    mviringo(ubao_x - ukingo, ubao_y - ukingo, ubao_ukubwa + 2 * ukingo, ubao_ukubwa + 2 * ukingo, SELI_B, RANGI_YA_UBAO);
+    n32 ukubwa_wa_namba = SELI_B * 2 / 5;
+    n32 i = 0;
+    wakati (i < 68) {
+        n32 mk = i / 17;
+        n32 rangi = RANGI_YA_SELI;
+        n32 rangi_ya_namba = RANGI_YA_NAMBA;
+        kama (ni_seli_salama(i)) { rangi = RANGI_YA_SALAMA; }
+        kama (i % 17 == KUINGIA && kiti_kipo[mk]) { rangi = rangi_ya_mchezaji(mk); rangi_ya_namba = rgb(255, 255, 255); }
+        seli(NJIA_SAFU[i], NJIA_WIMA[i], rangi);
+        n32 x = ubao_x + gridi_mahali(NJIA_WIMA[i]);
+        n32 y = ubao_y + gridi_mahali(NJIA_SAFU[i]);
+        andika_katikati(namba_kama_maandishi(i + 1), x + gridi_ukubwa(NJIA_WIMA[i]) / 2, y + gridi_ukubwa(NJIA_SAFU[i]) / 2, 0, ukubwa_wa_namba, rangi_ya_namba);
+        i = i + 1;
+    }
+    n32 m = 0;
+    wakati (m < 4) {
+        n32 rangi_m = rangi_ya_mchezaji(m);
+        n32 h = 0;
+        wakati (h < 7) {
+            n32 s = 0;
+            n32 w = 0;
+            seli_ya_nyumbani(m, h, &s, &w);
+            seli(s, w, changanya(rangi_m, RANGI_YA_SELI, 140));
+            h = h + 1;
+        }
+        // kiota: paneli ya mviringo yenye rangi ya mchezaji, kisima ndani, na
+        // nafasi nne za pauni
+        n32 kx = ubao_x + gridi_mahali(kiota_wima(m)) + g;
+        n32 ky = ubao_y + gridi_mahali(kiota_safu(m)) + g;
+        n32 ukubwa = 8 * SELI_B - 2 * g;
+        n32 rangi_ya_kiota = rangi_m;
+        kama (kiti_kipo[m] == 0) { rangi_ya_kiota = changanya(rangi_m, RANGI_YA_SELI, 200); }
+        mviringo(kx, ky, ukubwa, ukubwa, SELI_B, rangi_ya_kiota);
+        n32 ndani = ukubwa * 70 / 100;
+        n32 nx = kx + (ukubwa - ndani) / 2;
+        n32 ny = ky + (ukubwa - ndani) / 2;
+        mviringo(nx, ny, ndani, ndani, ndani / 4, changanya(rangi_ya_kiota, RANGI_YA_UBAO, 215));
+        n32 j = 0;
+        wakati (j < 4) {
+            mahali_pa_maendeleo(m, j, KIOTANI);
+            duara(pauni_x, pauni_y, pauni_nusu + pauni_nusu / 4, changanya(rangi_ya_kiota, RANGI_YA_UBAO, 175));
+            j = j + 1;
+        }
+        m = m + 1;
+    }
+    // nyumbani: mraba wa pembe za mviringo wa pembetatu nne; pengo la rangi ya
+    // ubao kwenye milalo kama pengo la seli
+    n32 x0 = ubao_x + gridi_mahali(8) + g;
+    n32 y0 = ubao_y + gridi_mahali(8) + g;
+    n32 kati = 3 * SELI_A - 2 * g;
+    n32 rr = SELI_B / 2;
+    n32 py = 0;
+    wakati (py < kati) {
+        n32 px = 0;
+        wakati (px < kati) {
+            n32 a = px * 2 - kati;
+            n32 b = py * 2 - kati;
+            n32 aa = a; kama (aa < 0) { aa = 0 - aa; }
+            n32 bb = b; kama (bb < 0) { bb = 0 - bb; }
+            n32 mchezaji = 0;
+            kama (bb >= aa) { kama (b < 0) { mchezaji = 1; } sivyo { mchezaji = 3; } }
+            sivyo { kama (a < 0) { mchezaji = 0; } sivyo { mchezaji = 2; } }
+            n32 rangi = changanya(rangi_ya_mchezaji(mchezaji), RANGI_YA_SELI, 70);
+            kama (aa - bb <= g * 2 && bb - aa <= g * 2) { rangi = RANGI_YA_UBAO; }
+            // pembe za mviringo
+            n32 cxp = px; kama (kati - 1 - px < cxp) { cxp = kati - 1 - px; }
+            n32 cyp = py; kama (kati - 1 - py < cyp) { cyp = kati - 1 - py; }
+            n32 alfa = 255;
+            kama (cxp < rr && cyp < rr) { alfa = alfa_ya_duara(cxp - rr, cyp - rr, rr); }
+            kama (alfa >= 255) { pikseli[(y0 + py) * hatua_ya_mstari + x0 + px] = rangi; }
+            sivyo { kama (alfa > 0) { pikseli_alfa(x0 + px, y0 + py, rangi, alfa); } }
+            px = px + 1;
+        }
+        py = py + 1;
+    }
+}

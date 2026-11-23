@@ -1,0 +1,240 @@
+// sauti.swa -- chumba cha sauti kwa wachezaji wa Wi-Fi.
+//
+// Kipaza sauti na spika ni mikondo ya AAudio (PCM i16, 16 kHz, mono) inayosomwa
+// na kuandikwa bila kusubiri kutoka kwenye mzunguko wa fremu -- hakuna nyuzi.
+// Kila fremu, sauti ya kipaza (ikiwa wazi) hutumwa kupitia mtandao.swa kwa
+// vipande vya ms 20; sauti inayopokelewa huchanganywa kwenye pete ya kucheza,
+// kila mzungumzaji akiwa na kishale chake, kisha huandikwa kwa spika.
+//
+// Ruhusa ya RECORD_AUDIO huombwa kwa JNI (Activity.requestPermissions) mara ya
+// kwanza kipaza kinapowashwa; hali yake hukaguliwa kila fremu hadi ikubaliwe.
+
+nje "libaaudio.so" {
+    n32 aaudio_mjenzi(n8** mjenzi) = "AAudio_createStreamBuilder";
+    w0 aaudio_mwelekeo(n8* mjenzi, n32 mwelekeo) = "AAudioStreamBuilder_setDirection";
+    w0 aaudio_kiwango(n8* mjenzi, n32 kiwango) = "AAudioStreamBuilder_setSampleRate";
+    w0 aaudio_njia(n8* mjenzi, n32 idadi) = "AAudioStreamBuilder_setChannelCount";
+    w0 aaudio_umbo(n8* mjenzi, n32 umbo) = "AAudioStreamBuilder_setFormat";
+    w0 aaudio_kasi(n8* mjenzi, n32 namna) = "AAudioStreamBuilder_setPerformanceMode";
+    w0 aaudio_matumizi(n8* mjenzi, n32 matumizi) = "AAudioStreamBuilder_setUsage";
+    w0 aaudio_chanzo(n8* mjenzi, n32 chanzo) = "AAudioStreamBuilder_setInputPreset";
+    n32 aaudio_fungua(n8* mjenzi, n8** mkondo) = "AAudioStreamBuilder_openStream";
+    n32 aaudio_futa_mjenzi(n8* mjenzi) = "AAudioStreamBuilder_delete";
+    n32 aaudio_anza(n8* mkondo) = "AAudioStream_requestStart";
+    n32 aaudio_funga(n8* mkondo) = "AAudioStream_close";
+    n32 aaudio_soma(n8* mkondo, n8* chombo, n32 fremu, n64 muda) = "AAudioStream_read";
+    n32 aaudio_andika(n8* mkondo, n8* chombo, n32 fremu, n64 muda) = "AAudioStream_write";
+}
+
+w0 mtandao_tuma_sauti(n32 kiti, n8* data, n32 urefu);
+
+n32 KIWANGO = 16000;
+n32 KIPANDE = 320;                 // sampuli 320 = ms 20
+
+n8* sauti_shughuli = 0;
+n8* mkondo_wa_kipaza = 0;
+n8* mkondo_wa_spika = 0;
+n32 kipaza_kimewashwa = 0;
+n32 ruhusa_imeombwa = 0;
+n32 muda_wa_kuongea[4];
+
+// pete ya kucheza: jumla ya sampuli (n32) ili wazungumzaji wachanganywe
+n32 PETE = 16384;
+n32 pete_ya_kucheza[16384];
+n32 kishale_cha_kucheza = 0;       // sampuli inayofuata kwenda spika
+n32 kishale_cha_mzungumzaji[4];    // mahali pa kuandika kwa kila kiti
+n32 CHELEWA = 1600;                // ms 100 za akiba dhidi ya kukatika
+
+// sampuli ya i16 (little-endian) kama n32 yenye ishara
+n32 sampuli(n8* data, n32 i) {
+    n32 s = (data[2 * i] & 255) | ((data[2 * i + 1] & 255) << 8);
+    kama (s >= 32768) { s = s - 65536; }
+    rudisha s;
+}
+
+n32 sauti_kipaza_kiko_wazi() { rudisha kipaza_kimewashwa; }
+n32 sauti_anaongea(n32 kiti) {
+    kama (kiti < 0 || kiti > 3 || muda_wa_kuongea[kiti] == 0) { rudisha 0; }
+    rudisha sasa_ms() - muda_wa_kuongea[kiti] < 350;
+}
+
+w0 andaa_sauti(n8* shughuli) { sauti_shughuli = shughuli; }
+
+// ---------------------------------------------------------------- JNI
+// JNIEnv* ni kielekezi cha jedwali la kazi (jni.h): FindClass 6,
+// DeleteLocalRef 23, GetObjectClass 31, GetMethodID 33, CallIntMethod 49,
+// CallVoidMethod 61, NewStringUTF 167, NewObjectArray 172, SetObjectArrayElement 174
+n8* jni_env() { n8** s = sauti_shughuli; rudisha s[2]; }
+n8* jni_shughuli() { n8** s = sauti_shughuli; rudisha s[3]; }
+n64 jni_kazi(n32 i) {
+    n64** env = jni_env();
+    n64* jedwali = env[0];
+    rudisha jedwali[i];
+}
+
+n8* RUHUSA = "android.permission.RECORD_AUDIO";
+
+n32 ruhusa_ipo() {
+    kama (sauti_shughuli == 0) { rudisha 0; }
+    n8* env = jni_env();
+    n8* shughuli = jni_shughuli();
+    n64 pata_darasa = jni_kazi(31);
+    n64 pata_njia = jni_kazi(33);
+    n64 ita_namba = jni_kazi(49);
+    n64 mfuatano_mpya = jni_kazi(167);
+    n64 futa = jni_kazi(23);
+    n8* darasa = pata_darasa(env, shughuli);
+    n8* njia = pata_njia(env, darasa, "checkSelfPermission", "(Ljava/lang/String;)I");
+    n8* jina = mfuatano_mpya(env, RUHUSA);
+    n32 jibu = ita_namba(env, shughuli, njia, jina);
+    futa(env, jina);
+    futa(env, darasa);
+    rudisha jibu == 0;
+}
+
+w0 omba_ruhusa() {
+    kama (sauti_shughuli == 0) { rudisha; }
+    n8* env = jni_env();
+    n8* shughuli = jni_shughuli();
+    n64 tafuta_darasa = jni_kazi(6);
+    n64 pata_darasa = jni_kazi(31);
+    n64 pata_njia = jni_kazi(33);
+    n64 ita_tupu = jni_kazi(61);
+    n64 mfuatano_mpya = jni_kazi(167);
+    n64 safu_mpya = jni_kazi(172);
+    n64 weka_kipengele = jni_kazi(174);
+    n64 futa = jni_kazi(23);
+    n8* darasa_la_mfuatano = tafuta_darasa(env, "java/lang/String");
+    n8* jina = mfuatano_mpya(env, RUHUSA);
+    n8* safu = safu_mpya(env, 1, darasa_la_mfuatano, jina);
+    weka_kipengele(env, safu, 0, jina);
+    n8* darasa = pata_darasa(env, shughuli);
+    n8* njia = pata_njia(env, darasa, "requestPermissions", "([Ljava/lang/String;I)V");
+    ita_tupu(env, shughuli, njia, safu, 7);
+    futa(env, safu);
+    futa(env, jina);
+    futa(env, darasa);
+    futa(env, darasa_la_mfuatano);
+}
+
+// ---------------------------------------------------------------- mikondo
+n8* fungua_mkondo(n32 kuingiza) {
+    n8* mjenzi = 0;
+    kama (aaudio_mjenzi(&mjenzi) != 0) { rudisha 0; }
+    aaudio_mwelekeo(mjenzi, kuingiza);              // 0 toa, 1 ingiza
+    aaudio_kiwango(mjenzi, KIWANGO);
+    aaudio_njia(mjenzi, 1);
+    aaudio_umbo(mjenzi, 1);                          // PCM_I16
+    aaudio_kasi(mjenzi, 12);                         // LOW_LATENCY
+    kama (kuingiza) { aaudio_chanzo(mjenzi, 7); }    // VOICE_COMMUNICATION
+    sivyo { aaudio_matumizi(mjenzi, 2); }            // USAGE_VOICE_COMMUNICATION
+    n8* mkondo = 0;
+    n32 jibu = aaudio_fungua(mjenzi, &mkondo);
+    aaudio_futa_mjenzi(mjenzi);
+    kama (jibu != 0) { rudisha 0; }
+    aaudio_anza(mkondo);
+    rudisha mkondo;
+}
+
+w0 funga_sauti() {
+    kama (mkondo_wa_kipaza != 0) { aaudio_funga(mkondo_wa_kipaza); mkondo_wa_kipaza = 0; }
+    kama (mkondo_wa_spika != 0) { aaudio_funga(mkondo_wa_spika); mkondo_wa_spika = 0; }
+    kipaza_kimewashwa = 0;
+}
+
+w0 sauti_badili_kipaza() {
+    kama (kipaza_kimewashwa) {
+        kipaza_kimewashwa = 0;
+        kama (mkondo_wa_kipaza != 0) { aaudio_funga(mkondo_wa_kipaza); mkondo_wa_kipaza = 0; }
+        rudisha;
+    }
+    kama (ruhusa_ipo() == 0) {
+        kama (ruhusa_imeombwa == 0) { omba_ruhusa(); ruhusa_imeombwa = 1; }
+        kipaza_kimewashwa = 1;       // kitafunguliwa ruhusa ikikubaliwa
+        rudisha;
+    }
+    kipaza_kimewashwa = 1;
+}
+
+// sauti iliyopokelewa kutoka kiti fulani: changanya kwenye pete
+w0 sauti_pokea(n32 kiti, n8* data, n32 urefu) {
+    kama (kiti < 0 || kiti > 3) { rudisha; }
+    n32 n = urefu / 2;
+    n32 kishale = kishale_cha_mzungumzaji[kiti];
+    kama (kishale - kishale_cha_kucheza < CHELEWA / 2 || kishale - kishale_cha_kucheza > PETE / 2) { kishale = kishale_cha_kucheza + CHELEWA; }
+    n32 kubwa = 0;
+    n32 i = 0;
+    wakati (i < n) {
+        n32 s = sampuli(data, i);
+        n32 nafasi = (kishale + i) % PETE;
+        kama (nafasi < 0) { nafasi = nafasi + PETE; }
+        pete_ya_kucheza[nafasi] = pete_ya_kucheza[nafasi] + s;
+        kama (s > kubwa) { kubwa = s; }
+        kama (0 - s > kubwa) { kubwa = 0 - s; }
+        i = i + 1;
+    }
+    kishale_cha_mzungumzaji[kiti] = kishale + n;
+    kama (kubwa > 1200) {
+        kama (sauti_anaongea(kiti) == 0) { omba_fremu_ijayo(); }
+        muda_wa_kuongea[kiti] = sasa_ms();
+    }
+}
+
+n8 chombo_cha_kipaza[1280];
+n8 chombo_cha_spika[2048];
+
+w0 sauti_kila_fremu() {
+    n32 hai = aina_ya_mchezo == HALI_YA_MCHEZO_WIFI && (mtandao_ni_mwenyeji() || mtandao_ni_mteja());
+    kama (hai == 0) {
+        kama (mkondo_wa_kipaza != 0 || mkondo_wa_spika != 0) { funga_sauti(); }
+        rudisha;
+    }
+    // spika iko wazi muda wote wa chumba
+    kama (mkondo_wa_spika == 0) { mkondo_wa_spika = fungua_mkondo(0); }
+    // kipaza: hufunguliwa ruhusa ikiwepo
+    kama (kipaza_kimewashwa && mkondo_wa_kipaza == 0 && ruhusa_ipo()) { mkondo_wa_kipaza = fungua_mkondo(1); }
+    kama (kipaza_kimewashwa && mkondo_wa_kipaza != 0) {
+        n32 kiti = kiti_changu();
+        n32 n = aaudio_soma(mkondo_wa_kipaza, chombo_cha_kipaza, KIPANDE, 0);
+        wakati (n == KIPANDE) {
+            n32 kubwa = 0;
+            n32 i = 0;
+            wakati (i < KIPANDE) {
+                n32 s = sampuli(chombo_cha_kipaza, i);
+                kama (s < 0) { s = 0 - s; }
+                kama (s > kubwa) { kubwa = s; }
+                i = i + 1;
+            }
+            kama (kubwa > 1200 && kiti >= 0) { muda_wa_kuongea[kiti] = sasa_ms(); }
+            kama (kiti >= 0) { mtandao_tuma_sauti(kiti, chombo_cha_kipaza, KIPANDE * 2); }
+            n = aaudio_soma(mkondo_wa_kipaza, chombo_cha_kipaza, KIPANDE, 0);
+        }
+    }
+    // spika: andika kilichochanganywa hadi kishale cha mbali zaidi
+    kama (mkondo_wa_spika != 0) {
+        n32 mwisho = kishale_cha_kucheza;
+        n32 m = 0;
+        wakati (m < 4) { kama (kishale_cha_mzungumzaji[m] > mwisho && kishale_cha_mzungumzaji[m] - kishale_cha_kucheza < PETE / 2) { mwisho = kishale_cha_mzungumzaji[m]; } m = m + 1; }
+        n32 zipo = mwisho - kishale_cha_kucheza;
+        kama (zipo > 1024) { zipo = 1024; }
+        kama (zipo > 0) {
+            n32 i = 0;
+            wakati (i < zipo) {
+                n32 nafasi = (kishale_cha_kucheza + i) % PETE;
+                n32 s = pete_ya_kucheza[nafasi];
+                kama (s > 32767) { s = 32767; }
+                kama (s < -32768) { s = -32768; }
+                chombo_cha_spika[2 * i] = s & 255;
+                chombo_cha_spika[2 * i + 1] = (s >> 8) & 255;
+                i = i + 1;
+            }
+            n32 imeandikwa = aaudio_andika(mkondo_wa_spika, chombo_cha_spika, zipo, 0);
+            kama (imeandikwa > 0) {
+                i = 0;
+                wakati (i < imeandikwa) { pete_ya_kucheza[(kishale_cha_kucheza + i) % PETE] = 0; i = i + 1; }
+                kishale_cha_kucheza = kishale_cha_kucheza + imeandikwa;
+            }
+        }
+    }
+    omba_tiki();
+}

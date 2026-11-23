@@ -1,0 +1,258 @@
+// michoro.swa -- kuchora kwenye pikseli za dirisha: maumbo laini (duara na
+// mistatili ya pembe za mviringo yenye kingo zilizolainishwa), mchanganyiko wa
+// uwazi (alfa), vivuli, kete na pauni. Maandishi: fonti.swa.
+//
+// Pikseli ni RGBA_8888: baiti R G B A, yaani neno la biti 32 0xAABBGGRR
+// linalohifadhiwa kama n32.
+
+nje "libc.so" {
+    n8* nakili_haraka(n8* lengo, n8* chanzo, n64 ukubwa) = "memcpy";
+}
+
+n32* pikseli = 0;
+n32 hatua_ya_mstari = 0;
+n32 upana_wa_skrini = 0;
+n32 urefu_wa_skrini = 0;
+
+// ---------------------------------------------------------------- rangi
+n32 rgb(n32 r, n32 g, n32 b) { rudisha (255 << 24) | (b << 16) | (g << 8) | r; }
+
+// changanya rangi mbili: alfa 0 = chini pekee, 255 = juu pekee. Bila
+// kugawanya: alfa hupanuliwa hadi 0..256 na R,B huchanganywa pamoja (0x00FF00FF)
+// kisha G (0x0000FF00) -- kuzidisha mara mbili kwa kila pikseli badala ya
+// kugawanya mara tatu.
+n32 changanya(n32 chini, n32 juu, n32 alfa) {
+    kama (alfa >= 255) { rudisha juu; }
+    kama (alfa <= 0) { rudisha chini; }
+    n64 a = alfa + (alfa >> 7);
+    n64 b = 256 - a;
+    n64 j = juu & 16777215;
+    n64 c = chini & 16777215;
+    n64 rb = (((j & 16711935) * a + (c & 16711935) * b) >> 8) & 16711935;
+    n64 g = (((j & 65280) * a + (c & 65280) * b) >> 8) & 65280;
+    rudisha -16777216 | rb | g;
+}
+
+n32 nyepesisha(n32 rangi, n32 kiasi) { rudisha changanya(rangi, rgb(255, 255, 255), kiasi); }
+n32 fifisha(n32 rangi, n32 kiasi) { rudisha changanya(rangi, rgb(0, 0, 0), kiasi); }
+
+// ---------------------------------------------------------------- maumbo
+w0 pikseli_alfa(n32 x, n32 y, n32 rangi, n32 alfa) {
+    kama (x < 0 || y < 0 || x >= upana_wa_skrini || y >= urefu_wa_skrini) { rudisha; }
+    n32 i = y * hatua_ya_mstari + x;
+    pikseli[i] = changanya(pikseli[i], rangi, alfa);
+}
+
+// mstatili usio na uwazi: mstari wa kwanza pikseli kwa pikseli, mingine kwa memcpy
+w0 mstatili(n32 x, n32 y, n32 upana, n32 urefu, n32 rangi) {
+    kama (x < 0) { upana = upana + x; x = 0; }
+    kama (y < 0) { urefu = urefu + y; y = 0; }
+    kama (x + upana > upana_wa_skrini) { upana = upana_wa_skrini - x; }
+    kama (y + urefu > urefu_wa_skrini) { urefu = urefu_wa_skrini - y; }
+    kama (upana <= 0 || urefu <= 0) { rudisha; }
+    n32 mwanzo = y * hatua_ya_mstari + x;
+    n32 i = 0;
+    wakati (i < upana) { pikseli[mwanzo + i] = rangi; i = i + 1; }
+    n8* wa_kwanza = pikseli + mwanzo;
+    n64 baiti = upana * 4;
+    n32 j = 1;
+    wakati (j < urefu) {
+        n8* huu = pikseli + (mwanzo + j * hatua_ya_mstari);
+        nakili_haraka(huu, wa_kwanza, baiti);
+        j = j + 1;
+    }
+}
+
+// mstatili wenye uwazi: mipaka hukatwa mara moja, rangi ya juu huzidishwa
+// mara moja, kisha kila pikseli ni kuzidisha mara mbili tu
+w0 mstatili_alfa(n32 x, n32 y, n32 upana, n32 urefu, n32 rangi, n32 alfa) {
+    kama (alfa <= 0) { rudisha; }
+    kama (alfa >= 255) { mstatili(x, y, upana, urefu, rangi); rudisha; }
+    kama (x < 0) { upana = upana + x; x = 0; }
+    kama (y < 0) { urefu = urefu + y; y = 0; }
+    kama (x + upana > upana_wa_skrini) { upana = upana_wa_skrini - x; }
+    kama (y + urefu > urefu_wa_skrini) { urefu = urefu_wa_skrini - y; }
+    kama (upana <= 0 || urefu <= 0) { rudisha; }
+    n64 a = alfa + (alfa >> 7);
+    n64 b = 256 - a;
+    n64 j = rangi & 16777215;
+    n64 jrb = (j & 16711935) * a;
+    n64 jg = (j & 65280) * a;
+    n32 mstari = 0;
+    wakati (mstari < urefu) {
+        n32 idx = (y + mstari) * hatua_ya_mstari + x;
+        n32 mwisho = idx + upana;
+        wakati (idx < mwisho) {
+            n64 c = pikseli[idx] & 16777215;
+            pikseli[idx] = -16777216 | ((((c & 16711935) * b + jrb) >> 8) & 16711935) | ((((c & 65280) * b + jg) >> 8) & 65280);
+            idx = idx + 1;
+        }
+        mstari = mstari + 1;
+    }
+}
+
+// uwazi wa kingo za duara: kipimo cha nusu-pikseli (2dx+1)^2 + (2dy+1)^2 dhidi ya
+// (2r-1)^2 (ndani kabisa) na (2r+1)^2 (nje kabisa)
+n32 alfa_ya_duara(n32 dx, n32 dy, n32 r) {
+    n32 a = 2 * dx + 1;
+    n32 b = 2 * dy + 1;
+    n32 d = a * a + b * b;
+    n32 ndani = (2 * r - 1) * (2 * r - 1);
+    n32 nje_ya = (2 * r + 1) * (2 * r + 1);
+    kama (d <= ndani) { rudisha 255; }
+    kama (d >= nje_ya) { rudisha 0; }
+    rudisha (nje_ya - d) * 255 / (nje_ya - ndani);
+}
+
+// duara laini; alfa ya jumla 0..255
+w0 duara_alfa(n32 cx, n32 cy, n32 r, n32 rangi, n32 alfa) {
+    kama (r <= 0) { rudisha; }
+    n32 dy = 0 - r - 1;
+    wakati (dy <= r) {
+        n32 dx = 0 - r - 1;
+        wakati (dx <= r) {
+            n32 a = alfa_ya_duara(dx, dy, r);
+            kama (a > 0) { pikseli_alfa(cx + dx, cy + dy, rangi, a * alfa / 255); }
+            dx = dx + 1;
+        }
+        dy = dy + 1;
+    }
+}
+w0 duara(n32 cx, n32 cy, n32 r, n32 rangi) { duara_alfa(cx, cy, r, rangi, 255); }
+
+// pete: duara la nje kando ya ndani (unene t)
+w0 pete(n32 cx, n32 cy, n32 r, n32 t, n32 rangi, n32 alfa) {
+    n32 dy = 0 - r - 1;
+    wakati (dy <= r) {
+        n32 dx = 0 - r - 1;
+        wakati (dx <= r) {
+            n32 a = alfa_ya_duara(dx, dy, r) - alfa_ya_duara(dx, dy, r - t);
+            kama (a > 0) { pikseli_alfa(cx + dx, cy + dy, rangi, a * alfa / 255); }
+            dx = dx + 1;
+        }
+        dy = dy + 1;
+    }
+}
+
+// mstatili wa pembe za mviringo (nusu-kipenyo p), laini kwenye pembe
+w0 mviringo_alfa(n32 x, n32 y, n32 u, n32 h, n32 p, n32 rangi, n32 alfa) {
+    kama (u <= 0 || h <= 0) { rudisha; }
+    kama (p * 2 > u) { p = u / 2; }
+    kama (p * 2 > h) { p = h / 2; }
+    kama (alfa >= 255) {
+        mstatili(x + p, y, u - 2 * p, h, rangi);
+        mstatili(x, y + p, p, h - 2 * p, rangi);
+        mstatili(x + u - p, y + p, p, h - 2 * p, rangi);
+    } sivyo {
+        mstatili_alfa(x + p, y, u - 2 * p, h, rangi, alfa);
+        mstatili_alfa(x, y + p, p, h - 2 * p, rangi, alfa);
+        mstatili_alfa(x + u - p, y + p, p, h - 2 * p, rangi, alfa);
+    }
+    // pembe nne: robo-duara kila moja
+    n32 j = 0;
+    wakati (j < p) {
+        n32 i = 0;
+        wakati (i < p) {
+            n32 a = alfa_ya_duara(i - p, j - p, p) * alfa / 255;
+            kama (a > 0) {
+                pikseli_alfa(x + i, y + j, rangi, a);
+                pikseli_alfa(x + u - 1 - i, y + j, rangi, a);
+                pikseli_alfa(x + i, y + h - 1 - j, rangi, a);
+                pikseli_alfa(x + u - 1 - i, y + h - 1 - j, rangi, a);
+            }
+            i = i + 1;
+        }
+        j = j + 1;
+    }
+}
+w0 mviringo(n32 x, n32 y, n32 u, n32 h, n32 p, n32 rangi) { mviringo_alfa(x, y, u, h, p, rangi, 255); }
+
+// ---------------------------------------------------------------- namba kama maandishi
+n8 chombo_cha_namba[16];
+n8* namba_kama_maandishi(n32 n) {
+    n32 i = 15;
+    chombo_cha_namba[i] = 0;
+    kama (n == 0) { i = i - 1; chombo_cha_namba[i] = 48; }
+    wakati (n > 0) { i = i - 1; chombo_cha_namba[i] = 48 + n % 10; n = n / 10; }
+    rudisha chombo_cha_namba + i;
+}
+
+// ---------------------------------------------------------------- mistari
+// mzizi wa mraba wa namba kamili (Newton)
+n64 mzizi(n64 n) {
+    kama (n <= 0) { rudisha 0; }
+    n64 x = n;
+    n64 y = (x + 1) / 2;
+    wakati (y < x) { x = y; y = (x + n / x) / 2; }
+    rudisha x;
+}
+
+// mstari laini wenye ncha za mviringo (unene kwa pikseli): kila pikseli ya
+// mstatili unaouzunguka hupimwa umbali wake hadi kipande cha mstari, kwa
+// 1/16 ya pikseli, na kingo hulainishwa ndani ya pikseli moja -- aikoni za
+// mistari
+w0 mstari_laini(n32 x0, n32 y0, n32 x1, n32 y1, n32 unene, n32 rangi) {
+    n64 nusu = unene * 8;
+    n32 pembeni = unene / 2 + 2;
+    n32 xa = x0; kama (x1 < xa) { xa = x1; }
+    n32 xb = x0; kama (x1 > xb) { xb = x1; }
+    n32 ya = y0; kama (y1 < ya) { ya = y1; }
+    n32 yb = y0; kama (y1 > yb) { yb = y1; }
+    n64 dx = (x1 - x0) * 16;
+    n64 dy = (y1 - y0) * 16;
+    n64 l2 = dx * dx + dy * dy;
+    n32 py = ya - pembeni;
+    wakati (py <= yb + pembeni) {
+        n32 px = xa - pembeni;
+        wakati (px <= xb + pembeni) {
+            n64 qx = px * 16 + 8 - x0 * 16 - 8;
+            n64 qy = py * 16 + 8 - y0 * 16 - 8;
+            n64 t = 0;
+            kama (l2 > 0) { t = (qx * dx + qy * dy) * 1024 / l2; }
+            kama (t < 0) { t = 0; }
+            kama (t > 1024) { t = 1024; }
+            n64 ex = qx - dx * t / 1024;
+            n64 ey = qy - dy * t / 1024;
+            n64 d = mzizi(ex * ex + ey * ey);
+            n64 a = (nusu + 8 - d) * 255 / 16;
+            kama (a > 255) { a = 255; }
+            kama (a > 0) { pikseli_alfa(px, py, rangi, a); }
+            px = px + 1;
+        }
+        py = py + 1;
+    }
+}
+
+// ---------------------------------------------------------------- kete na pauni
+// rangi hizi hufuata mandhari (angavu/giza) -- huwekwa na andaa_mandhari
+n32 RANGI_YA_KETE = 0;
+n32 RANGI_YA_KETE_UKINGO = 0;
+n32 RANGI_YA_KETE_ZIMA = 0;
+n32 RANGI_YA_NUKTA = 0;
+n32 RANGI_YA_UKINGO_WA_PAUNI = 0;
+
+// kete: mraba bapa wenye pembe za mviringo na ukingo mwembamba; nukta za mviringo
+w0 chora_kete(n32 x, n32 y, n32 u, n32 thamani, n32 hai) {
+    n32 p = u * 22 / 100;
+    n32 mwili = RANGI_YA_KETE;
+    kama (hai == 0) { mwili = RANGI_YA_KETE_ZIMA; }
+    mviringo(x, y, u, u, p, RANGI_YA_KETE_UKINGO);
+    mviringo(x + 1, y + 1, u - 2, u - 2, p - 1, mwili);
+    n32 d = u * 26 / 100;
+    n32 r = u * 9 / 100;
+    n32 cx = x + u / 2;
+    n32 cy = y + u / 2;
+    kama (thamani % 2 == 1) { duara(cx, cy, r, RANGI_YA_NUKTA); }
+    kama (thamani >= 2) { duara(cx - d, cy - d, r, RANGI_YA_NUKTA); duara(cx + d, cy + d, r, RANGI_YA_NUKTA); }
+    kama (thamani >= 4) { duara(cx + d, cy - d, r, RANGI_YA_NUKTA); duara(cx - d, cy + d, r, RANGI_YA_NUKTA); }
+    kama (thamani == 6) { duara(cx - d, cy, r, RANGI_YA_NUKTA); duara(cx + d, cy, r, RANGI_YA_NUKTA); }
+}
+
+// pauni: diski bapa ya rangi yenye pete ya kutenganisha na kivuli laini chini
+w0 chora_pauni(n32 cx, n32 cy, n32 r, n32 rangi) {
+    duara_alfa(cx, cy + r / 5, r, rgb(0, 0, 0), 55);
+    duara(cx, cy, r, RANGI_YA_UKINGO_WA_PAUNI);
+    n32 ukingo = r / 6;
+    kama (ukingo < 2) { ukingo = 2; }
+    duara(cx, cy, r - ukingo, rangi);
+}

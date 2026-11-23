@@ -1,0 +1,74 @@
+husisha { maktaba/kumbukumbu.swa }
+husisha { maktaba/mfuatano.swa }
+husisha { msimbo/fonti.swa }
+
+// fonti_jaribio.swa -- huchora maandishi kwa fonti.swa kwenye picha (PPM) ili
+// kuikagua kwa macho kwenye kompyuta ya mezani:
+//   bin/swa --programu majaribio/fonti_jaribio.swa > fj && ./fj assets/fonti/ReadexPro-Medium.ttf picha.ppm
+
+n32* pikseli = 0;
+n32 hatua_ya_mstari = 0;
+n32 upana_wa_skrini = 0;
+n32 urefu_wa_skrini = 0;
+
+n32 rgb(n32 r, n32 g, n32 b) { rudisha (255 << 24) | (b << 16) | (g << 8) | r; }
+n32 changanya(n32 chini, n32 juu, n32 alfa) {
+    n32 b = 255 - alfa;
+    n32 r = ((juu & 255) * alfa + (chini & 255) * b) / 255;
+    n32 g = (((juu >> 8) & 255) * alfa + ((chini >> 8) & 255) * b) / 255;
+    n32 bl = (((juu >> 16) & 255) * alfa + ((chini >> 16) & 255) * b) / 255;
+    rudisha rgb(r, g, bl);
+}
+
+n8* soma_faili_lote(n8* njia) {
+    n64 fd = wito_wa_mfumo(2, njia, 0, 0, 0, 0, 0);
+    kama (fd < 0) { rudisha 0; }
+    n8* p = tenga(1048576);
+    n64 n = wito_wa_mfumo(0, fd, p, 1048576, 0, 0, 0);
+    wito_wa_mfumo(3, fd, 0, 0, 0, 0, 0);
+    kama (n <= 0) { rudisha 0; }
+    rudisha p;
+}
+
+n32 anza(n32 idadi, n8** hoja) {
+    kama (idadi < 3) { andika("matumizi: fj fonti.ttf picha.ppm\n"); rudisha 1; }
+    n8* data = soma_faili_lote(hoja[1]);
+    kama (data == 0 || fonti_pakia(0, data) == 0) { andika("fonti haikusomeka\n"); rudisha 1; }
+    andaa_fonti();
+    upana_wa_skrini = 720;
+    urefu_wa_skrini = 400;
+    hatua_ya_mstari = 720;
+    n8* bafa = tenga(720 * 400 * 4);
+    pikseli = bafa;
+    n32 i = 0;
+    wakati (i < 720 * 400) { pikseli[i] = rgb(21, 23, 30); i = i + 1; }
+    n32 nyeupe = rgb(238, 238, 242);
+    andika_fonti("Pachisi", 30, 80, 0, 64, nyeupe);
+    andika_fonti("Zamu yako  Your turn  Rusha kete", 30, 140, 0, 30, rgb(245, 191, 66));
+    andika_fonti("Gusa kete kurusha. Pauni mbili huziba njia!", 30, 190, 0, 22, nyeupe);
+    andika_fonti("0123456789 +20 +10  Kajara Studio", 30, 235, 0, 18, rgb(146, 151, 168));
+    andika_fonti("Ag gy Qq @#&% (dhidi ya kompyuta)", 30, 280, 0, 16, nyeupe);
+    andika_fonti("12 13 14 15 16", 30, 315, 0, 11, nyeupe);
+    andika_katikati("Katikati", 360, 365, 0, 26, nyeupe);
+    // PPM
+    n64 fd = wito_wa_mfumo(2, hoja[2], 577, 420, 0, 0, 0);
+    n8* kichwa = "P6\n720 400\n255\n";
+    wito_wa_mfumo(1, fd, kichwa, urefu_wa_mfuatano(kichwa), 0, 0, 0);
+    n8* mstari = tenga(720 * 3);
+    n32 y = 0;
+    wakati (y < 400) {
+        n32 x = 0;
+        wakati (x < 720) {
+            n32 v = pikseli[y * 720 + x];
+            mstari[x * 3] = v & 255;
+            mstari[x * 3 + 1] = (v >> 8) & 255;
+            mstari[x * 3 + 2] = (v >> 16) & 255;
+            x = x + 1;
+        }
+        wito_wa_mfumo(1, fd, mstari, 720 * 3, 0, 0, 0);
+        y = y + 1;
+    }
+    wito_wa_mfumo(3, fd, 0, 0, 0, 0, 0);
+    andika("herufi zilizohifadhiwa: baiti %d\n", ghala_wapi);
+    rudisha 0;
+}

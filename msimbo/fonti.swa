@@ -1,0 +1,487 @@
+// fonti.swa -- kuchora maandishi kwa fonti ya TrueType (faili .ttf), kwa Swa.
+//
+// Husoma majedwali ya fonti: head, hhea, maxp, hmtx, cmap (muundo 4), loca na
+// glyf (maumbo rahisi na ya mchanganyiko). Mikunjo ya pili (quadratic) hugawanywa
+// kuwa mistari; kila mstari wa pikseli hupimwa kwa mistari-ndogo 4, na urefu wa
+// kila sehemu iliyojazwa ndani ya pikseli huhesabiwa kwa 1/64 ya pikseli -- kingo
+// laini bila desimali. Kila herufi huchorwa mara moja kwa kila ukubwa na
+// kuhifadhiwa (alfa ya baiti moja kwa pikseli).
+//
+// Kipimo cha ndani: 1/64 ya pikseli (26.6). Fonti hutumia Y juu; michoro Y chini.
+
+n32 FONTI_UPEO = 4;
+n8* fonti_data[4];
+n32 fonti_upem[4];
+n32 fonti_loca_ndefu[4];
+n32 fonti_idadi_ya_herufi[4];
+n32 fonti_juu[4];               // ascender (vipimo vya fonti)
+n32 fonti_chini[4];             // descender (hasi)
+n32 fonti_hmetrics[4];
+n32 fonti_cmap[4];
+n32 fonti_loca[4];
+n32 fonti_glyf[4];
+n32 fonti_hmtx[4];
+
+n32 bu16(n8* p, n32 o) { rudisha ((p[o] & 255) << 8) | (p[o + 1] & 255); }
+n32 bi16(n8* p, n32 o) { n32 v = bu16(p, o); kama (v >= 32768) { v = v - 65536; } rudisha v; }
+n32 bu32(n8* p, n32 o) { rudisha ((p[o] & 255) << 24) | ((p[o + 1] & 255) << 16) | ((p[o + 2] & 255) << 8) | (p[o + 3] & 255); }
+
+n32 jedwali(n8* p, n8* jina) {
+    n32 n = bu16(p, 4);
+    n32 i = 0;
+    wakati (i < n) {
+        n32 r = 12 + 16 * i;
+        kama (p[r] == jina[0] && p[r + 1] == jina[1] && p[r + 2] == jina[2] && p[r + 3] == jina[3]) { rudisha bu32(p, r + 8); }
+        i = i + 1;
+    }
+    rudisha -1;
+}
+
+// pakia fonti kutoka kwenye kumbukumbu; rudisha 1 ikifaulu
+n32 fonti_pakia(n32 f, n8* p) {
+    fonti_data[f] = p;
+    n32 head = jedwali(p, "head");
+    n32 hhea = jedwali(p, "hhea");
+    n32 maxp = jedwali(p, "maxp");
+    n32 cmap = jedwali(p, "cmap");
+    fonti_loca[f] = jedwali(p, "loca");
+    fonti_glyf[f] = jedwali(p, "glyf");
+    fonti_hmtx[f] = jedwali(p, "hmtx");
+    kama (head < 0 || hhea < 0 || maxp < 0 || cmap < 0 || fonti_loca[f] < 0 || fonti_glyf[f] < 0 || fonti_hmtx[f] < 0) { rudisha 0; }
+    fonti_upem[f] = bu16(p, head + 18);
+    fonti_loca_ndefu[f] = bi16(p, head + 50);
+    fonti_idadi_ya_herufi[f] = bu16(p, maxp + 4);
+    fonti_juu[f] = bi16(p, hhea + 4);
+    fonti_chini[f] = bi16(p, hhea + 6);
+    fonti_hmetrics[f] = bu16(p, hhea + 34);
+    // jedwali dogo la cmap: Windows Unicode BMP (3, 1) muundo 4
+    fonti_cmap[f] = -1;
+    n32 n = bu16(p, cmap + 2);
+    n32 i = 0;
+    wakati (i < n) {
+        n32 r = cmap + 4 + 8 * i;
+        kama (bu16(p, r) == 3 && bu16(p, r + 2) == 1) {
+            n32 o = cmap + bu32(p, r + 4);
+            kama (bu16(p, o) == 4) { fonti_cmap[f] = o; }
+        }
+        i = i + 1;
+    }
+    rudisha fonti_cmap[f] >= 0;
+}
+
+n32 faharisi_ya_herufi(n32 f, n32 c) {
+    n8* p = fonti_data[f];
+    n32 o = fonti_cmap[f];
+    n32 sehemu = bu16(p, o + 6) / 2;
+    n32 mwisho = o + 14;
+    n32 mwanzo = mwisho + sehemu * 2 + 2;
+    n32 delta = mwanzo + sehemu * 2;
+    n32 masafa = delta + sehemu * 2;
+    n32 i = 0;
+    wakati (i < sehemu) {
+        kama (c <= bu16(p, mwisho + 2 * i)) {
+            n32 a = bu16(p, mwanzo + 2 * i);
+            kama (c < a) { rudisha 0; }
+            n32 d = bu16(p, delta + 2 * i);
+            n32 r = bu16(p, masafa + 2 * i);
+            kama (r == 0) { rudisha (c + d) & 65535; }
+            n32 g = bu16(p, masafa + 2 * i + r + 2 * (c - a));
+            kama (g == 0) { rudisha 0; }
+            rudisha (g + d) & 65535;
+        }
+        i = i + 1;
+    }
+    rudisha 0;
+}
+
+n32 upana_wa_herufi_fu(n32 f, n32 g) {
+    n32 i = g;
+    kama (i >= fonti_hmetrics[f]) { i = fonti_hmetrics[f] - 1; }
+    rudisha bu16(fonti_data[f], fonti_hmtx[f] + 4 * i);
+}
+
+n32 mahali_pa_glyf(n32 f, n32 g) {
+    n8* p = fonti_data[f];
+    kama (fonti_loca_ndefu[f]) { rudisha bu32(p, fonti_loca[f] + 4 * g); }
+    rudisha bu16(p, fonti_loca[f] + 2 * g) * 2;
+}
+
+// ---------------------------------------------------------------- muhtasari wa herufi
+n32 nukta_x[2048];
+n32 nukta_y[2048];
+n8 nukta_kwenye[2048];
+n32 nukta_n = 0;
+n32 mwisho_wa_kontua[256];
+n32 kontua_n = 0;
+
+w0 soma_muhtasari(n32 f, n32 g, n32 dx, n32 dy, n32 kina) {
+    kama (kina > 4) { rudisha; }
+    n8* p = fonti_data[f];
+    n32 o = fonti_glyf[f] + mahali_pa_glyf(f, g);
+    kama (mahali_pa_glyf(f, g + 1) == mahali_pa_glyf(f, g)) { rudisha; }      // herufi tupu (nafasi)
+    n32 kontua = bi16(p, o);
+    kama (kontua < 0) {
+        // mchanganyiko: vipande vyenye umbali (x, y)
+        n32 q = o + 10;
+        n32 zaidi = 1;
+        wakati (zaidi) {
+            n32 bendera = bu16(p, q);
+            n32 kipande = bu16(p, q + 2);
+            q = q + 4;
+            n32 ax = 0;
+            n32 ay = 0;
+            kama (bendera & 1) { ax = bi16(p, q); ay = bi16(p, q + 2); q = q + 4; }
+            sivyo {
+                ax = p[q]; ay = p[q + 1];
+                kama (ax > 127) { ax = ax - 256; }
+                kama (ay > 127) { ay = ay - 256; }
+                q = q + 2;
+            }
+            kama (bendera & 8) { q = q + 2; }
+            kama (bendera & 64) { q = q + 4; }
+            kama (bendera & 128) { q = q + 8; }
+            soma_muhtasari(f, kipande, dx + ax, dy + ay, kina + 1);
+            zaidi = bendera & 32;
+        }
+        rudisha;
+    }
+    n32 mwanzo_wa_nukta = nukta_n;
+    n32 i = 0;
+    n32 mwisho = 0;
+    wakati (i < kontua) {
+        mwisho = bu16(p, o + 10 + 2 * i);
+        kama (kontua_n < 256) { mwisho_wa_kontua[kontua_n] = mwanzo_wa_nukta + mwisho; kontua_n = kontua_n + 1; }
+        i = i + 1;
+    }
+    n32 idadi = mwisho + 1;
+    kama (mwanzo_wa_nukta + idadi > 2048) { rudisha; }
+    n32 q = o + 10 + 2 * kontua;
+    q = q + 2 + bu16(p, q);                       // ruka maagizo
+    // bendera
+    n8 bendera_za_nukta[2048];
+    i = 0;
+    wakati (i < idadi) {
+        n32 b = p[q] & 255;
+        q = q + 1;
+        bendera_za_nukta[i] = b;
+        i = i + 1;
+        kama (b & 8) {
+            n32 rudia = p[q] & 255;
+            q = q + 1;
+            wakati (rudia > 0 && i < idadi) { bendera_za_nukta[i] = b; i = i + 1; rudia = rudia - 1; }
+        }
+    }
+    // x
+    n32 x = 0;
+    i = 0;
+    wakati (i < idadi) {
+        n32 b = bendera_za_nukta[i] & 255;
+        kama (b & 2) { n32 d = p[q] & 255; q = q + 1; kama (b & 16) { x = x + d; } sivyo { x = x - d; } }
+        sivyo { kama ((b & 16) == 0) { x = x + bi16(p, q); q = q + 2; } }
+        nukta_x[mwanzo_wa_nukta + i] = x + dx;
+        nukta_kwenye[mwanzo_wa_nukta + i] = b & 1;
+        i = i + 1;
+    }
+    n32 y = 0;
+    i = 0;
+    wakati (i < idadi) {
+        n32 b = bendera_za_nukta[i] & 255;
+        kama (b & 4) { n32 d = p[q] & 255; q = q + 1; kama (b & 32) { y = y + d; } sivyo { y = y - d; } }
+        sivyo { kama ((b & 32) == 0) { y = y + bi16(p, q); q = q + 2; } }
+        nukta_y[mwanzo_wa_nukta + i] = y + dy;
+        i = i + 1;
+    }
+    nukta_n = mwanzo_wa_nukta + idadi;
+}
+
+// ---------------------------------------------------------------- kingo na kujaza
+n32 kingo_x0[4096];
+n32 kingo_y0[4096];
+n32 kingo_x1[4096];
+n32 kingo_y1[4096];
+n32 kingo_mwelekeo[4096];
+n32 kingo_n = 0;
+
+w0 ongeza_ukingo(n32 x0, n32 y0, n32 x1, n32 y1) {
+    kama (y0 == y1 || kingo_n >= 4096) { rudisha; }
+    kama (y0 < y1) { kingo_x0[kingo_n] = x0; kingo_y0[kingo_n] = y0; kingo_x1[kingo_n] = x1; kingo_y1[kingo_n] = y1; kingo_mwelekeo[kingo_n] = 1; }
+    sivyo { kingo_x0[kingo_n] = x1; kingo_y0[kingo_n] = y1; kingo_x1[kingo_n] = x0; kingo_y1[kingo_n] = y0; kingo_mwelekeo[kingo_n] = -1; }
+    kingo_n = kingo_n + 1;
+}
+
+// mkunjo wa pili kutoka (x0,y0) kupitia (cx,cy) hadi (x1,y1), vipande n
+w0 ongeza_mkunjo(n32 x0, n32 y0, n32 cx, n32 cy, n32 x1, n32 y1) {
+    n32 n = 6;
+    n32 px = x0;
+    n32 py = y0;
+    n32 i = 1;
+    wakati (i <= n) {
+        n32 a = n - i;
+        n32 x = (a * a * x0 + 2 * a * i * cx + i * i * x1) / (n * n);
+        n32 y = (a * a * y0 + 2 * a * i * cy + i * i * y1) / (n * n);
+        ongeza_ukingo(px, py, x, y);
+        px = x;
+        py = y;
+        i = i + 1;
+    }
+}
+
+// kipimo cha pikseli kwa 26.6: fu * ukubwa * 64 / upem
+n32 ukubwa_wa_sasa = 16;
+n32 upem_wa_sasa = 1000;
+n32 asili_x = 0;
+n32 asili_y = 0;
+n32 kwa_x(n32 fx) { n64 v = fx; rudisha v * ukubwa_wa_sasa * 64 / upem_wa_sasa - asili_x; }
+n32 kwa_y(n32 fy) { n64 v = fy; rudisha asili_y - v * ukubwa_wa_sasa * 64 / upem_wa_sasa; }
+
+w0 jenga_kingo() {
+    kingo_n = 0;
+    n32 mwanzo = 0;
+    n32 c = 0;
+    wakati (c < kontua_n) {
+        n32 mwisho = mwisho_wa_kontua[c];
+        n32 n = mwisho - mwanzo + 1;
+        kama (n >= 2) {
+            // anza kwenye nukta iliyo kwenye mstari (au katikati ya mbili zisizo)
+            n32 sx = 0;
+            n32 sy = 0;
+            n32 anza_i = 0;
+            kama (nukta_kwenye[mwanzo]) { sx = kwa_x(nukta_x[mwanzo]); sy = kwa_y(nukta_y[mwanzo]); anza_i = 1; }
+            sivyo {
+                kama (nukta_kwenye[mwisho]) { sx = kwa_x(nukta_x[mwisho]); sy = kwa_y(nukta_y[mwisho]); }
+                sivyo { sx = (kwa_x(nukta_x[mwanzo]) + kwa_x(nukta_x[mwisho])) / 2; sy = (kwa_y(nukta_y[mwanzo]) + kwa_y(nukta_y[mwisho])) / 2; }
+            }
+            n32 px = sx;
+            n32 py = sy;
+            n32 kudhibiti = 0;
+            n32 cx = 0;
+            n32 cy = 0;
+            n32 k = 0;
+            wakati (k < n) {
+                n32 i = mwanzo + (anza_i + k) % n;
+                n32 x = kwa_x(nukta_x[i]);
+                n32 y = kwa_y(nukta_y[i]);
+                kama (nukta_kwenye[i]) {
+                    kama (kudhibiti) { ongeza_mkunjo(px, py, cx, cy, x, y); kudhibiti = 0; }
+                    sivyo { ongeza_ukingo(px, py, x, y); }
+                    px = x; py = y;
+                } sivyo {
+                    kama (kudhibiti) {
+                        n32 mx = (cx + x) / 2;
+                        n32 my = (cy + y) / 2;
+                        ongeza_mkunjo(px, py, cx, cy, mx, my);
+                        px = mx; py = my;
+                    }
+                    cx = x; cy = y;
+                    kudhibiti = 1;
+                }
+                k = k + 1;
+            }
+            kama (kudhibiti) { ongeza_mkunjo(px, py, cx, cy, sx, sy); } sivyo { ongeza_ukingo(px, py, sx, sy); }
+        }
+        mwanzo = mwisho + 1;
+        c = c + 1;
+    }
+}
+
+// jaza kingo ndani ya bitmap ya alfa (u x h), kanuni ya kuzunguka isiyo sifuri
+n32 msalaba_x[512];
+n32 msalaba_m[512];
+n32 limbikizo[1024];
+
+w0 jaza_kingo(n8* alfa, n32 u, n32 h) {
+    n32 r = 0;
+    wakati (r < h) {
+        n32 i = 0;
+        wakati (i < u) { limbikizo[i] = 0; i = i + 1; }
+        n32 s = 0;
+        wakati (s < 4) {
+            n32 yy = r * 64 + 8 + s * 16;
+            n32 n = 0;
+            n32 e = 0;
+            wakati (e < kingo_n) {
+                kama (yy >= kingo_y0[e] && yy < kingo_y1[e] && n < 512) {
+                    n64 dx = kingo_x1[e] - kingo_x0[e];
+                    n32 x = kingo_x0[e] + dx * (yy - kingo_y0[e]) / (kingo_y1[e] - kingo_y0[e]);
+                    // ingiza kwa mpangilio (vipindi ni vichache)
+                    n32 j = n;
+                    wakati (j > 0 && msalaba_x[j - 1] > x) { msalaba_x[j] = msalaba_x[j - 1]; msalaba_m[j] = msalaba_m[j - 1]; j = j - 1; }
+                    msalaba_x[j] = x;
+                    msalaba_m[j] = kingo_mwelekeo[e];
+                    n = n + 1;
+                }
+                e = e + 1;
+            }
+            n32 zunguko = 0;
+            n32 j = 0;
+            wakati (j < n) {
+                n32 ilikuwa = zunguko;
+                zunguko = zunguko + msalaba_m[j];
+                kama (ilikuwa != 0 && j > 0) {
+                    n32 xa = msalaba_x[j - 1];
+                    n32 xb = msalaba_x[j];
+                    kama (xa < 0) { xa = 0; }
+                    kama (xb > u * 64) { xb = u * 64; }
+                    n32 px = xa / 64;
+                    wakati (px * 64 < xb && px < u) {
+                        n32 kushoto = px * 64;
+                        kama (xa > kushoto) { kushoto = xa; }
+                        n32 kulia = px * 64 + 64;
+                        kama (xb < kulia) { kulia = xb; }
+                        kama (kulia > kushoto) { limbikizo[px] = limbikizo[px] + kulia - kushoto; }
+                        px = px + 1;
+                    }
+                }
+                j = j + 1;
+            }
+            s = s + 1;
+        }
+        i = 0;
+        wakati (i < u) {
+            n32 a = limbikizo[i];
+            kama (a > 255) { a = 255; }
+            alfa[r * u + i] = a;
+            i = i + 1;
+        }
+        r = r + 1;
+    }
+}
+
+// ---------------------------------------------------------------- hifadhi ya herufi
+n32 VIPIMO_UPEO = 24;
+n32 kipimo_fonti[24];
+n32 kipimo_ukubwa[24];
+n32 vipimo_n = 0;
+n32 herufi_alfa[2304];            // 24 x 96: umbali ndani ya ghala (au -1)
+n32 herufi_u[2304];
+n32 herufi_h[2304];
+n32 herufi_bx[2304];
+n32 herufi_by[2304];
+n32 herufi_mbele[2304];           // upana wa kusonga (26.6)
+n8* ghala_la_herufi = 0;
+n32 ghala_wapi = 0;
+n32 GHALA_UKUBWA = 4194304;
+
+n32 kipimo_cha(n32 f, n32 ukubwa) {
+    n32 i = 0;
+    wakati (i < vipimo_n) { kama (kipimo_fonti[i] == f && kipimo_ukubwa[i] == ukubwa) { rudisha i; } i = i + 1; }
+    kama (vipimo_n >= VIPIMO_UPEO) { rudisha VIPIMO_UPEO - 1; }
+    kipimo_fonti[vipimo_n] = f;
+    kipimo_ukubwa[vipimo_n] = ukubwa;
+    n32 c = 0;
+    wakati (c < 96) { herufi_alfa[vipimo_n * 96 + c] = -2; c = c + 1; }
+    vipimo_n = vipimo_n + 1;
+    rudisha vipimo_n - 1;
+}
+
+// herufi c (32..127) kwa kipimo v: hutengenezwa mara ya kwanza
+n32 herufi_tayari(n32 v, n32 c) {
+    n32 k = v * 96 + c - 32;
+    kama (herufi_alfa[k] != -2) { rudisha k; }
+    n32 f = kipimo_fonti[v];
+    ukubwa_wa_sasa = kipimo_ukubwa[v];
+    upem_wa_sasa = fonti_upem[f];
+    n32 g = faharisi_ya_herufi(f, c);
+    n64 mbele = upana_wa_herufi_fu(f, g);
+    herufi_mbele[k] = mbele * ukubwa_wa_sasa * 64 / upem_wa_sasa;
+    herufi_alfa[k] = -1;
+    n8* p = fonti_data[f];
+    n32 o = fonti_glyf[f] + mahali_pa_glyf(f, g);
+    kama (g == 0 || mahali_pa_glyf(f, g + 1) == mahali_pa_glyf(f, g)) { rudisha k; }
+    n64 xmin = bi16(p, o + 2);
+    n64 ymin = bi16(p, o + 4);
+    n64 xmax = bi16(p, o + 6);
+    n64 ymax = bi16(p, o + 8);
+    n32 px0 = xmin * ukubwa_wa_sasa / upem_wa_sasa - 1;
+    n32 py1 = ymax * ukubwa_wa_sasa / upem_wa_sasa + 2;
+    n32 u = (xmax - xmin) * ukubwa_wa_sasa / upem_wa_sasa + 3;
+    n32 h = (ymax - ymin) * ukubwa_wa_sasa / upem_wa_sasa + 4;
+    kama (u > 1024 || h > 1024 || ghala_la_herufi == 0 || ghala_wapi + u * h > GHALA_UKUBWA) { rudisha k; }
+    asili_x = px0 * 64;
+    asili_y = py1 * 64;
+    nukta_n = 0;
+    kontua_n = 0;
+    soma_muhtasari(f, g, 0, 0, 0);
+    jenga_kingo();
+    jaza_kingo(ghala_la_herufi + ghala_wapi, u, h);
+    herufi_alfa[k] = ghala_wapi;
+    herufi_u[k] = u;
+    herufi_h[k] = h;
+    herufi_bx[k] = px0;
+    herufi_by[k] = py1;
+    ghala_wapi = ghala_wapi + u * h;
+    rudisha k;
+}
+
+n32 andaa_fonti() {
+    kama (ghala_la_herufi == 0) { ghala_la_herufi = tenga(GHALA_UKUBWA); }
+    rudisha ghala_la_herufi != 0;
+}
+
+// upana wa maandishi kwa pikseli
+n32 upana_wa(n8* s, n32 f, n32 ukubwa) {
+    n32 v = kipimo_cha(f, ukubwa);
+    n32 x = 0;
+    n32 i = 0;
+    wakati (s[i] != 0) {
+        n32 c = s[i] & 255;
+        kama (c >= 32 && c < 128) { x = x + herufi_mbele[herufi_tayari(v, c)]; }
+        i = i + 1;
+    }
+    rudisha (x + 32) / 64;
+}
+
+// urefu wa herufi kubwa (kwa kupanga katikati wima): ~ 0.7 ya ukubwa
+n32 urefu_wa_kubwa(n32 ukubwa) { rudisha ukubwa * 7 / 10; }
+
+n32 kizuizi_cha_rangi = 0;
+w0 andika_fonti(n8* s, n32 x, n32 y_msingi, n32 f, n32 ukubwa, n32 rangi) {
+    n32 v = kipimo_cha(f, ukubwa);
+    n32 kalamu = x * 64;
+    n32 i = 0;
+    wakati (s[i] != 0) {
+        n32 c = s[i] & 255;
+        kama (c >= 32 && c < 128) {
+            n32 k = herufi_tayari(v, c);
+            n32 a = herufi_alfa[k];
+            kama (a >= 0) {
+                n32 gx = (kalamu + 32) / 64 + herufi_bx[k];
+                n32 gy = y_msingi - herufi_by[k];
+                n32 u = herufi_u[k];
+                n32 h = herufi_h[k];
+                n32 r = 0;
+                wakati (r < h) {
+                    n32 yy = gy + r;
+                    kama (yy >= 0 && yy < urefu_wa_skrini) {
+                        n32 q = 0;
+                        wakati (q < u) {
+                            n32 al = ghala_la_herufi[a + r * u + q] & 255;
+                            kama (al > 0) {
+                                n32 xx = gx + q;
+                                kama (xx >= 0 && xx < upana_wa_skrini) {
+                                    n32 idx = yy * hatua_ya_mstari + xx;
+                                    kama (al >= 250) { pikseli[idx] = rangi; } sivyo { pikseli[idx] = changanya(pikseli[idx], rangi, al); }
+                                }
+                            }
+                            q = q + 1;
+                        }
+                    }
+                    r = r + 1;
+                }
+            }
+            kalamu = kalamu + herufi_mbele[k];
+        }
+        i = i + 1;
+    }
+}
+
+// maandishi katikati ya cx; y ni katikati wima ya herufi kubwa
+w0 andika_katikati(n8* s, n32 cx, n32 cy, n32 f, n32 ukubwa, n32 rangi) {
+    andika_fonti(s, cx - upana_wa(s, f, ukubwa) / 2, cy + urefu_wa_kubwa(ukubwa) / 2, f, ukubwa, rangi);
+}
+w0 andika_kushoto(n8* s, n32 x, n32 cy, n32 f, n32 ukubwa, n32 rangi) {
+    andika_fonti(s, x, cy + urefu_wa_kubwa(ukubwa) / 2, f, ukubwa, rangi);
+}
+w0 andika_kulia(n8* s, n32 x_kulia, n32 cy, n32 f, n32 ukubwa, n32 rangi) {
+    andika_fonti(s, x_kulia - upana_wa(s, f, ukubwa), cy + urefu_wa_kubwa(ukubwa) / 2, f, ukubwa, rangi);
+}

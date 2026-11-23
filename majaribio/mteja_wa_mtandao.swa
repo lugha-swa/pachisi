@@ -1,0 +1,158 @@
+husisha { maktaba/kumbukumbu.swa }
+husisha { maktaba/mfuatano.swa }
+husisha { msimbo/mantiki.swa }
+
+// mteja_wa_mtandao.swa -- mteja wa majaribio wa vyumba vya Wi-Fi, kwa
+// kompyuta ya mezani (bin/swa --programu). Husikiliza tangazo la chumba,
+// hujiunga, hudai kiti, kisha hucheza kwa kompyuta ya mantiki.swa kila zamu
+// yake inapofika. Huchapisha kila tukio; hutoka mchezo ukiisha.
+//   ./mteja                 -- hutafuta chumba kwa tangazo la UDP
+//   ./mteja 192.168.1.10    -- huunganisha moja kwa moja kwa anwani ya mwenyeji
+// Toleo la Android (kwa kujaribu tangazo kwenye simu yenyewe) hujengwa kwa
+// kubadilisha "libc.so.6" kuwa "libc.so" na kutumia bin/swa --android.
+
+nje "libc.so.6" {
+    n32 tundu_jipya(n32 familia, n32 aina, n32 itifaki) = "socket";
+    n32 tundu_funga_anwani(n32 tundu, n8* anwani, n32 urefu) = "bind";
+    n32 tundu_unganisha(n32 tundu, n8* anwani, n32 urefu) = "connect";
+    n64 tundu_tuma(n32 tundu, n8* data, n64 urefu, n32 bendera) = "send";
+    n64 tundu_pokea(n32 tundu, n8* data, n64 urefu, n32 bendera) = "recv";
+    n64 tundu_pokea_kutoka(n32 tundu, n8* data, n64 urefu, n32 bendera, n8* anwani, n8* urefu_a) = "recvfrom";
+    n32 tundu_chaguo(n32 tundu, n32 ngazi, n32 jina, n8* thamani, n32 urefu) = "setsockopt";
+    n32 lala_kidogo(n32 mikrosekunde) = "usleep";
+}
+
+n32 kete_nasibu() { rudisha 1; }
+
+n64 sasa_ms() {
+    n64 ts[2];
+    wito_wa_mfumo(228, 1, ts, 0, 0, 0, 0);
+    rudisha ts[0] * 1000 + ts[1] / 1000000;
+}
+
+n8 chombo[4096];
+n32 kiasi = 0;
+n32 tundu = -1;
+n32 kiti_changu = -1;
+n32 mchezo_umeanza = 0;
+
+w0 tuma_ombi(n32 aina, n32 a, n32 b) {
+    n8 o[20];
+    o[0] = aina; o[1] = a; o[2] = b; o[3] = 0;
+    n8* jina = "MEZANI";
+    n32 i = 0;
+    wakati (i < 16) { o[4 + i] = 0; i = i + 1; }
+    i = 0;
+    wakati (jina[i] != 0) { o[4 + i] = jina[i]; i = i + 1; }
+    tundu_tuma(tundu, o, 20, 16384);
+}
+
+n32 anza(n32 idadi, n8** hoja) {
+    n64 upeo_ms = 240000;
+    // 1. sikiliza tangazo
+    n32 u = tundu_jipya(2, 2, 0);
+    n32 moja[1];
+    moja[0] = 1;
+    tundu_chaguo(u, 1, 2, moja, 4);
+    n8 a[16];
+    n32 i = 0;
+    wakati (i < 16) { a[i] = 0; i = i + 1; }
+    a[0] = 2; a[2] = 185; a[3] = 114;                 // bandari 47474
+    kama (tundu_funga_anwani(u, a, 16) != 0) { andika("bind ya UDP imeshindwa\n"); rudisha 1; }
+    n8 t[64];
+    n8 kutoka[16];
+    n32 urefu_a[1];
+    urefu_a[0] = 16;
+    kama (idadi > 1) {
+        // anwani ya mwenyeji kutoka kwenye hoja: a.b.c.d
+        n8* s = hoja[1];
+        n32 sehemu = 0;
+        n32 thamani = 0;
+        i = 0;
+        wakati (i < 16) { kutoka[i] = 0; i = i + 1; }
+        kutoka[0] = 2;
+        i = 0;
+        wakati (1) {
+            n32 c = s[i];
+            kama (c == 46 || c == 0) {
+                kama (sehemu < 4) { kutoka[4 + sehemu] = thamani; }
+                sehemu = sehemu + 1;
+                thamani = 0;
+                kama (c == 0) { acha; }
+            } sivyo { thamani = thamani * 10 + c - 48; }
+            i = i + 1;
+        }
+        andika("tunaunganisha moja kwa moja na %s\n", s);
+    } sivyo {
+        andika("tunasikiliza tangazo la chumba...\n");
+        n64 n = tundu_pokea_kutoka(u, t, 64, 0, kutoka, urefu_a);
+        kama (n < 24 || t[0] != 80) { andika("tangazo baya\n"); rudisha 1; }
+        andika("chumba %c%c%c%c kutoka %d.%d.%d.%d, mwenyeji %s\n", t[4], t[5], t[6], t[7], kutoka[4] & 255, kutoka[5] & 255, kutoka[6] & 255, kutoka[7] & 255, t + 8);
+    }
+    // 2. unganisha TCP 47475
+    kutoka[2] = 185; kutoka[3] = 115;
+    tundu = tundu_jipya(2, 1, 0);
+    kama (tundu_unganisha(tundu, kutoka, 16) != 0) { andika("connect imeshindwa\n"); rudisha 1; }
+    tuma_ombi(4, 0, 0);
+    andika("tumejiunga; tunasubiri mwenyeji aanzishe mchezo\n");
+    // 3. pokea hali; cheza zamu zetu
+    n64 mwanzo = sasa_ms();
+    n64 ombi_la_mwisho = 0;
+    n32 hali_iliyotumwa = -1;
+    wakati (sasa_ms() - mwanzo < upeo_ms) {
+        n64 r = tundu_pokea(tundu, chombo + kiasi, 4096 - kiasi, 64);
+        kama (r == 0) { andika("mwenyeji ameondoka\n"); rudisha 1; }
+        kama (r > 0) { kiasi = kiasi + r; }
+        wakati (kiasi >= 384) {
+            n32* v = chombo;
+            n32 m = 0;
+            wakati (m < 4) { kiti_kipo[m] = v[1 + m]; ni_kompyuta[m] = v[5 + m]; m = m + 1; }
+            m = 0;
+            wakati (m < 16) { pauni[m] = v[17 + m]; m = m + 1; }
+            zamu = v[33]; kete[0] = v[34]; kete[1] = v[35];
+            m = 0;
+            wakati (m < 8) { hatua[m] = v[36 + m]; hatua_ni_kete[m] = v[44 + m]; m = m + 1; }
+            idadi_ya_hatua = v[52]; hali_ya_zamu = v[53]; mshindi = v[56];
+            SHERIA_KUINGIA = v[59]; SHERIA_ZAWADI_YA_KULA = v[60]; SHERIA_ZAWADI_YA_NYUMBANI = v[61];
+            SHERIA_VIZUIZI = v[62]; SHERIA_SALAMA = v[63]; SHERIA_PACHA_TATU = v[64]; PAUNI_KWA_MCHEZAJI = v[65];
+            n32 nafasi = v[66];
+            n32 kiti = -1;
+            m = 0;
+            wakati (m < 4) { kama (v[13 + m] == nafasi) { kiti = m; } m = m + 1; }
+            kama (kiti != kiti_changu) { kiti_changu = kiti; andika("kiti changu: %d\n", kiti); }
+            kama (v[67] && mchezo_umeanza == 0) { mchezo_umeanza = 1; andika("mchezo umeanza\n"); }
+            kama (mchezo_umeanza && mshindi >= 0) {
+                andika("mshindi: kiti %d%s\n", mshindi, kama_ni_mimi(mshindi));
+                rudisha 0;
+            }
+            nakili(chombo, chombo + 384, kiasi - 384);
+            kiasi = kiasi - 384;
+            hali_iliyotumwa = -1;
+        }
+        // zamu yetu: omba hatua; rudia baada ya ms 700 kama mwenyeji alikuwa anahuisha
+        kama (mchezo_umeanza && mshindi < 0 && zamu == kiti_changu && sasa_ms() - ombi_la_mwisho > 700) {
+            ombi_la_mwisho = sasa_ms();
+            kama (hali_ya_zamu == HALI_RUSHA) {
+                kama (hali_iliyotumwa != 1) { andika("zamu yangu: rusha\n"); }
+                hali_iliyotumwa = 1;
+                tuma_ombi(1, 0, 0);
+            }
+            kama (hali_ya_zamu == HALI_SOGEZA) {
+                chagua_hatua_ya_kompyuta();
+                kama (pauni_bora >= 0) {
+                    kama (hali_iliyotumwa != 2) { andika("zamu yangu: pauni %d kwa %d\n", pauni_bora, hatua[hatua_bora]); }
+                    hali_iliyotumwa = 2;
+                    tuma_ombi(2, pauni_bora, hatua_bora);
+                }
+            }
+        }
+        lala_kidogo(20000);
+    }
+    andika("muda umekwisha\n");
+    rudisha 2;
+}
+
+n8* kama_ni_mimi(n32 m) {
+    kama (m == kiti_changu) { rudisha " (mimi)"; }
+    rudisha "";
+}

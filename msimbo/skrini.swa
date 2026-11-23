@@ -1,0 +1,1853 @@
+// skrini.swa -- skrini zote, droo ya pembeni, mguso, uhuishaji, wasifu na rekodi.
+//
+// Mtiririko: Kajara Studio -> karibu (lugha) -> wasifu (mara ya kwanza) ->
+// nyumbani -> mpangilio / sheria / chumba cha Wi-Fi -> mchezo -> mshindi.
+// Muundo: upau unaoelea juu (droo, kichwa, kipaza sauti), droo inayoteleza
+// kutoka kushoto, vibao vya majina kwenye pembe ya kila mchezaji, kete
+// zinazoguswa kurusha, ujumbe unaoelea juu ya ubao, na karatasi ya mshindi
+// inayopanda kutoka chini. Fremu huombwa tu wakati kitu kinasonga.
+
+n64 sasa_nano();
+w0 omba_fremu_ijayo();
+w0 omba_tiki();
+w0 mtandao_tuma_hali();
+w0 mtandao_ombi(n32 aina, n32 a, n32 b);
+n32 mtandao_ni_mteja();
+n32 mtandao_ni_mwenyeji();
+w0 mtandao_funga();
+w0 mtandao_anza_mwenyeji();
+w0 mtandao_anza_kutafuta();
+w0 mtandao_jiunge(n32 chumba);
+w0 mtandao_dai_kiti(n32 kiti);
+w0 mtandao_kila_fremu();
+n32 mtandao_vyumba_idadi();
+n8* mtandao_jina_la_chumba(n32 i);
+n32 kiti_changu();
+n8* jina_la_kiti(n32 m);
+n32 mmiliki_wa_kiti(n32 m);
+n8 nambari_ya_chumba[8];
+n32 sauti_kipaza_kiko_wazi();
+w0 sauti_badili_kipaza();
+n32 sauti_anaongea(n32 kiti);
+
+n32 sasa_ms() { rudisha sasa_nano() / 1000000; }
+
+// fonti: 0 kawaida, 1 wastani, 2 nzito
+n32 F_KAWAIDA = 0;
+n32 F_WASTANI = 1;
+n32 F_NZITO = 2;
+n32 F_SERIF = 3;        // vichwa: Source Serif 4
+
+// ---------------------------------------------------------------- mandhari
+n32 R_MANDHARI = 0;
+n32 R_KADI = 0;
+n32 R_KADI_JUU = 0;
+n32 R_MAANDISHI = 0;
+n32 R_HAFIFU = 0;
+n32 R_DHAHABU = 0;
+n32 R_MSTARI = 0;
+n32 R_KIDOLE = 0;      // kidole cha kidhibiti cha sehemu
+n32 R_NJIA_YA_KIDOLE = 0;
+n32 R_DROO = 0;
+n32 R_DUARA = 0;       // duara la aikoni
+n32 R_KISHIKIO = 0;    // kishikio cha karatasi
+n32 R_SWICHI = 0;      // swichi iliyozimwa
+n32 R_DOKEZO = 0;      // maandishi ya dokezo
+n32 R_IKONI = 0;
+n32 R_KITUFE = 0;      // kitufe kikuu: cheupe gizani, cheusi mwangani
+n32 R_KITUFE_M = 0;
+n32 PALETI[8];
+n32 rangi_ya_kiti[4];
+
+w0 andaa_mandhari(n32 giza) {
+    kama (giza) {
+        R_MANDHARI = rgb(21, 21, 21);
+        R_DROO = rgb(17, 17, 17);
+        R_KADI = rgb(32, 32, 31);
+        R_KADI_JUU = rgb(49, 49, 49);
+        R_DUARA = rgb(55, 55, 54);
+        R_MSTARI = rgb(61, 60, 58);
+        R_KISHIKIO = rgb(52, 51, 50);
+        R_SWICHI = rgb(77, 77, 76);
+        R_NJIA_YA_KIDOLE = rgb(32, 32, 31);
+        R_KIDOLE = rgb(61, 60, 58);
+        R_MAANDISHI = rgb(240, 239, 236);
+        R_HAFIFU = rgb(195, 194, 183);
+        R_DOKEZO = rgb(151, 149, 141);
+        R_IKONI = rgb(195, 194, 183);
+        R_KITUFE = rgb(255, 255, 255);
+        R_KITUFE_M = rgb(11, 11, 11);
+        RANGI_YA_UBAO = rgb(32, 32, 31);
+        RANGI_YA_SELI = rgb(49, 49, 49);
+        RANGI_YA_NAMBA = rgb(140, 139, 133);
+        RANGI_YA_SALAMA = rgb(66, 66, 64);
+        RANGI_YA_KETE = rgb(240, 239, 236);
+        RANGI_YA_KETE_UKINGO = rgb(240, 239, 236);
+        RANGI_YA_KETE_ZIMA = rgb(120, 119, 115);
+        RANGI_YA_NUKTA = rgb(21, 21, 21);
+        RANGI_YA_UKINGO_WA_PAUNI = rgb(240, 239, 236);
+    } sivyo {
+        R_MANDHARI = rgb(249, 249, 247);
+        R_DROO = rgb(249, 249, 247);
+        R_KADI = rgb(255, 255, 255);
+        R_KADI_JUU = rgb(240, 239, 236);
+        R_DUARA = rgb(230, 230, 230);
+        R_MSTARI = rgb(220, 220, 220);
+        R_KISHIKIO = rgb(216, 216, 214);
+        R_SWICHI = rgb(210, 210, 207);
+        R_NJIA_YA_KIDOLE = rgb(240, 239, 236);
+        R_KIDOLE = rgb(255, 255, 255);
+        R_MAANDISHI = rgb(11, 11, 11);
+        R_HAFIFU = rgb(82, 81, 78);
+        R_DOKEZO = rgb(123, 121, 116);
+        R_IKONI = rgb(56, 56, 53);
+        R_KITUFE = rgb(11, 11, 11);
+        R_KITUFE_M = rgb(255, 255, 255);
+        RANGI_YA_UBAO = rgb(255, 255, 255);
+        RANGI_YA_SELI = rgb(240, 239, 236);
+        RANGI_YA_NAMBA = rgb(138, 136, 130);
+        RANGI_YA_SALAMA = rgb(222, 221, 216);
+        RANGI_YA_KETE = rgb(255, 255, 255);
+        RANGI_YA_KETE_UKINGO = rgb(220, 220, 220);
+        RANGI_YA_KETE_ZIMA = rgb(236, 235, 231);
+        RANGI_YA_NUKTA = rgb(11, 11, 11);
+        RANGI_YA_UKINGO_WA_PAUNI = rgb(255, 255, 255);
+    }
+    R_DHAHABU = rgb(217, 119, 87);
+    PALETI[0] = rgb(204, 98, 80);
+    PALETI[1] = rgb(88, 150, 110);
+    PALETI[2] = rgb(214, 168, 72);
+    PALETI[3] = rgb(84, 124, 196);
+    PALETI[4] = rgb(146, 108, 196);
+    PALETI[5] = rgb(217, 119, 87);
+    PALETI[6] = rgb(66, 150, 150);
+    PALETI[7] = rgb(204, 112, 150);
+}
+
+w0 andaa_rangi_za_viti() {
+    rangi_ya_kiti[0] = 0; rangi_ya_kiti[1] = 1; rangi_ya_kiti[2] = 2; rangi_ya_kiti[3] = 3;
+}
+
+n32 rangi_ya_mchezaji(n32 m) { rudisha PALETI[rangi_ya_kiti[m]]; }
+
+// mandhari: mteremko mwororo wa wima
+w0 chora_mandhari() {
+    mstatili(0, 0, upana_wa_skrini, urefu_wa_skrini, R_MANDHARI);
+}
+
+// ---------------------------------------------------------------- maandishi
+n32 lugha = 0;           // 0 Kiswahili, 1 English
+
+n8* t(n32 id) {
+    n32 e = lugha == 1;
+    kama (id == 1) { kama (e) { rudisha "A Kajara Studio game"; } rudisha "Mchezo kutoka Kajara Studio"; }
+    kama (id == 2) { kama (e) { rudisha "Choose your language"; } rudisha "Chagua lugha"; }
+    kama (id == 3) { kama (e) { rudisha "Continue"; } rudisha "Endelea"; }
+    kama (id == 4) { kama (e) { rudisha "Create your player"; } rudisha "Unda mchezaji wako"; }
+    kama (id == 5) { kama (e) { rudisha "Your name"; } rudisha "Jina lako"; }
+    kama (id == 6) { kama (e) { rudisha "Player ID"; } rudisha "Kitambulisho"; }
+    kama (id == 7) { kama (e) { rudisha "Save"; } rudisha "Hifadhi"; }
+    kama (id == 8) { kama (e) { rudisha "Hello,"; } rudisha "Habari,"; }
+    kama (id == 9) { kama (e) { rudisha "Play the computer"; } rudisha "Cheza na kompyuta"; }
+    kama (id == 10) { kama (e) { rudisha "Pass and play"; } rudisha "Wote kwenye simu hii"; }
+    kama (id == 11) { kama (e) { rudisha "Wi-Fi room"; } rudisha "Chumba cha Wi-Fi"; }
+    kama (id == 12) { kama (e) { rudisha "How to play"; } rudisha "Jinsi ya kucheza"; }
+    kama (id == 13) { kama (e) { rudisha "Records"; } rudisha "Rekodi"; }
+    kama (id == 14) { kama (e) { rudisha "Players"; } rudisha "Wachezaji"; }
+    kama (id == 15) { kama (e) { rudisha "House rules"; } rudisha "Sheria za nyumbani"; }
+    kama (id == 16) { kama (e) { rudisha "Start game"; } rudisha "Anza mchezo"; }
+    kama (id == 17) { kama (e) { rudisha "Back"; } rudisha "Rudi"; }
+    kama (id == 18) { kama (e) { rudisha "Tap a colour to change it"; } rudisha "Gusa rangi kuibadilisha"; }
+    kama (id == 19) { kama (e) { rudisha "You"; } rudisha "Wewe"; }
+    kama (id == 20) { kama (e) { rudisha "Computer"; } rudisha "Kompyuta"; }
+    kama (id == 21) { kama (e) { rudisha "Player"; } rudisha "Mchezaji"; }
+    kama (id == 22) { kama (e) { rudisha "Enter with"; } rudisha "Ingia kwa"; }
+    kama (id == 23) { kama (e) { rudisha "Capture bonus +20"; } rudisha "Zawadi ya kula +20"; }
+    kama (id == 24) { kama (e) { rudisha "Home bonus +10"; } rudisha "Zawadi ya nyumbani +10"; }
+    kama (id == 25) { kama (e) { rudisha "Blockades"; } rudisha "Vizuizi"; }
+    kama (id == 26) { kama (e) { rudisha "Safe squares"; } rudisha "Seli salama"; }
+    kama (id == 27) { kama (e) { rudisha "Three doubles penalty"; } rudisha "Adhabu ya pacha tatu"; }
+    kama (id == 28) { kama (e) { rudisha "Pawns each"; } rudisha "Pauni kwa kila mmoja"; }
+    kama (id == 29) { kama (e) { rudisha "Done"; } rudisha "Tayari"; }
+    kama (id == 30) { kama (e) { rudisha "Tap the dice to roll"; } rudisha "Gusa kete kurusha"; }
+    kama (id == 31) { kama (e) { rudisha "Your turn"; } rudisha "Zamu yako"; }
+    kama (id == 32) { kama (e) { rudisha "Tap a glowing pawn"; } rudisha "Gusa pauni inayong'aa"; }
+    kama (id == 33) { kama (e) { rudisha "No legal moves"; } rudisha "Hakuna hatua halali"; }
+    kama (id == 34) { kama (e) { rudisha "Doubles! Roll again"; } rudisha "Pacha! Rusha tena"; }
+    kama (id == 35) { kama (e) { rudisha "Third doubles: pawn sent back"; } rudisha "Pacha tatu: pauni imerudi"; }
+    kama (id == 36) { kama (e) { rudisha "Captured!"; } rudisha "Imeliwa!"; }
+    kama (id == 37) { kama (e) { rudisha "Pawn home!"; } rudisha "Imefika nyumbani!"; }
+    kama (id == 38) { kama (e) { rudisha "wins!"; } rudisha "ameshinda!"; }
+    kama (id == 39) { kama (e) { rudisha "Play again"; } rudisha "Cheza tena"; }
+    kama (id == 40) { kama (e) { rudisha "Home"; } rudisha "Nyumbani"; }
+    kama (id == 41) { kama (e) { rudisha "Resume game"; } rudisha "Endelea na mchezo"; }
+    kama (id == 42) { kama (e) { rudisha "Restart game"; } rudisha "Anza upya"; }
+    kama (id == 43) { kama (e) { rudisha "is playing"; } rudisha "anacheza"; }
+    kama (id == 44) { kama (e) { rudisha "Games"; } rudisha "Michezo"; }
+    kama (id == 45) { kama (e) { rudisha "Wins"; } rudisha "Ushindi"; }
+    kama (id == 46) { kama (e) { rudisha "Captures"; } rudisha "Uliola"; }
+    kama (id == 47) { kama (e) { rudisha "Pawns home"; } rudisha "Pauni nyumbani"; }
+    kama (id == 48) { kama (e) { rudisha "Host a room"; } rudisha "Fungua chumba"; }
+    kama (id == 49) { kama (e) { rudisha "Rooms nearby"; } rudisha "Vyumba vilivyo karibu"; }
+    kama (id == 50) { kama (e) { rudisha "Looking for rooms on this Wi-Fi"; } rudisha "Tunatafuta vyumba kwenye Wi-Fi hii"; }
+    kama (id == 51) { kama (e) { rudisha "Room"; } rudisha "Chumba"; }
+    kama (id == 52) { kama (e) { rudisha "Tap an open seat to take it"; } rudisha "Gusa kiti kilicho wazi kukichukua"; }
+    kama (id == 53) { kama (e) { rudisha "Open seat"; } rudisha "Kiti kiko wazi"; }
+    kama (id == 54) { kama (e) { rudisha "Waiting for the host to start"; } rudisha "Tunamsubiri mwenyeji aanze"; }
+    kama (id == 55) { kama (e) { rudisha "Everyone on the same Wi-Fi"; } rudisha "Wote kwenye Wi-Fi moja"; }
+    kama (id == 58) { kama (e) { rudisha "Language"; } rudisha "Lugha"; }
+    kama (id == 59) { kama (e) { rudisha "Open seats are played by the computer"; } rudisha "Viti wazi huchezwa na kompyuta"; }
+    kama (id == 60) { kama (e) { rudisha "Roll two dice each turn"; } rudisha "Rusha kete mbili kila zamu"; }
+    kama (id == 61) { kama (e) { rudisha "The entry number brings a pawn out"; } rudisha "Namba ya kuingia hutoa pauni"; }
+    kama (id == 62) { kama (e) { rudisha "Each die moves one pawn"; } rudisha "Kila kete husogeza pauni moja"; }
+    kama (id == 63) { kama (e) { rudisha "Land on a pawn to capture it"; } rudisha "Tua juu ya pauni kuila"; }
+    kama (id == 64) { kama (e) { rudisha "Two pawns together block the road"; } rudisha "Pauni mbili pamoja huziba njia"; }
+    kama (id == 65) { kama (e) { rudisha "Shaded squares are safe"; } rudisha "Seli zenye kivuli ni salama"; }
+    kama (id == 66) { kama (e) { rudisha "Doubles give another roll"; } rudisha "Pacha hukupa zamu nyingine"; }
+    kama (id == 67) { kama (e) { rudisha "Bring every pawn home to win"; } rudisha "Fikisha pauni zote nyumbani"; }
+    kama (id == 68) { kama (e) { rudisha "About Kajara Studio"; } rudisha "Kuhusu Kajara Studio"; }
+    kama (id == 69) { kama (e) { rudisha "Pachisi by Kajara Studio, written in Swa"; } rudisha "Pachisi ya Kajara Studio, imeandikwa kwa Swa"; }
+    kama (id == 70) { kama (e) { rudisha "New game"; } rudisha "Mchezo mpya"; }
+    kama (id == 71) { kama (e) { rudisha "You against up to three computers"; } rudisha "Wewe dhidi ya kompyuta hadi tatu"; }
+    kama (id == 72) { kama (e) { rudisha "Friends share one phone"; } rudisha "Marafiki kwenye simu moja"; }
+    kama (id == 73) { kama (e) { rudisha "Play and talk with nearby phones"; } rudisha "Cheza na ongea na simu za karibu"; }
+    kama (id == 74) { kama (e) { rudisha "Saved on this phone"; } rudisha "Imehifadhiwa kwenye simu hii"; }
+    kama (id == 75) { kama (e) { rudisha "Win rate"; } rudisha "Kiwango cha ushindi"; }
+    rudisha "";
+}
+
+n8* jina_la_rangi(n32 i) {
+    n32 e = lugha == 1;
+    kama (i == 0) { kama (e) { rudisha "Red"; } rudisha "Nyekundu"; }
+    kama (i == 1) { kama (e) { rudisha "Green"; } rudisha "Kijani"; }
+    kama (i == 2) { kama (e) { rudisha "Yellow"; } rudisha "Manjano"; }
+    kama (i == 3) { kama (e) { rudisha "Blue"; } rudisha "Samawati"; }
+    kama (i == 4) { kama (e) { rudisha "Purple"; } rudisha "Zambarau"; }
+    kama (i == 5) { kama (e) { rudisha "Orange"; } rudisha "Chungwa"; }
+    kama (i == 6) { kama (e) { rudisha "Teal"; } rudisha "Kijanibahari"; }
+    kama (e) { rudisha "Pink"; }
+    rudisha "Waridi";
+}
+
+// ---------------------------------------------------------------- vipimo vya muundo
+// vipimo vyote vimeandikwa kwa upana wa pikseli 720 na
+// hupanuliwa kulingana na upana wa skrini hii
+n32 pk(n32 v) { rudisha v * upana_wa_skrini / 720; }
+
+n32 k = 3;               // kitengo cha nafasi
+n32 T_KUBWA = 64;
+n32 T_KICHWA = 34;
+n32 T_WASTANI = 24;
+n32 T_NDOGO = 19;
+n32 juu_salama = 0;
+
+w0 andaa_vipimo() {
+    n32 w = upana_wa_skrini;
+    k = w / 180;
+    kama (k < 2) { k = 2; }
+    T_KUBWA = pk(76);
+    T_KICHWA = pk(44);
+    T_WASTANI = pk(30);
+    T_NDOGO = pk(26);
+    juu_salama = urefu_wa_skrini * 45 / 1000;
+}
+
+// ---------------------------------------------------------------- vitufe
+n32 vitufe_idadi = 0;
+n32 kitufe_x[64];
+n32 kitufe_y[64];
+n32 kitufe_u[64];
+n32 kitufe_r[64];
+n32 kitufe_id[64];
+n32 kitufe_kilichobonyezwa = -1;
+
+w0 sajili_kitufe(n32 id, n32 x, n32 y, n32 u, n32 r) {
+    kama (vitufe_idadi >= 64) { rudisha; }
+    kitufe_x[vitufe_idadi] = x; kitufe_y[vitufe_idadi] = y;
+    kitufe_u[vitufe_idadi] = u; kitufe_r[vitufe_idadi] = r;
+    kitufe_id[vitufe_idadi] = id;
+    vitufe_idadi = vitufe_idadi + 1;
+}
+
+n32 kitufe_kilichoguswa(n32 x, n32 y) {
+    n32 i = vitufe_idadi - 1;
+    wakati (i >= 0) {
+        kama (x >= kitufe_x[i] && x < kitufe_x[i] + kitufe_u[i] && y >= kitufe_y[i] && y < kitufe_y[i] + kitufe_r[i]) { rudisha kitufe_id[i]; }
+        i = i - 1;
+    }
+    rudisha -1;
+}
+
+// kitufe cha kidonge: mtindo 0 = cha pili, 1 = kikuu (dhahabu)
+w0 kitufe(n32 id, n32 x, n32 y, n32 u, n32 h, n8* s, n32 mtindo) {
+    n32 rangi = R_KADI_JUU;
+    n32 rm = R_MAANDISHI;
+    kama (mtindo >= 1) { rangi = R_KITUFE; rm = R_KITUFE_M; }
+    kama (kitufe_kilichobonyezwa == id) { rangi = changanya(rangi, R_DOKEZO, 70); }
+    mviringo(x, y, u, h, h / 2, rangi);
+    andika_katikati(s, x + u / 2, y + h / 2, F_WASTANI, T_WASTANI, rm);
+    sajili_kitufe(id, x, y, u, h);
+}
+
+// kadi: paneli inayoelea yenye pembe za mviringo
+w0 kadi(n32 x, n32 y, n32 u, n32 h) {
+    mviringo(x, y, u, h, pk(32), R_KADI);
+}
+
+// swichi ya mtindo wa iOS
+w0 swichi(n32 id, n32 x, n32 y, n32 imewaka) {
+    n32 u = pk(76);
+    n32 h = pk(44);
+    n32 rangi = R_SWICHI;
+    kama (imewaka) { rangi = R_DHAHABU; }
+    mviringo(x, y, u, h, h / 2, rangi);
+    n32 cx = x + h / 2;
+    kama (imewaka) { cx = x + u - h / 2; }
+    duara(cx, y + h / 2, h / 2 - pk(4), rgb(255, 255, 255));
+    sajili_kitufe(id, x - pk(16), y - pk(16), u + pk(32), h + pk(32));
+}
+
+// ---------------------------------------------------------------- aikoni za mistari
+
+n32 unene_wa(n32 s) { n32 t = s / 12; kama (t < 2) { t = 2; } rudisha t; }
+
+// ---------------------------------------------------------------- aikoni
+w0 aikoni_menyu(n32 cx, n32 cy, n32 s, n32 rangi) {
+    n32 t = unene_wa(s);
+    mstari_laini(cx - s / 2, cy - s / 5, cx + s / 2, cy - s / 5, t, rangi);
+    mstari_laini(cx - s / 2, cy + s / 5, cx + s / 6, cy + s / 5, t, rangi);
+}
+
+w0 aikoni_kipaza(n32 cx, n32 cy, n32 s, n32 rangi, n32 msingi, n32 kimezimwa) {
+    n32 t = unene_wa(s);
+    n32 u = s * 2 / 5;
+    n32 h = s * 3 / 5;
+    n32 juu = cy - s / 2;
+    n32 kati = juu + h / 2;
+    pete(cx, kati, s * 7 / 20 + t / 2, t, rangi, 255);
+    mstatili(cx - s / 2, juu - 2, s, h / 2 + 2, msingi);
+    mviringo(cx - u / 2, juu, u, h, u / 2, rangi);
+    mviringo(cx - u / 2 + t, juu + t, u - 2 * t, h - 2 * t, u / 2 - t, msingi);
+    mstari_laini(cx, kati + s * 7 / 20, cx, cy + s / 2, t, rangi);
+    kama (kimezimwa) {
+        mstari_laini(cx - s / 2, cy - s / 2, cx + s / 2, cy + s / 2, t * 3, msingi);
+        mstari_laini(cx - s / 2, cy - s / 2, cx + s / 2, cy + s / 2, t, rangi);
+    }
+}
+
+w0 aikoni_kete(n32 cx, n32 cy, n32 s, n32 rangi, n32 msingi) {
+    n32 t = unene_wa(s);
+    mviringo(cx - s / 2, cy - s / 2, s, s, s / 4, rangi);
+    mviringo(cx - s / 2 + t, cy - s / 2 + t, s - 2 * t, s - 2 * t, s / 4 - t, msingi);
+    n32 r = s / 12 + 1;
+    duara(cx - s / 5, cy - s / 5, r, rangi);
+    duara(cx, cy, r, rangi);
+    duara(cx + s / 5, cy + s / 5, r, rangi);
+}
+
+w0 aikoni_watu(n32 cx, n32 cy, n32 s, n32 rangi, n32 msingi) {
+    n32 t = unene_wa(s);
+    pete(cx - s / 5, cy - s / 5, s / 6, t, rangi, 255);
+    pete(cx - s / 5, cy + s / 2, s * 3 / 10, t, rangi, 255);
+    pete(cx + s / 4, cy - s / 6, s / 7, t, rangi, 255);
+    pete(cx + s / 4, cy + s / 2, s / 4, t, rangi, 255);
+    mstatili(cx - s / 2 - 2, cy + s / 2, s + 4, s * 3 / 10 + t + 1, msingi);
+}
+
+w0 aikoni_wifi(n32 cx, n32 cy, n32 s, n32 rangi, n32 msingi) {
+    n32 t = unene_wa(s);
+    n32 chini = cy + s / 3;
+    pete(cx, chini, s / 2, t, rangi, 255);
+    pete(cx, chini, s * 3 / 10, t, rangi, 255);
+    mstatili(cx - s / 2 - 2, chini + 1, s + 4, s / 2 + 2, msingi);
+    duara(cx, chini - t / 2, t, rangi);
+}
+
+w0 aikoni_nyumbani(n32 cx, n32 cy, n32 s, n32 rangi) {
+    n32 t = unene_wa(s);
+    mstari_laini(cx - s / 2, cy - s / 12, cx, cy - s / 2, t, rangi);
+    mstari_laini(cx, cy - s / 2, cx + s / 2, cy - s / 12, t, rangi);
+    mstari_laini(cx - s / 3, cy - s / 5, cx - s / 3, cy + s / 2, t, rangi);
+    mstari_laini(cx + s / 3, cy - s / 5, cx + s / 3, cy + s / 2, t, rangi);
+    mstari_laini(cx - s / 3, cy + s / 2, cx + s / 3, cy + s / 2, t, rangi);
+}
+
+w0 aikoni_sheria(n32 cx, n32 cy, n32 s, n32 rangi, n32 msingi) {
+    n32 t = unene_wa(s);
+    mstari_laini(cx - s / 2, cy - s / 4, cx + s / 2, cy - s / 4, t, rangi);
+    mstari_laini(cx - s / 2, cy + s / 4, cx + s / 2, cy + s / 4, t, rangi);
+    duara(cx - s / 6, cy - s / 4, s / 7 + t, msingi);
+    pete(cx - s / 6, cy - s / 4, s / 7 + t / 2, t, rangi, 255);
+    duara(cx + s / 5, cy + s / 4, s / 7 + t, msingi);
+    pete(cx + s / 5, cy + s / 4, s / 7 + t / 2, t, rangi, 255);
+}
+
+w0 aikoni_herufi(n32 cx, n32 cy, n32 s, n32 rangi, n8* herufi) {
+    n32 t = unene_wa(s);
+    pete(cx, cy, s / 2, t, rangi, 255);
+    andika_katikati(herufi, cx, cy, F_WASTANI, s * 3 / 5, rangi);
+}
+
+w0 aikoni_rekodi(n32 cx, n32 cy, n32 s, n32 rangi) {
+    n32 t = unene_wa(s);
+    mstari_laini(cx - s / 3, cy + s / 2, cx - s / 3, cy + s / 12, t, rangi);
+    mstari_laini(cx, cy + s / 2, cx, cy - s / 2, t, rangi);
+    mstari_laini(cx + s / 3, cy + s / 2, cx + s / 3, cy - s / 6, t, rangi);
+}
+
+w0 aikoni_dunia(n32 cx, n32 cy, n32 s, n32 rangi) {
+    n32 t = unene_wa(s);
+    pete(cx, cy, s / 2, t, rangi, 255);
+    mstari_laini(cx - s / 2, cy, cx + s / 2, cy, t, rangi);
+    mstari_laini(cx, cy - s / 2, cx, cy + s / 2, t, rangi);
+}
+
+w0 aikoni_cheza(n32 cx, n32 cy, n32 s, n32 rangi) {
+    n32 t = unene_wa(s);
+    mstari_laini(cx - s / 3, cy - s / 2, cx - s / 3, cy + s / 2, t, rangi);
+    mstari_laini(cx - s / 3, cy - s / 2, cx + s / 2, cy, t, rangi);
+    mstari_laini(cx - s / 3, cy + s / 2, cx + s / 2, cy, t, rangi);
+}
+
+w0 aikoni_upya(n32 cx, n32 cy, n32 s, n32 rangi, n32 msingi) {
+    n32 t = unene_wa(s);
+    pete(cx, cy, s / 2, t, rangi, 255);
+    mstatili(cx, cy - s / 2 - t, s / 2 + t, s / 3, msingi);
+    // kichwa cha mshale mwishoni mwa duara, kikielekea kulia (saa)
+    mstari_laini(cx, cy - s / 2, cx - s / 5, cy - s / 2 - s / 5, t, rangi);
+    mstari_laini(cx, cy - s / 2, cx - s / 5, cy - s / 2 + s / 5, t, rangi);
+}
+
+w0 aikoni_mshale(n32 cx, n32 cy, n32 s, n32 rangi) {
+    n32 t = unene_wa(s);
+    mstari_laini(cx - s / 6, cy - s / 3, cx + s / 6, cy, t, rangi);
+    mstari_laini(cx + s / 6, cy, cx - s / 6, cy + s / 3, t, rangi);
+}
+
+w0 aikoni_funga(n32 cx, n32 cy, n32 s, n32 rangi) {
+    n32 t = unene_wa(s);
+    mstari_laini(cx - s / 2, cy - s / 2, cx + s / 2, cy + s / 2, t, rangi);
+    mstari_laini(cx - s / 2, cy + s / 2, cx + s / 2, cy - s / 2, t, rangi);
+}
+
+w0 aikoni_jumlisha(n32 cx, n32 cy, n32 s, n32 rangi) {
+    n32 t = unene_wa(s);
+    mstari_laini(cx - s / 2, cy, cx + s / 2, cy, t, rangi);
+    mstari_laini(cx, cy - s / 2, cx, cy + s / 2, t, rangi);
+}
+
+// ---------------------------------------------------------------- upau wa juu
+
+// ---------------------------------------------------------------- wasifu na rekodi
+// faili <internalDataPath>/wasifu: n32[16] -- alama, toleo, lugha, urefu wa
+// jina, michezo, ushindi, uliola, nyumbani, kuna wasifu; jina (baiti 16) na
+// kitambulisho (baiti 12)
+n8* njia_ya_data = 0;
+n8 njia_ya_faili[256];
+n8 jina_la_mchezaji[17];
+n32 urefu_wa_jina = 0;
+n8 kitambulisho[13];
+n32 ina_wasifu = 0;
+n32 rekodi_michezo = 0;
+n32 rekodi_ushindi = 0;
+n32 rekodi_uliola = 0;
+n32 rekodi_nyumbani = 0;
+
+n32 njia_ya(n8* faili) {
+    kama (njia_ya_data == 0) { rudisha 0; }
+    n32 n = urefu_wa_mfuatano(njia_ya_data);
+    n32 f = urefu_wa_mfuatano(faili);
+    kama (n + f + 2 > 250) { rudisha 0; }
+    nakili(njia_ya_faili, njia_ya_data, n);
+    njia_ya_faili[n] = 47;
+    nakili(njia_ya_faili + n + 1, faili, f + 1);
+    rudisha 1;
+}
+
+n8 chombo_cha_wasifu[96];
+w0 hifadhi_wasifu() {
+    kama (njia_ya("wasifu") == 0) { rudisha; }
+    n32* v = chombo_cha_wasifu;
+    v[0] = 1346454345;     // "PACH"
+    v[1] = 1;
+    v[2] = lugha;
+    v[3] = urefu_wa_jina;
+    v[4] = rekodi_michezo;
+    v[5] = rekodi_ushindi;
+    v[6] = rekodi_uliola;
+    v[7] = rekodi_nyumbani;
+    v[8] = ina_wasifu;
+    nakili(chombo_cha_wasifu + 64, jina_la_mchezaji, 16);
+    nakili(chombo_cha_wasifu + 80, kitambulisho, 12);
+    n64 fd = wito_wa_mfumo(2, njia_ya_faili, 577, 384, 0, 0, 0);
+    kama (fd < 0) { rudisha; }
+    wito_wa_mfumo(1, fd, chombo_cha_wasifu, 96, 0, 0, 0);
+    wito_wa_mfumo(3, fd, 0, 0, 0, 0, 0);
+}
+
+w0 soma_wasifu() {
+    kama (njia_ya("wasifu") == 0) { rudisha; }
+    n64 fd = wito_wa_mfumo(2, njia_ya_faili, 0, 0, 0, 0, 0);
+    kama (fd < 0) { rudisha; }
+    n64 n = wito_wa_mfumo(0, fd, chombo_cha_wasifu, 96, 0, 0, 0);
+    wito_wa_mfumo(3, fd, 0, 0, 0, 0, 0);
+    n32* v = chombo_cha_wasifu;
+    kama (n != 96 || v[0] != 1346454345) { rudisha; }
+    lugha = v[2] & 1;
+    urefu_wa_jina = v[3];
+    kama (urefu_wa_jina < 0 || urefu_wa_jina > 16) { urefu_wa_jina = 0; }
+    rekodi_michezo = v[4];
+    rekodi_ushindi = v[5];
+    rekodi_uliola = v[6];
+    rekodi_nyumbani = v[7];
+    ina_wasifu = v[8];
+    nakili(jina_la_mchezaji, chombo_cha_wasifu + 64, 16);
+    jina_la_mchezaji[urefu_wa_jina] = 0;
+    nakili(kitambulisho, chombo_cha_wasifu + 80, 12);
+    kitambulisho[12] = 0;
+}
+
+// kitambulisho: KJ-XXXX-XXXX kwa herufi za base32 (bila 0/O/1/I)
+w0 unda_kitambulisho() {
+    n8* herufi = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    n8 nasibu[8];
+    wito_wa_mfumo(318, nasibu, 8, 0, 0, 0, 0);
+    kitambulisho[0] = 75; kitambulisho[1] = 74; kitambulisho[2] = 45;
+    n32 i = 0;
+    wakati (i < 8) {
+        n32 nafasi = 3 + i;
+        kama (i >= 4) { nafasi = 4 + i; }
+        kitambulisho[nafasi] = herufi[(nasibu[i] & 255) % 32];
+        i = i + 1;
+    }
+    kitambulisho[7] = 45;
+    kitambulisho[12] = 0;
+}
+
+// jina linaloonyeshwa: herufi ya kwanza ya kila neno kubwa, nyingine ndogo
+n8 chombo_cha_jina[20];
+n8* jina_zuri(n8* jina) {
+    n32 i = 0;
+    n32 mwanzo_wa_neno = 1;
+    wakati (jina[i] != 0 && i < 19) {
+        n32 c = jina[i] & 255;
+        kama (mwanzo_wa_neno == 0 && c >= 65 && c <= 90) { c = c + 32; }
+        kama (mwanzo_wa_neno && c >= 97 && c <= 122) { c = c - 32; }
+        mwanzo_wa_neno = c == 32;
+        chombo_cha_jina[i] = c;
+        i = i + 1;
+    }
+    chombo_cha_jina[i] = 0;
+    rudisha chombo_cha_jina;
+}
+
+// ---------------------------------------------------------------- hali ya programu
+n32 S_KAJARA = 0;
+n32 S_KARIBU = 1;
+n32 S_WASIFU = 2;
+n32 S_MENYU = 3;
+n32 S_MPANGILIO = 4;
+n32 S_SHERIA = 5;
+n32 S_KANUNI = 6;
+n32 S_REKODI = 7;
+n32 S_WIFI = 8;
+n32 S_MCHEZO = 9;
+n32 S_KUHUSU = 10;
+n32 skrini = 0;
+n32 skrini_ya_nyuma_ya_sheria = 4;
+n32 muda_wa_skrini = 0;
+
+n32 HALI_YA_MCHEZO_KOMPYUTA = 0;
+n32 HALI_YA_MCHEZO_PAMOJA = 1;
+n32 HALI_YA_MCHEZO_WIFI = 2;
+n32 aina_ya_mchezo = 0;
+n32 idadi_ya_wachezaji = 4;
+n32 kiti_cha_mtumiaji = 0;
+n32 hatua_iliyochaguliwa = 0;
+
+// droo ya pembeni
+n32 droo_iko_wazi = 0;
+n32 droo_muda = 0;
+n32 DROO_MS = 230;
+n8* droo_akiba = 0;
+n64 droo_akiba_baiti = 0;
+n32 droo_akiba_halali = 0;
+
+w0 nenda(n32 s) { skrini = s; muda_wa_skrini = sasa_ms(); kitufe_kilichobonyezwa = -1; droo_iko_wazi = 0; droo_muda = 0; }
+
+// ---------------------------------------------------------------- uhuishaji
+n32 U_HAKUNA = 0;
+n32 U_KETE = 1;
+n32 U_HOJA = 2;
+n32 U_KURUDI = 3;
+n32 uhuishaji = 0;
+n32 uhuishaji_mwanzo = 0;
+n32 HATUA_MS = 95;
+n32 KETE_MS = 680;
+n32 KURUDI_MS = 380;
+
+n32 pauni_kabla[16];
+n32 mhamaji = -1;
+n32 hamia_kutoka = 0;
+n32 hamia_hadi = 0;
+n32 zimeliwa[16];
+n32 idadi_iliyoliwa = 0;
+n32 mbegu_ya_onyesho = 12345;
+n32 uso_wa_kete[2];
+
+// ujumbe unaoelea juu ya ubao
+n32 toast_ujumbe = -1;
+n32 toast_muda = 0;
+n32 TOAST_MS = 1500;
+
+n32 nasibu_ya_onyesho() {
+    mbegu_ya_onyesho = (mbegu_ya_onyesho * 1103515245 + 12345) & 2147483647;
+    rudisha mbegu_ya_onyesho >> 8;
+}
+
+n32 hatua_za_mhamaji() {
+    kama (hamia_kutoka == KIOTANI) { rudisha hamia_hadi + 1; }
+    rudisha hamia_hadi - hamia_kutoka;
+}
+
+n32 ni_mchezaji_wa_simu_hii(n32 m) {
+    kama (aina_ya_mchezo == HALI_YA_MCHEZO_WIFI) { rudisha kiti_changu() == m; }
+    rudisha ni_kompyuta[m] == 0;
+}
+
+w0 onyesha_toast(n32 id) { toast_ujumbe = id; toast_muda = sasa_ms(); omba_fremu_ijayo(); }
+
+w0 rekodi_hatua(n32 m) {
+    kama (aina_ya_mchezo == HALI_YA_MCHEZO_PAMOJA) { rudisha; }
+    kama (ni_mchezaji_wa_simu_hii(m) == 0) { rudisha; }
+    kama (idadi_iliyoliwa > 0) { rekodi_uliola = rekodi_uliola + idadi_iliyoliwa; }
+    kama (hamia_hadi == NYUMBANI) { rekodi_nyumbani = rekodi_nyumbani + 1; }
+}
+
+w0 anza_sherehe();
+w0 mwisho_wa_mchezo() {
+    kama (aina_ya_mchezo != HALI_YA_MCHEZO_PAMOJA) {
+        rekodi_michezo = rekodi_michezo + 1;
+        kama (ni_mchezaji_wa_simu_hii(mshindi)) { rekodi_ushindi = rekodi_ushindi + 1; }
+    }
+    hifadhi_wasifu();
+    anza_sherehe();
+}
+
+w0 anza_uhuishaji_wa_hatua(n32 m) {
+    mhamaji = -1;
+    idadi_iliyoliwa = 0;
+    n32 x = 0;
+    wakati (x < 16) {
+        kama (pauni[x] != pauni_kabla[x]) {
+            kama (x / 4 == m && mhamaji < 0) { mhamaji = x; hamia_kutoka = pauni_kabla[x]; hamia_hadi = pauni[x]; }
+            sivyo { kama (pauni[x] == KIOTANI) { zimeliwa[idadi_iliyoliwa] = x; idadi_iliyoliwa = idadi_iliyoliwa + 1; } }
+        }
+        x = x + 1;
+    }
+    kama (mhamaji >= 0) {
+        uhuishaji = U_HOJA;
+        uhuishaji_mwanzo = sasa_ms();
+        rekodi_hatua(m);
+        kama (idadi_iliyoliwa > 0) { onyesha_toast(36); }
+        kama (hamia_hadi == NYUMBANI) { onyesha_toast(37); }
+        omba_fremu_ijayo();
+    }
+}
+
+w0 fanya_hatua(n32 j, n32 i) {
+    n32 m = zamu;
+    n32 x = 0;
+    wakati (x < 16) { pauni_kabla[x] = pauni[x]; x = x + 1; }
+    kama (sogeza(j, i) == 0) { rudisha; }
+    anza_uhuishaji_wa_hatua(m);
+    kama (mshindi >= 0) { mwisho_wa_mchezo(); }
+    hatua_iliyochaguliwa = 0;
+    mtandao_tuma_hali();
+}
+
+w0 fanya_rusha() {
+    rusha();
+    uhuishaji = U_KETE;
+    uhuishaji_mwanzo = sasa_ms();
+    hatua_iliyochaguliwa = 0;
+    kama (ujumbe == UJ_PACHA_TATU) { onyesha_toast(35); }
+    omba_fremu_ijayo();
+    mtandao_tuma_hali();
+}
+
+n32 endeleza_uhuishaji() {
+    kama (uhuishaji == U_HAKUNA) { rudisha 0; }
+    n32 muda = sasa_ms() - uhuishaji_mwanzo;
+    kama (uhuishaji == U_KETE) {
+        kama (muda >= KETE_MS) {
+            uhuishaji = U_HAKUNA;
+            kama (ujumbe == UJ_HAKUNA_HATUA) { onyesha_toast(33); }
+            kama (ujumbe == UJ_PACHA_RUSHA_TENA) { onyesha_toast(34); }
+            rudisha 0;
+        }
+        uso_wa_kete[0] = nasibu_ya_onyesho() % 6 + 1;
+        uso_wa_kete[1] = nasibu_ya_onyesho() % 6 + 1;
+        rudisha 1;
+    }
+    kama (uhuishaji == U_HOJA) {
+        kama (muda >= hatua_za_mhamaji() * HATUA_MS) {
+            kama (idadi_iliyoliwa > 0) { uhuishaji = U_KURUDI; uhuishaji_mwanzo = sasa_ms(); rudisha 1; }
+            uhuishaji = U_HAKUNA;
+            rudisha 0;
+        }
+        rudisha 1;
+    }
+    kama (uhuishaji == U_KURUDI) {
+        kama (muda >= KURUDI_MS) { uhuishaji = U_HAKUNA; rudisha 0; }
+        rudisha 1;
+    }
+    rudisha 0;
+}
+
+// kasi: kuanza haraka, kumalizika polepole (0..1000 -> 0..1000)
+n32 laini(n32 f) {
+    kama (f >= 1000) { rudisha 1000; }
+    kama (f <= 0) { rudisha 0; }
+    n32 g = 1000 - f;
+    rudisha 1000 - g * g / 1000;
+}
+
+n32 mdundo(n32 kipindi, n32 upeo) {
+    n32 a = (sasa_ms() % kipindi) * 2 * upeo / kipindi;
+    kama (a > upeo) { a = 2 * upeo - a; }
+    rudisha a;
+}
+
+// ---------------------------------------------------------------- sherehe
+n32 SHEREHE_N = 70;
+n32 sherehe_x[70];
+n32 sherehe_y[70];
+n32 sherehe_vx[70];
+n32 sherehe_vy[70];
+n32 sherehe_rangi[70];
+n32 sherehe_mwisho = 0;
+
+w0 anza_sherehe() {
+    n32 i = 0;
+    wakati (i < SHEREHE_N) {
+        sherehe_x[i] = (upana_wa_skrini / 2 + nasibu_ya_onyesho() % 240 - 120) * 16;
+        sherehe_y[i] = urefu_wa_skrini * 16 * 40 / 100;
+        sherehe_vx[i] = nasibu_ya_onyesho() % 480 - 240;
+        sherehe_vy[i] = 0 - 260 - nasibu_ya_onyesho() % 360;
+        sherehe_rangi[i] = PALETI[nasibu_ya_onyesho() % 8];
+        i = i + 1;
+    }
+    sherehe_mwisho = sasa_ms() + 4200;
+    omba_fremu_ijayo();
+}
+
+w0 chora_sherehe() {
+    kama (sasa_ms() > sherehe_mwisho) { rudisha; }
+    n32 i = 0;
+    wakati (i < SHEREHE_N) {
+        sherehe_x[i] = sherehe_x[i] + sherehe_vx[i] / 4;
+        sherehe_y[i] = sherehe_y[i] + sherehe_vy[i] / 4;
+        sherehe_vy[i] = sherehe_vy[i] + 14;
+        mviringo(sherehe_x[i] / 16, sherehe_y[i] / 16, k * 3, k * 2, 1, sherehe_rangi[i]);
+        i = i + 1;
+    }
+}
+
+// ---------------------------------------------------------------- upau unaoelea na droo
+n32 upau_chini = 0;
+
+// upau wa juu: kitufe cha droo kushoto, kichwa katikati, kipaza sauti kulia (hiari)
+w0 upau_wa_juu(n8* kichwa, n32 kipaza) {
+    n32 w = upana_wa_skrini;
+    n32 h = pk(112);
+    n32 y = juu_salama;
+    n32 cy = y + h / 2;
+    kama (kitufe_kilichobonyezwa == 900) { duara(pk(48), cy, pk(36), R_KADI_JUU); }
+    aikoni_menyu(pk(48), cy, pk(32), R_IKONI);
+    sajili_kitufe(900, 0, y, pk(104), h);
+    andika_katikati(kichwa, w / 2, cy, F_WASTANI, pk(32), R_MAANDISHI);
+    kama (kipaza) {
+        n32 kx = w - pk(56);
+        n32 iko = sauti_kipaza_kiko_wazi();
+        n32 msingi = R_KADI_JUU;
+        n32 rk = R_MAANDISHI;
+        kama (iko) { msingi = R_KITUFE; rk = R_KITUFE_M; }
+        duara(kx, cy, pk(32), msingi);
+        aikoni_kipaza(kx, cy, pk(30), rk, msingi, iko == 0);
+        sajili_kitufe(901, w - pk(104), y, pk(104), h);
+    }
+    upau_chini = y + h;
+}
+
+// ---------------------------------------------------------------- droo
+// aikoni za vipengele vya droo: 0 endelea, 1 anza upya, 2 nyumbani, 3 sheria,
+// 4 jinsi ya kucheza, 5 rekodi, 6 lugha, 7 kuhusu
+
+w0 aikoni_ya_droo(n32 aina, n32 cx, n32 cy, n32 s, n32 rangi, n32 msingi) {
+    kama (aina == 0) { aikoni_cheza(cx, cy, s, rangi); }
+    kama (aina == 1) { aikoni_upya(cx, cy, s, rangi, msingi); }
+    kama (aina == 2) { aikoni_nyumbani(cx, cy, s, rangi); }
+    kama (aina == 3) { aikoni_sheria(cx, cy, s, rangi, msingi); }
+    kama (aina == 4) { aikoni_herufi(cx, cy, s, rangi, "?"); }
+    kama (aina == 5) { aikoni_rekodi(cx, cy, s, rangi); }
+    kama (aina == 6) { aikoni_dunia(cx, cy, s, rangi); }
+    kama (aina == 7) { aikoni_herufi(cx, cy, s, rangi, "i"); }
+}
+
+n32 droo_kipengele_y = 0;
+w0 kipengele_cha_droo(n32 id, n32 x, n32 u, n32 aina, n8* jina) {
+    n32 h = pk(104);
+    n32 msingi = R_DROO;
+    kama (kitufe_kilichobonyezwa == id) { msingi = R_KADI; mviringo(x + pk(16), droo_kipengele_y, u - pk(32), h, pk(24), msingi); }
+    aikoni_ya_droo(aina, x + pk(72), droo_kipengele_y + h / 2, pk(36), R_MAANDISHI, msingi);
+    andika_kushoto(jina, x + pk(120), droo_kipengele_y + h / 2, F_KAWAIDA, T_WASTANI, R_MAANDISHI);
+    sajili_kitufe(id, x, droo_kipengele_y, u, h);
+    droo_kipengele_y = droo_kipengele_y + h;
+}
+
+// giza la skrini nzima (alfa ndogo)
+w0 giza_juu(n32 alfa) {
+    kama (alfa <= 0) { rudisha; }
+    n32 b = 255 - alfa;
+    n32 j = 0;
+    wakati (j < urefu_wa_skrini) {
+        n32 mwanzo = j * hatua_ya_mstari;
+        n32 i = 0;
+        wakati (i < upana_wa_skrini) {
+            n32 v = pikseli[mwanzo + i];
+            pikseli[mwanzo + i] = rgb((v & 255) * b / 255, ((v >> 8) & 255) * b / 255, ((v >> 16) & 255) * b / 255);
+            i = i + 1;
+        }
+        j = j + 1;
+    }
+}
+
+w0 chora_droo() {
+    n32 muda = sasa_ms() - droo_muda;
+    n32 f = laini(muda * 1000 / DROO_MS);
+    kama (muda < DROO_MS) { omba_fremu_ijayo(); }
+    kama (droo_iko_wazi == 0) {
+        kama (muda >= DROO_MS) { rudisha; }
+        f = 1000 - f;
+    }
+    n32 w = upana_wa_skrini;
+    n32 h = urefu_wa_skrini;
+    vitufe_idadi = 0;
+    // giza la nyuma huhesabiwa mara moja kwa kila ufunguzi, kisha hunakiliwa
+    n64 baiti = hatua_ya_mstari * h * 4;
+    kama (droo_akiba_halali == 0 || droo_akiba_baiti != baiti) {
+        mstatili_alfa(0, 0, w, h, rgb(0, 0, 0), 130);
+        kama (droo_akiba_baiti < baiti) { droo_akiba = tenga(baiti); }
+        droo_akiba_baiti = baiti;
+        nakili_haraka(droo_akiba, pikseli, baiti);
+        droo_akiba_halali = 1;
+    } sivyo { nakili_haraka(pikseli, droo_akiba, baiti); }
+    sajili_kitufe(990, 0, 0, w, h);
+    n32 u = w * 86 / 100;
+    n32 x = (f - 1000) * u / 1000;
+    mstatili(x, 0, u - pk(32), h, R_DROO);
+    mviringo(x + u - pk(64), 0, pk(64), h, pk(32), R_DROO);
+    andika_kushoto("Pachisi", x + pk(48), juu_salama + pk(80), F_SERIF, pk(48), R_MAANDISHI);
+    droo_kipengele_y = juu_salama + pk(144);
+    kama (skrini == S_MCHEZO && mshindi < 0) {
+        kipengele_cha_droo(910, x, u, 0, t(41));
+        kama (aina_ya_mchezo != HALI_YA_MCHEZO_WIFI) { kipengele_cha_droo(911, x, u, 1, t(42)); }
+    }
+    kipengele_cha_droo(912, x, u, 2, t(40));
+    kipengele_cha_droo(914, x, u, 3, t(15));
+    kipengele_cha_droo(915, x, u, 4, t(12));
+    kipengele_cha_droo(916, x, u, 5, t(13));
+    mstatili(x + pk(32), droo_kipengele_y + pk(12), u - pk(64), 1, R_MSTARI);
+    droo_kipengele_y = droo_kipengele_y + pk(24);
+    n8 lugha_s[40];
+    n8* a = t(58);
+    n32 n = urefu_wa_mfuatano(a);
+    nakili(lugha_s, a, n);
+    lugha_s[n] = 58; lugha_s[n + 1] = 32;
+    n8* jina_la_lugha = "Kiswahili";
+    kama (lugha == 1) { jina_la_lugha = "English"; }
+    nakili(lugha_s + n + 2, jina_la_lugha, urefu_wa_mfuatano(jina_la_lugha) + 1);
+    kipengele_cha_droo(917, x, u, 6, lugha_s);
+    kipengele_cha_droo(918, x, u, 7, t(68));
+    // chini: alama ya mchezaji na kidonge cha "mchezo mpya"
+    n32 py = h - pk(76);
+    n8* jina = jina_zuri(jina_la_mchezaji);
+    n8 awali[2];
+    awali[0] = jina[0];
+    awali[1] = 0;
+    kama (awali[0] == 0) { awali[0] = 80; }
+    duara(x + pk(76), py, pk(44), R_DHAHABU);
+    andika_katikati(awali, x + pk(76), py, F_WASTANI, pk(28), rgb(255, 255, 255));
+    sajili_kitufe(916, x + pk(32), py - pk(44), pk(88), pk(88));
+    n8* mpya = t(70);
+    n32 bu = upana_wa(mpya, F_WASTANI, T_WASTANI) + pk(100);
+    n32 bx = x + u - pk(32) - bu;
+    n32 rangi = R_KITUFE;
+    kama (kitufe_kilichobonyezwa == 913) { rangi = changanya(rangi, R_DOKEZO, 70); }
+    mviringo(bx, py - pk(44), bu, pk(88), pk(44), rangi);
+    aikoni_jumlisha(bx + pk(46), py, pk(22), R_KITUFE_M);
+    andika_kushoto(mpya, bx + pk(72), py, F_WASTANI, T_WASTANI, R_KITUFE_M);
+    sajili_kitufe(913, bx, py - pk(44), bu, pk(88));
+}
+
+// ---------------------------------------------------------------- mchezo
+
+w0 fungua_droo() { droo_iko_wazi = 1; droo_akiba_halali = 0; droo_muda = sasa_ms(); omba_fremu_ijayo(); }
+w0 funga_droo() { kama (droo_iko_wazi) { droo_iko_wazi = 0; droo_muda = sasa_ms(); omba_fremu_ijayo(); } }
+
+// ---------------------------------------------------------------- akiba ya ubao
+n8* akiba_ya_ubao = 0;
+n64 akiba_baiti = 0;
+n32 akiba_halali = 0;
+
+// ---------------------------------------------------------------- mchezo
+n32 inaweza_kusogezwa(n32 kk) {
+    n32 m = kk / 4;
+    kama (m != zamu || hali_ya_zamu != HALI_SOGEZA || uhuishaji != U_HAKUNA || droo_iko_wazi) { rudisha 0; }
+    kama (ni_mchezaji_wa_simu_hii(m) == 0) { rudisha 0; }
+    kama (hatua_iliyochaguliwa >= idadi_ya_hatua) { rudisha 0; }
+    rudisha lengo_la_hatua(m, kk % 4, hatua_iliyochaguliwa) != HAIWEZEKANI;
+}
+
+w0 chora_pauni_moja(n32 kk, n32 cx, n32 cy, n32 r, n32 inawaka) {
+    kama (inawaka) {
+        duara_alfa(cx, cy, r + r * 3 / 5, R_MAANDISHI, 40);
+        pete(cx, cy, r + r * 3 / 5, pk(3), R_MAANDISHI, 255);
+    }
+    chora_pauni(cx, cy, r, rangi_ya_mchezaji(kk / 4));
+}
+
+n32 onyesho_x[16];
+n32 onyesho_y[16];
+
+w0 chora_pauni_zote() {
+    n32 maendeleo[16];
+    n32 kk = 0;
+    wakati (kk < 16) {
+        maendeleo[kk] = pauni[kk];
+        kama (uhuishaji == U_HOJA) {
+            n32 x = 0;
+            wakati (x < idadi_iliyoliwa) { kama (zimeliwa[x] == kk) { maendeleo[kk] = pauni_kabla[kk]; } x = x + 1; }
+        }
+        kk = kk + 1;
+    }
+    kk = 0;
+    wakati (kk < 16) {
+        n32 m = kk / 4;
+        n32 j = kk % 4;
+        n32 p = maendeleo[kk];
+        n32 inasonga = kk == mhamaji && uhuishaji == U_HOJA;
+        kama (kiti_kipo[m] && j < PAUNI_KWA_MCHEZAJI && inasonga == 0) {
+            mahali_pa_maendeleo(m, j, p);
+            n32 cx = pauni_x;
+            n32 cy = pauni_y;
+            kama (p >= 0 && p < NYUMBANI) {
+                n32 mbele = 0;
+                n32 jumla = 0;
+                n32 y = 0;
+                wakati (y < 16) {
+                    n32 my = y / 4;
+                    n32 y_inasonga = y == mhamaji && uhuishaji == U_HOJA;
+                    kama (kiti_kipo[my] && y % 4 < PAUNI_KWA_MCHEZAJI && y_inasonga == 0 && maendeleo[y] >= 0 && maendeleo[y] < NYUMBANI) {
+                        n32 sawa = 0;
+                        kama (maendeleo[y] <= MWISHO_WA_NJIA && p <= MWISHO_WA_NJIA && mahali_kamili(my, maendeleo[y]) == mahali_kamili(m, p)) { sawa = 1; }
+                        kama (maendeleo[y] > MWISHO_WA_NJIA && my == m && maendeleo[y] == p) { sawa = 1; }
+                        kama (sawa) { jumla = jumla + 1; kama (y < kk) { mbele = mbele + 1; } }
+                    }
+                    y = y + 1;
+                }
+                kama (jumla > 1) {
+                    kama (seli_ni_mlalo(m, p)) { cx = cx - SELI_A / 4 + mbele * SELI_A / 2; }
+                    sivyo { cy = cy - SELI_A / 4 + mbele * SELI_A / 2; }
+                }
+            }
+            kama (uhuishaji == U_KURUDI) {
+                n32 x = 0;
+                wakati (x < idadi_iliyoliwa) {
+                    kama (zimeliwa[x] == kk) {
+                        n32 f = laini((sasa_ms() - uhuishaji_mwanzo) * 1000 / KURUDI_MS);
+                        mahali_pa_maendeleo(m, j, pauni_kabla[kk]);
+                        n32 ax = pauni_x;
+                        n32 ay = pauni_y;
+                        mahali_pa_maendeleo(m, j, KIOTANI);
+                        cx = ax + (pauni_x - ax) * f / 1000;
+                        cy = ay + (pauni_y - ay) * f / 1000;
+                    }
+                    x = x + 1;
+                }
+                mahali_pa_maendeleo(m, j, p);
+            }
+            onyesho_x[kk] = cx;
+            onyesho_y[kk] = cy;
+            chora_pauni_moja(kk, cx, cy, pauni_nusu, inaweza_kusogezwa(kk));
+        }
+        kk = kk + 1;
+    }
+    kama (uhuishaji == U_HOJA && mhamaji >= 0) {
+        n32 m = mhamaji / 4;
+        n32 j = mhamaji % 4;
+        n32 muda = sasa_ms() - uhuishaji_mwanzo;
+        n32 hatua_n = muda / HATUA_MS;
+        n32 f = (muda % HATUA_MS) * 1000 / HATUA_MS;
+        n32 jumla = hatua_za_mhamaji();
+        kama (hatua_n >= jumla) { hatua_n = jumla - 1; f = 1000; }
+        n32 p1 = 0;
+        n32 p2 = 0;
+        kama (hamia_kutoka == KIOTANI) {
+            p1 = hatua_n - 1;
+            kama (hatua_n == 0) { p1 = KIOTANI; }
+            p2 = hatua_n;
+        } sivyo { p1 = hamia_kutoka + hatua_n; p2 = p1 + 1; }
+        mahali_pa_maendeleo(m, j, p1);
+        n32 ax = pauni_x;
+        n32 ay = pauni_y;
+        mahali_pa_maendeleo(m, j, p2);
+        n32 cx = ax + (pauni_x - ax) * f / 1000;
+        n32 cy = ay + (pauni_y - ay) * f / 1000 - SELI_B * 4 * f * (1000 - f) / 1000000;
+        chora_pauni(cx, cy, pauni_nusu + pauni_nusu / 5, rangi_ya_mchezaji(m));
+    }
+}
+
+n8* jina_la_mchezaji_wa_kiti(n32 m) {
+    kama (aina_ya_mchezo == HALI_YA_MCHEZO_WIFI) {
+        kama (mmiliki_wa_kiti(m) < 0) { rudisha jina_la_rangi(rangi_ya_kiti[m]); }
+        rudisha jina_zuri(jina_la_kiti(m));
+    }
+    kama (aina_ya_mchezo == HALI_YA_MCHEZO_KOMPYUTA) {
+        kama (ni_kompyuta[m]) { rudisha jina_la_rangi(rangi_ya_kiti[m]); }
+        kama (urefu_wa_jina > 0) { rudisha jina_zuri(jina_la_mchezaji); }
+        rudisha t(19);
+    }
+    rudisha jina_la_rangi(rangi_ya_kiti[m]);
+}
+
+// kibao cha jina kwenye pembe ya mchezaji (juu ya kiota cha juu, chini ya cha chini)
+w0 kibao_cha_mchezaji(n32 m, n32 x, n32 y, n32 u, n32 h, n32 kulia) {
+    n32 hai = m == zamu && mshindi < 0;
+    n32 rangi = rangi_ya_mchezaji(m);
+    kama (hai) {
+        mviringo(x, y, u, h, h / 2, rangi);
+        mviringo(x + pk(3), y + pk(3), u - pk(6), h - pk(6), h / 2 - pk(3), R_KADI);
+    } sivyo { mviringo(x, y, u, h, h / 2, R_KADI); }
+    n32 ax = x + h / 2;
+    kama (kulia) { ax = x + u - h / 2; }
+    duara(ax, y + h / 2, h / 2 - pk(8), rangi);
+    n8* jina = jina_la_mchezaji_wa_kiti(m);
+    n8 awali[2];
+    awali[0] = jina[0];
+    awali[1] = 0;
+    andika_katikati(awali, ax, y + h / 2, F_NZITO, pk(22), rgb(255, 255, 255));
+    n32 nyumbani = 0;
+    n32 j = 0;
+    wakati (j < PAUNI_KWA_MCHEZAJI) { kama (pauni[m * 4 + j] == NYUMBANI) { nyumbani = nyumbani + 1; } j = j + 1; }
+    n8 alama[4];
+    alama[0] = 48 + nyumbani;
+    alama[1] = 47;
+    alama[2] = 48 + PAUNI_KWA_MCHEZAJI;
+    alama[3] = 0;
+    n32 rm = R_HAFIFU;
+    n32 fonti = F_KAWAIDA;
+    kama (hai) { rm = R_MAANDISHI; fonti = F_WASTANI; }
+    n8 fupi[18];
+    n32 n = urefu_wa_mfuatano(jina);
+    kama (n > 17) { n = 17; }
+    nakili(fupi, jina, n);
+    fupi[n] = 0;
+    n32 nafasi = u - h - pk(80);
+    wakati (n > 1 && upana_wa(fupi, fonti, pk(26)) > nafasi) { n = n - 1; fupi[n] = 0; }
+    kama (kulia) {
+        andika_kulia(fupi, x + u - h - pk(4), y + h / 2, fonti, pk(26), rm);
+        andika_kushoto(alama, x + pk(20), y + h / 2, F_KAWAIDA, pk(24), R_DOKEZO);
+    } sivyo {
+        andika_kushoto(fupi, x + h + pk(4), y + h / 2, fonti, pk(26), rm);
+        andika_kulia(alama, x + u - pk(20), y + h / 2, F_KAWAIDA, pk(24), R_DOKEZO);
+    }
+    kama (sauti_anaongea(m)) {
+        n32 wx = ax + h / 2 + pk(4);
+        kama (kulia) { wx = ax - h / 2 - pk(24); }
+        n32 b = 0;
+        wakati (b < 3) {
+            n32 urefu = pk(8) + mdundo(300 + b * 90, pk(14));
+            mviringo(wx + b * pk(8), y + h / 2 - urefu / 2, pk(4), urefu, pk(2), R_MAANDISHI);
+            b = b + 1;
+        }
+        omba_fremu_ijayo();
+    }
+}
+
+
+w0 chora_mchezo() {
+    n32 w = upana_wa_skrini;
+    n32 h = urefu_wa_skrini;
+    n32 kibao_h = pk(64);
+    n32 upeo = w - pk(48);
+    kama (upeo > h * 50 / 100) { upeo = h * 50 / 100; }
+    n32 kete_u = pk(104);
+    n32 trei_h = kete_u + pk(136);
+    n32 juu_ya_eneo = juu_salama + pk(112);
+    n32 jumla = kibao_h + pk(24) + upeo + pk(24) + kibao_h + pk(24) + trei_h;
+    n32 y0 = juu_ya_eneo + (h - juu_ya_eneo - jumla) / 2;
+    kama (y0 < juu_ya_eneo) { y0 = juu_ya_eneo; }
+    weka_ukubwa_wa_ubao((w - upeo) / 2, y0 + kibao_h + pk(24), upeo);
+
+    // mandhari na ubao huchorwa mara moja kwenye akiba
+    n64 baiti_za_skrini = hatua_ya_mstari * h * 4;
+    kama (akiba_halali && akiba_baiti == baiti_za_skrini) {
+        nakili_haraka(pikseli, akiba_ya_ubao, baiti_za_skrini);
+    } sivyo {
+        chora_mandhari();
+        chora_ubao();
+        kama (akiba_baiti < baiti_za_skrini) { akiba_ya_ubao = tenga(baiti_za_skrini); }
+        akiba_baiti = baiti_za_skrini;
+        nakili_haraka(akiba_ya_ubao, pikseli, baiti_za_skrini);
+        akiba_halali = 1;
+    }
+    upau_wa_juu("Pachisi", aina_ya_mchezo == HALI_YA_MCHEZO_WIFI);
+
+    n32 ukingo = SELI_B / 2;
+    n32 bx = ubao_x - ukingo;
+    n32 bu = ubao_ukubwa + 2 * ukingo;
+    n32 ku = (bu - pk(16)) / 2;
+    n32 juu_y = ubao_y - ukingo - kibao_h - pk(16);
+    n32 chini_y = ubao_y + ubao_ukubwa + ukingo + pk(16);
+    kama (kiti_kipo[0]) { kibao_cha_mchezaji(0, bx, juu_y, ku, kibao_h, 0); }
+    kama (kiti_kipo[1]) { kibao_cha_mchezaji(1, bx + bu - ku, juu_y, ku, kibao_h, 1); }
+    kama (kiti_kipo[3]) { kibao_cha_mchezaji(3, bx, chini_y, ku, kibao_h, 0); }
+    kama (kiti_kipo[2]) { kibao_cha_mchezaji(2, bx + bu - ku, chini_y, ku, kibao_h, 1); }
+
+    chora_pauni_zote();
+
+    // trei ya kete
+    n32 trei_y = chini_y + kibao_h + pk(24);
+    n32 tu = pk(400);
+    n32 tx = (w - tu) / 2;
+    n32 wangu = ni_mchezaji_wa_simu_hii(zamu) && mshindi < 0;
+    n32 inasubiri = wangu && hali_ya_zamu == HALI_RUSHA && uhuishaji == U_HAKUNA && droo_iko_wazi == 0;
+    n32 msingi = R_KADI;
+    kama (inasubiri && kitufe_kilichobonyezwa == 101) { msingi = R_KADI_JUU; }
+    mviringo(tx, trei_y, tu, trei_h, pk(40), msingi);
+    n32 kete_y = trei_y + pk(32);
+    n32 a = kete[0];
+    n32 b = kete[1];
+    n32 ruka = 0;
+    n32 ruka2 = 0;
+    kama (uhuishaji == U_KETE) {
+        a = uso_wa_kete[0];
+        b = uso_wa_kete[1];
+        n32 f = (sasa_ms() - uhuishaji_mwanzo) * 1000 / KETE_MS;
+        ruka = kete_u * 3 * f * (1000 - f) / 3000000;
+        ruka2 = ruka * 3 / 4;
+    }
+    kama (a <= 0) { a = 5; b = 2; }
+    n32 hai = hali_ya_zamu == HALI_SOGEZA || uhuishaji == U_KETE || inasubiri;
+    chora_kete(w / 2 - kete_u - pk(10), kete_y - ruka, kete_u, a, hai);
+    chora_kete(w / 2 + pk(10), kete_y - ruka2, kete_u, b, hai);
+    kama (inasubiri) { sajili_kitufe(101, tx, trei_y, tu, trei_h); }
+
+    n32 my = kete_y + kete_u + pk(52);
+    kama (inasubiri) { andika_katikati(t(30), w / 2, my, F_KAWAIDA, T_NDOGO, R_MAANDISHI); }
+    kama (wangu && hali_ya_zamu == HALI_SOGEZA && uhuishaji == U_HAKUNA) {
+        n32 cu = pk(88);
+        n32 ch = pk(60);
+        n32 jumla_u = idadi_ya_hatua * cu + (idadi_ya_hatua - 1) * pk(12);
+        n32 x = (w - jumla_u) / 2;
+        n32 i = 0;
+        wakati (i < idadi_ya_hatua) {
+            n32 mtindo = 0;
+            kama (i == hatua_iliyochaguliwa && hatua_ina_pauni(i)) { mtindo = 1; }
+            kitufe(110 + i, x, my - ch / 2, cu, ch, namba_kama_maandishi(hatua[i]), mtindo);
+            x = x + cu + pk(12);
+            i = i + 1;
+        }
+    }
+    kama (wangu == 0 && mshindi < 0) {
+        n8 s[40];
+        n8* jina = jina_la_mchezaji_wa_kiti(zamu);
+        n32 n = urefu_wa_mfuatano(jina);
+        kama (n > 20) { n = 20; }
+        nakili(s, jina, n);
+        s[n] = 32;
+        n8* kitenzi = t(43);
+        nakili(s + n + 1, kitenzi, urefu_wa_mfuatano(kitenzi) + 1);
+        andika_katikati(s, w / 2, my, F_KAWAIDA, T_NDOGO, R_HAFIFU);
+    }
+
+    // arifa juu ya ubao: kidonge cha rangi ya kitufe kikuu
+    kama (toast_ujumbe >= 0) {
+        n32 muda = sasa_ms() - toast_muda;
+        kama (muda < TOAST_MS) {
+            n32 alfa = 255;
+            kama (muda < 160) { alfa = muda * 255 / 160; }
+            kama (muda > TOAST_MS - 260) { alfa = (TOAST_MS - muda) * 255 / 260; }
+            n8* maneno = t(toast_ujumbe);
+            n32 tw = upana_wa(maneno, F_WASTANI, pk(28)) + pk(64);
+            n32 th = pk(72);
+            n32 ty = ubao_y + ubao_ukubwa / 2 - th / 2;
+            mviringo_alfa(w / 2 - tw / 2, ty, tw, th, th / 2, R_KITUFE, alfa);
+            andika_katikati(maneno, w / 2, ty + th / 2, F_WASTANI, pk(28), changanya(R_KITUFE, R_KITUFE_M, alfa));
+            omba_fremu_ijayo();
+        } sivyo { toast_ujumbe = -1; }
+    }
+}
+
+// mshindi: karatasi inayopanda kutoka chini
+
+// mshindi: karatasi inayopanda kutoka chini
+n32 mshindi_muda = 0;
+w0 chora_mshindi() {
+    n32 w = upana_wa_skrini;
+    n32 h = urefu_wa_skrini;
+    kama (mshindi_muda == 0) { mshindi_muda = sasa_ms(); }
+    n32 muda = sasa_ms() - mshindi_muda;
+    n32 f = laini(muda * 1000 / 380);
+    kama (muda < 380 || sasa_ms() < sherehe_mwisho) { omba_fremu_ijayo(); }
+    vitufe_idadi = 0;
+    n32 sh = pk(640);
+    n32 y = h - sh * f / 1000;
+    mviringo(0, y, w, sh + pk(64), pk(64), R_MANDHARI);
+    mviringo(w / 2 - pk(36), y + pk(14), pk(72), pk(8), pk(4), R_KISHIKIO);
+    aikoni_funga(pk(72), y + pk(72), pk(28), R_MAANDISHI);
+    sajili_kitufe(121, pk(24), y + pk(24), pk(96), pk(96));
+    n32 rangi = rangi_ya_mchezaji(mshindi);
+    duara(w / 2, y + pk(200), pk(76), R_KADI);
+    chora_pauni(w / 2, y + pk(200), pk(44), rangi);
+    andika_katikati(jina_la_mchezaji_wa_kiti(mshindi), w / 2, y + pk(330), F_SERIF, T_KICHWA, R_MAANDISHI);
+    andika_katikati(t(38), w / 2, y + pk(382), F_KAWAIDA, T_WASTANI, R_HAFIFU);
+    n32 x = pk(24);
+    n32 bu = w - pk(48);
+    kama (aina_ya_mchezo != HALI_YA_MCHEZO_WIFI || mtandao_ni_mwenyeji()) {
+        kitufe(120, x, y + sh - pk(216), bu, pk(88), t(39), 1);
+    }
+    kitufe(121, x, y + sh - pk(112), bu, pk(88), t(40), 0);
+    chora_sherehe();
+}
+
+// ---------------------------------------------------------------- skrini nyingine
+
+// ---------------------------------------------------------------- skrini nyingine
+w0 chora_nembo(n32 cx, n32 cy, n32 r) {
+    chora_pauni(cx, cy - r, r * 3 / 5, PALETI[1]);
+    chora_pauni(cx - r, cy, r * 3 / 5, PALETI[0]);
+    chora_pauni(cx + r, cy, r * 3 / 5, PALETI[2]);
+    chora_pauni(cx, cy + r, r * 3 / 5, PALETI[3]);
+}
+
+// kidhibiti cha sehemu: njia ya kadi, kidole cha rangi angavu zaidi
+
+w0 kidhibiti(n32 id0, n32 x, n32 y, n32 u, n32 idadi, n32 iliyochaguliwa, n8* s0, n8* s1, n8* s2) {
+    n32 h = pk(80);
+    mviringo(x, y, u, h, h / 2, R_NJIA_YA_KIDOLE);
+    n32 kipande = (u - pk(12)) / idadi;
+    n32 i = 0;
+    wakati (i < idadi) {
+        n32 kx = x + pk(6) + i * kipande;
+        n32 rm = R_HAFIFU;
+        kama (i == iliyochaguliwa) {
+            mviringo(kx, y + pk(6), kipande, h - pk(12), (h - pk(12)) / 2, R_KIDOLE);
+            rm = R_MAANDISHI;
+        }
+        n8* s = s0;
+        kama (i == 1) { s = s1; }
+        kama (i == 2) { s = s2; }
+        andika_katikati(s, kx + kipande / 2, y + h / 2, F_WASTANI, T_WASTANI, rm);
+        sajili_kitufe(id0 + i, kx, y, kipande, h);
+        i = i + 1;
+    }
+}
+
+w0 alama_ya_kajara(n32 cx, n32 cy, n32 s, n32 rangi, n32 msingi) {
+    mviringo(cx - s, cy - s, s * 2, s * 2, s / 2, rangi);
+    mviringo(cx - s / 2, cy - s / 2, s, s, s / 4, msingi);
+}
+
+w0 chora_kajara() {
+    n32 w = upana_wa_skrini;
+    n32 h = urefu_wa_skrini;
+    n32 muda = sasa_ms() - muda_wa_skrini;
+    n32 alfa = muda * 255 / 600;
+    kama (alfa > 255) { alfa = 255; }
+    kama (muda > 1500) { alfa = 255 - (muda - 1500) * 255 / 400; }
+    kama (alfa < 0) { alfa = 0; }
+    mstatili(0, 0, w, h, R_MANDHARI);
+    alama_ya_kajara(w / 2, h * 42 / 100, k * 7, changanya(R_MANDHARI, R_DHAHABU, alfa), R_MANDHARI);
+    andika_katikati("KAJARA", w / 2, h * 52 / 100, F_NZITO, T_KUBWA * 3 / 4, changanya(R_MANDHARI, R_MAANDISHI, alfa));
+    andika_katikati("S T U D I O", w / 2, h * 52 / 100 + T_KUBWA * 3 / 4, F_WASTANI, T_NDOGO, changanya(R_MANDHARI, R_HAFIFU, alfa));
+    kama (muda > 1900) { nenda(S_KARIBU); }
+    omba_fremu_ijayo();
+}
+
+w0 chora_karibu() {
+    n32 w = upana_wa_skrini;
+    n32 h = urefu_wa_skrini;
+    n32 muda = sasa_ms() - muda_wa_skrini;
+    n32 panda = (1000 - laini(muda * 1000 / 500)) * pk(40) / 1000;
+    kama (muda < 500) { omba_fremu_ijayo(); }
+    chora_nembo(w / 2, h * 27 / 100 + panda, pk(56));
+    andika_katikati("Pachisi", w / 2, h * 41 / 100 + panda, F_SERIF, T_KUBWA, R_MAANDISHI);
+    andika_katikati(t(1), w / 2, h * 41 / 100 + pk(72) + panda, F_KAWAIDA, T_WASTANI, R_HAFIFU);
+    andika_katikati(t(2), w / 2, h * 62 / 100, F_KAWAIDA, T_NDOGO, R_HAFIFU);
+    kidhibiti(1, pk(24), h * 62 / 100 + pk(32), w - pk(48), 2, lugha, "Kiswahili", "English", "");
+    kitufe(3, pk(24), h - pk(200), w - pk(48), pk(88), t(3), 1);
+    andika_katikati("Kajara Studio", w / 2, h - pk(56), F_KAWAIDA, T_NDOGO, R_DOKEZO);
+}
+
+n8* MIPANGILIO_YA_KIBODI = "QWERTYUIOPASDFGHJKLZXCVBNM";
+
+w0 chora_wasifu() {
+    n32 w = upana_wa_skrini;
+    n32 h = urefu_wa_skrini;
+    andika_katikati(t(4), w / 2, juu_salama + pk(120), F_SERIF, T_KICHWA, R_MAANDISHI);
+    n32 x = pk(24);
+    n32 u = w - pk(48);
+    n32 sy = juu_salama + pk(200);
+    // sehemu ya kuandika: kisanduku cha mviringo
+    mviringo(x, sy, u, pk(104), pk(52), R_MSTARI);
+    mviringo(x + 1, sy + 1, u - 2, pk(104) - 2, pk(52) - 1, R_KADI);
+    n8* jina = jina_zuri(jina_la_mchezaji);
+    n32 cx = x + pk(40);
+    kama (urefu_wa_jina == 0) { andika_kushoto(t(5), x + pk(44), sy + pk(52), F_KAWAIDA, T_WASTANI, R_DOKEZO); }
+    sivyo {
+        andika_kushoto(jina, x + pk(40), sy + pk(52), F_KAWAIDA, T_WASTANI, R_MAANDISHI);
+        cx = x + pk(40) + upana_wa(jina, F_KAWAIDA, T_WASTANI) + pk(2);
+    }
+    mstatili(cx, sy + pk(34), pk(2), pk(36), R_MAANDISHI);
+    andika_kushoto(t(6), x + pk(16), sy + pk(152), F_KAWAIDA, T_NDOGO, R_HAFIFU);
+    andika_kulia(kitambulisho, x + u - pk(16), sy + pk(152), F_WASTANI, T_NDOGO, R_MAANDISHI);
+    n32 nafasi_x = pk(8);
+    n32 ku = (w - pk(16) - 9 * nafasi_x) / 10;
+    n32 kh = pk(88);
+    n32 kby = h - pk(200) - 4 * (kh + pk(12)) - pk(24);
+    n32 i = 0;
+    wakati (i < 26) {
+        n32 safu = 0;
+        n32 nafasi = i;
+        n32 mwanzo = pk(8);
+        kama (i >= 10) { safu = 1; nafasi = i - 10; mwanzo = pk(8) + (ku + nafasi_x) / 2; }
+        kama (i >= 19) { safu = 2; nafasi = i - 19; mwanzo = pk(8) + (ku + nafasi_x) * 3 / 2; }
+        n8 herufi[2];
+        herufi[0] = MIPANGILIO_YA_KIBODI[i];
+        herufi[1] = 0;
+        n32 kx = mwanzo + nafasi * (ku + nafasi_x);
+        n32 kky = kby + safu * (kh + pk(12));
+        n32 rangi = R_KADI;
+        kama (kitufe_kilichobonyezwa == 200 + i) { rangi = R_DUARA; }
+        mviringo(kx, kky, ku, kh, pk(16), rangi);
+        andika_katikati(herufi, kx + ku / 2, kky + kh / 2, F_KAWAIDA, pk(32), R_MAANDISHI);
+        sajili_kitufe(200 + i, kx, kky, ku, kh);
+        i = i + 1;
+    }
+    n32 y4 = kby + 3 * (kh + pk(12));
+    n32 nafasi_u = w * 62 / 100;
+    kitufe(230, pk(8), y4, nafasi_u, kh, "space", 0);
+    kitufe(231, pk(16) + nafasi_u, y4, w - pk(24) - nafasi_u, kh, "<", 0);
+    n32 mtindo = 1;
+    kama (urefu_wa_jina == 0) { mtindo = 0; }
+    kitufe(232, pk(24), h - pk(152), w - pk(48), pk(88), t(7), mtindo);
+}
+
+// mstari wa orodha: duara la aikoni, kichwa, maelezo na mshale
+
+// kadi kubwa ya menyu: aikoni, kichwa na maelezo
+w0 kadi_ya_menyu(n32 id, n32 x, n32 y, n32 u, n32 h, n32 aikoni, n8* kichwa, n8* maelezo) {
+    n32 msingi = R_KADI;
+    kama (kitufe_kilichobonyezwa == id) { msingi = R_KADI_JUU; }
+    mviringo(x, y, u, h, pk(32), msingi);
+    n32 ix = x + pk(62);
+    n32 iy = y + h / 2;
+    duara(ix, iy, pk(38), R_DUARA);
+    kama (aikoni == 0) { aikoni_kete(ix, iy, pk(34), R_MAANDISHI, R_DUARA); }
+    kama (aikoni == 1) { aikoni_watu(ix, iy, pk(40), R_MAANDISHI, R_DUARA); }
+    kama (aikoni == 2) { aikoni_wifi(ix, iy - pk(4), pk(38), R_MAANDISHI, R_DUARA); }
+    andika_kushoto(kichwa, x + pk(120), iy - pk(20), F_KAWAIDA, T_WASTANI, R_MAANDISHI);
+    andika_kushoto(maelezo, x + pk(120), iy + pk(24), F_KAWAIDA, pk(28), R_HAFIFU);
+    aikoni_mshale(x + u - pk(48), iy, pk(28), R_HAFIFU);
+    sajili_kitufe(id, x, y, u, h);
+}
+
+w0 chora_menyu() {
+    n32 w = upana_wa_skrini;
+    n32 h = urefu_wa_skrini;
+    upau_wa_juu("", 0);
+    chora_nembo(w / 2, h * 30 / 100, pk(44));
+    n8 salamu[48];
+    n8* s = t(8);
+    n32 a = urefu_wa_mfuatano(s);
+    nakili(salamu, s, a);
+    salamu[a] = 32;
+    n8* jina = jina_zuri(jina_la_mchezaji);
+    nakili(salamu + a + 1, jina, urefu_wa_mfuatano(jina) + 1);
+    andika_katikati(salamu, w / 2, h * 30 / 100 + pk(124), F_SERIF, T_KICHWA, R_MAANDISHI);
+    n32 x = pk(24);
+    n32 u = w - pk(48);
+    n32 ch = pk(117);
+    n32 y = h - pk(48) - 3 * ch - 2 * pk(24);
+    kadi_ya_menyu(10, x, y, u, ch, 0, t(9), t(71));
+    kadi_ya_menyu(11, x, y + ch + pk(24), u, ch, 1, t(10), t(72));
+    kadi_ya_menyu(12, x, y + 2 * (ch + pk(24)), u, ch, 2, t(11), t(73));
+}
+
+w0 chora_mpangilio() {
+    n32 w = upana_wa_skrini;
+    n32 h = urefu_wa_skrini;
+    n8* kichwa = t(9);
+    kama (aina_ya_mchezo == HALI_YA_MCHEZO_PAMOJA) { kichwa = t(10); }
+    upau_wa_juu(kichwa, 0);
+    n32 x = pk(24);
+    n32 u = w - pk(48);
+    n32 y = upau_chini + pk(32);
+    andika_kushoto(t(14), x + pk(24), y, F_KAWAIDA, pk(28), R_HAFIFU);
+    kidhibiti(22, x, y + pk(32), u, 3, idadi_ya_wachezaji - 2, "2", "3", "4");
+    y = y + pk(160);
+    andika_kushoto(t(18), x + pk(24), y, F_KAWAIDA, pk(28), R_HAFIFU);
+    y = y + pk(32);
+    n32 m = 0;
+    wakati (m < 4) {
+        kama (kiti_kipo[m]) {
+            n32 rh = pk(117);
+            kadi(x, y, u, rh);
+            duara(x + pk(62), y + rh / 2, pk(38), R_DUARA);
+            chora_pauni(x + pk(62), y + rh / 2, pk(24), rangi_ya_mchezaji(m));
+            sajili_kitufe(30 + m, x, y, pk(124), rh);
+            andika_kushoto(jina_la_rangi(rangi_ya_kiti[m]), x + pk(120), y + rh / 2 - pk(20), F_KAWAIDA, T_WASTANI, R_MAANDISHI);
+            n8* jukumu = t(21);
+            kama (aina_ya_mchezo == HALI_YA_MCHEZO_KOMPYUTA) {
+                kama (m == kiti_cha_mtumiaji) { jukumu = jina_zuri(jina_la_mchezaji); } sivyo { jukumu = t(20); }
+            }
+            andika_kushoto(jukumu, x + pk(120), y + rh / 2 + pk(24), F_KAWAIDA, pk(28), R_HAFIFU);
+            kama (aina_ya_mchezo == HALI_YA_MCHEZO_KOMPYUTA) {
+                n32 bw = pk(104);
+                n32 bx = x + u - pk(24) - bw;
+                kama (m == kiti_cha_mtumiaji) {
+                    mviringo(bx, y + rh / 2 - pk(30), bw, pk(60), pk(30), R_KITUFE);
+                    andika_katikati(t(19), bx + bw / 2, y + rh / 2, F_WASTANI, pk(26), R_KITUFE_M);
+                } sivyo {
+                    mviringo(bx, y + rh / 2 - pk(30), bw, pk(60), pk(30), R_KADI_JUU);
+                    andika_katikati(t(19), bx + bw / 2, y + rh / 2, F_WASTANI, pk(26), R_HAFIFU);
+                    sajili_kitufe(40 + m, bx - pk(8), y, bw + pk(16), rh);
+                }
+            }
+            y = y + rh + pk(16);
+        }
+        m = m + 1;
+    }
+    kitufe(50, pk(24), h - pk(256), w - pk(48), pk(88), t(15), 0);
+    kitufe(51, pk(24), h - pk(152), w - pk(48), pk(88), t(16), 1);
+}
+
+n32 sheria_y = 0;
+w0 mstari_wa_sheria(n32 id, n8* jina, n32 imewaka) {
+    n32 w = upana_wa_skrini;
+    n32 x = pk(24);
+    n32 u = w - pk(48);
+    n32 rh = pk(104);
+    kadi(x, sheria_y, u, rh);
+    andika_kushoto(jina, x + pk(32), sheria_y + rh / 2, F_KAWAIDA, T_WASTANI, R_MAANDISHI);
+    swichi(id, x + u - pk(32) - pk(76), sheria_y + rh / 2 - pk(22), imewaka);
+    sheria_y = sheria_y + rh + pk(16);
+}
+
+w0 chaguo_la_namba(n32 id0, n32 x_kulia, n32 cy, n32 kutoka, n32 hadi, n32 thamani) {
+    n32 bu = pk(64);
+    n32 n = hadi - kutoka + 1;
+    n32 x = x_kulia - n * bu - (n - 1) * pk(8);
+    n32 v = kutoka;
+    wakati (v <= hadi) {
+        n32 rangi = R_KADI_JUU;
+        n32 rm = R_MAANDISHI;
+        kama (v == thamani) { rangi = R_KITUFE; rm = R_KITUFE_M; }
+        mviringo(x, cy - pk(28), bu, pk(56), pk(28), rangi);
+        andika_katikati(namba_kama_maandishi(v), x + bu / 2, cy, F_WASTANI, pk(28), rm);
+        sajili_kitufe(id0 + v - kutoka, x - pk(4), cy - pk(44), bu + pk(8), pk(88));
+        x = x + bu + pk(8);
+        v = v + 1;
+    }
+}
+
+w0 chora_sheria() {
+    n32 w = upana_wa_skrini;
+    n32 h = urefu_wa_skrini;
+    upau_wa_juu(t(15), 0);
+    n32 x = pk(24);
+    n32 u = w - pk(48);
+    sheria_y = upau_chini + pk(24);
+    n32 rh = pk(104);
+    kadi(x, sheria_y, u, rh);
+    andika_kushoto(t(22), x + pk(32), sheria_y + rh / 2, F_KAWAIDA, T_WASTANI, R_MAANDISHI);
+    chaguo_la_namba(60, x + u - pk(24), sheria_y + rh / 2, 5, 6, SHERIA_KUINGIA);
+    sheria_y = sheria_y + rh + pk(16);
+    mstari_wa_sheria(62, t(23), SHERIA_ZAWADI_YA_KULA > 0);
+    mstari_wa_sheria(63, t(24), SHERIA_ZAWADI_YA_NYUMBANI > 0);
+    mstari_wa_sheria(64, t(25), SHERIA_VIZUIZI);
+    mstari_wa_sheria(65, t(26), SHERIA_SALAMA);
+    mstari_wa_sheria(66, t(27), SHERIA_PACHA_TATU);
+    kadi(x, sheria_y, u, rh);
+    andika_kushoto(t(28), x + pk(32), sheria_y + rh / 2, F_KAWAIDA, T_WASTANI, R_MAANDISHI);
+    chaguo_la_namba(72, x + u - pk(24), sheria_y + rh / 2, 2, 4, PAUNI_KWA_MCHEZAJI);
+    kitufe(70, pk(24), h - pk(152), w - pk(48), pk(88), t(29), 1);
+}
+
+w0 chora_kanuni() {
+    n32 w = upana_wa_skrini;
+    upau_wa_juu(t(12), 0);
+    n32 y = upau_chini + pk(24);
+    n32 x = pk(24);
+    n32 u = w - pk(48);
+    n32 i = 0;
+    wakati (i < 8) {
+        n32 rh = pk(104);
+        kadi(x, y, u, rh);
+        duara(x + pk(56), y + rh / 2, pk(28), R_DUARA);
+        andika_katikati(namba_kama_maandishi(i + 1), x + pk(56), y + rh / 2, F_WASTANI, pk(26), R_MAANDISHI);
+        andika_kushoto(t(60 + i), x + pk(104), y + rh / 2, F_KAWAIDA, pk(28), R_MAANDISHI);
+        y = y + rh + pk(12);
+        i = i + 1;
+    }
+}
+
+w0 kigae_cha_rekodi(n32 x, n32 y, n32 u, n32 h, n8* jina, n32 thamani) {
+    kadi(x, y, u, h);
+    andika_katikati(namba_kama_maandishi(thamani), x + u / 2, y + h / 2 - pk(16), F_SERIF, pk(56), R_MAANDISHI);
+    andika_katikati(jina, x + u / 2, y + h / 2 + pk(44), F_KAWAIDA, pk(26), R_HAFIFU);
+}
+
+w0 chora_rekodi() {
+    n32 w = upana_wa_skrini;
+    upau_wa_juu(t(13), 0);
+    n32 y = upau_chini + pk(24);
+    duara(w / 2, y + pk(56), pk(56), R_DHAHABU);
+    n8* jina = jina_zuri(jina_la_mchezaji);
+    n8 awali[2];
+    awali[0] = jina[0];
+    awali[1] = 0;
+    andika_katikati(awali, w / 2, y + pk(56), F_WASTANI, pk(44), rgb(255, 255, 255));
+    andika_katikati(jina, w / 2, y + pk(168), F_SERIF, T_KICHWA, R_MAANDISHI);
+    andika_katikati(kitambulisho, w / 2, y + pk(214), F_KAWAIDA, T_NDOGO, R_HAFIFU);
+    n32 x = pk(24);
+    n32 gu = (w - pk(48) - pk(16)) / 2;
+    n32 gh = pk(208);
+    n32 gy = y + pk(260);
+    kigae_cha_rekodi(x, gy, gu, gh, t(44), rekodi_michezo);
+    kigae_cha_rekodi(x + gu + pk(16), gy, gu, gh, t(45), rekodi_ushindi);
+    kigae_cha_rekodi(x, gy + gh + pk(16), gu, gh, t(46), rekodi_uliola);
+    kigae_cha_rekodi(x + gu + pk(16), gy + gh + pk(16), gu, gh, t(47), rekodi_nyumbani);
+    n32 kiwango = 0;
+    kama (rekodi_michezo > 0) { kiwango = rekodi_ushindi * 100 / rekodi_michezo; }
+    n32 by = gy + 2 * (gh + pk(16));
+    n32 ku = w - pk(48);
+    kadi(x, by, ku, pk(117));
+    andika_kushoto(t(75), x + pk(32), by + pk(40), F_KAWAIDA, T_WASTANI, R_MAANDISHI);
+    n32 bu = ku - pk(64);
+    mviringo(x + pk(32), by + pk(76), bu, pk(10), pk(5), R_KADI_JUU);
+    mviringo(x + pk(32), by + pk(76), bu * kiwango / 100 + pk(10), pk(10), pk(5), R_DHAHABU);
+    n8 asilimia[8];
+    n8* nk = namba_kama_maandishi(kiwango);
+    n32 nn = urefu_wa_mfuatano(nk);
+    nakili(asilimia, nk, nn);
+    asilimia[nn] = 37;
+    asilimia[nn + 1] = 0;
+    andika_kulia(asilimia, x + ku - pk(32), by + pk(40), F_WASTANI, T_WASTANI, R_MAANDISHI);
+    andika_katikati(t(74), w / 2, urefu_wa_skrini - pk(56), F_KAWAIDA, T_NDOGO, R_DOKEZO);
+}
+
+w0 chora_kuhusu() {
+    n32 w = upana_wa_skrini;
+    n32 h = urefu_wa_skrini;
+    upau_wa_juu(t(68), 0);
+    alama_ya_kajara(w / 2, h * 32 / 100, pk(56), R_DHAHABU, R_MANDHARI);
+    andika_katikati("Kajara Studio", w / 2, h * 44 / 100, F_SERIF, T_KICHWA, R_MAANDISHI);
+    andika_katikati(t(69), w / 2, h * 44 / 100 + pk(64), F_KAWAIDA, T_NDOGO, R_HAFIFU);
+    andika_katikati("Inter, Source Serif 4 (SIL OFL)", w / 2, h * 44 / 100 + pk(108), F_KAWAIDA, T_NDOGO, R_DOKEZO);
+    andika_katikati("v0.1.0", w / 2, h * 44 / 100 + pk(152), F_KAWAIDA, T_NDOGO, R_DOKEZO);
+}
+
+w0 chora_wifi() {
+    n32 w = upana_wa_skrini;
+    n32 h = urefu_wa_skrini;
+    n32 x = pk(24);
+    n32 u = w - pk(48);
+    upau_wa_juu(t(11), mtandao_ni_mwenyeji() || mtandao_ni_mteja());
+    n32 y = upau_chini + pk(16);
+    kama (mtandao_ni_mwenyeji() || mtandao_ni_mteja()) {
+        n8 kichwa[24];
+        n8* c = t(51);
+        n32 a = urefu_wa_mfuatano(c);
+        nakili(kichwa, c, a);
+        kichwa[a] = 32;
+        nakili(kichwa + a + 1, nambari_ya_chumba, 5);
+        andika_katikati(kichwa, w / 2, y + pk(48), F_SERIF, T_KICHWA, R_MAANDISHI);
+        andika_katikati(t(52), w / 2, y + pk(104), F_KAWAIDA, T_NDOGO, R_HAFIFU);
+        y = y + pk(152);
+        n32 m = 0;
+        wakati (m < 4) {
+            n32 rh = pk(104);
+            n32 msingi = R_KADI;
+            kama (kitufe_kilichobonyezwa == 150 + m) { msingi = R_KADI_JUU; }
+            mviringo(x, y, u, rh, pk(32), msingi);
+            duara(x + pk(56), y + rh / 2, pk(34), R_DUARA);
+            chora_pauni(x + pk(56), y + rh / 2, pk(22), rangi_ya_mchezaji(m));
+            n32 mmiliki = mmiliki_wa_kiti(m);
+            n8* jina = t(53);
+            n32 rm = R_DOKEZO;
+            kama (mmiliki >= 0) { jina = jina_zuri(jina_la_kiti(m)); rm = R_MAANDISHI; }
+            andika_kushoto(jina, x + pk(112), y + rh / 2, F_KAWAIDA, T_WASTANI, rm);
+            kama (m == kiti_changu()) {
+                mviringo(x + u - pk(128), y + rh / 2 - pk(28), pk(104), pk(56), pk(28), R_KITUFE);
+                andika_katikati(t(19), x + u - pk(76), y + rh / 2, F_WASTANI, pk(26), R_KITUFE_M);
+            }
+            kama (sauti_anaongea(m)) { pete(x + pk(56), y + rh / 2, pk(36), pk(3), R_MAANDISHI, 255); }
+            sajili_kitufe(150 + m, x, y, u, rh);
+            y = y + rh + pk(12);
+            m = m + 1;
+        }
+        andika_katikati(t(59), w / 2, y + pk(24), F_KAWAIDA, T_NDOGO, R_DOKEZO);
+        kama (mtandao_ni_mwenyeji()) { kitufe(160, pk(24), h - pk(256), w - pk(48), pk(88), t(16), 1); }
+        sivyo { andika_katikati(t(54), w / 2, h - pk(212), F_KAWAIDA, T_NDOGO, R_HAFIFU); }
+        kitufe(161, pk(24), h - pk(152), w - pk(48), pk(88), t(17), 0);
+        rudisha;
+    }
+    andika_katikati(t(55), w / 2, y + pk(24), F_KAWAIDA, T_NDOGO, R_HAFIFU);
+    y = y + pk(64);
+    kadi_ya_menyu(140, x, y, u, pk(117), 2, t(48), t(55));
+    y = y + pk(117) + pk(48);
+    andika_kushoto(t(49), x + pk(24), y, F_KAWAIDA, pk(28), R_HAFIFU);
+    y = y + pk(32);
+    n32 n = mtandao_vyumba_idadi();
+    kama (n == 0) {
+        n32 i = 0;
+        wakati (i < 3) {
+            n32 awamu = mdundo(900 + i * 150, pk(10));
+            duara(w / 2 - pk(24) + i * pk(24), y + pk(40) - awamu, pk(6), R_DOKEZO);
+            i = i + 1;
+        }
+        andika_katikati(t(50), w / 2, y + pk(96), F_KAWAIDA, T_NDOGO, R_DOKEZO);
+    }
+    n32 i = 0;
+    wakati (i < n && i < 5) {
+        n32 rh = pk(104);
+        n32 msingi = R_KADI;
+        kama (kitufe_kilichobonyezwa == 170 + i) { msingi = R_KADI_JUU; }
+        mviringo(x, y, u, rh, pk(32), msingi);
+        duara(x + pk(56), y + rh / 2, pk(34), R_DUARA);
+        aikoni_wifi(x + pk(56), y + rh / 2 - pk(4), pk(34), R_MAANDISHI, R_DUARA);
+        andika_kushoto(mtandao_jina_la_chumba(i), x + pk(112), y + rh / 2, F_KAWAIDA, T_WASTANI, R_MAANDISHI);
+        aikoni_mshale(x + u - pk(48), y + rh / 2, pk(28), R_HAFIFU);
+        sajili_kitufe(170 + i, x, y, u, rh);
+        y = y + rh + pk(12);
+        i = i + 1;
+    }
+    omba_fremu_ijayo();
+}
+
+// ---------------------------------------------------------------- kuchora kila kitu
+w0 chora_skrini() {
+    andaa_vipimo();
+    vitufe_idadi = 0;
+    kama (skrini != S_MCHEZO && skrini != S_KAJARA) { chora_mandhari(); }
+    kama (skrini == S_KAJARA) { chora_kajara(); }
+    kama (skrini == S_KARIBU) { chora_karibu(); }
+    kama (skrini == S_WASIFU) { chora_wasifu(); }
+    kama (skrini == S_MENYU) { chora_menyu(); }
+    kama (skrini == S_MPANGILIO) { chora_mpangilio(); }
+    kama (skrini == S_SHERIA) { chora_sheria(); }
+    kama (skrini == S_KANUNI) { chora_kanuni(); }
+    kama (skrini == S_REKODI) { chora_rekodi(); }
+    kama (skrini == S_KUHUSU) { chora_kuhusu(); }
+    kama (skrini == S_WIFI) { chora_wifi(); }
+    kama (skrini == S_MCHEZO) {
+        kama (endeleza_uhuishaji()) { omba_fremu_ijayo(); }
+        chora_mchezo();
+        kama (mshindi >= 0 && uhuishaji == U_HAKUNA) { chora_mshindi(); } sivyo { mshindi_muda = 0; }
+    }
+    chora_droo();
+}
+
+// ---------------------------------------------------------------- vitendo
+w0 andaa_viti_kwa_idadi() {
+    n32 m = 0;
+    wakati (m < 4) { kiti_kipo[m] = 0; m = m + 1; }
+    kiti_kipo[0] = 1;
+    kiti_kipo[2] = 1;
+    kama (idadi_ya_wachezaji >= 3) { kiti_kipo[1] = 1; }
+    kama (idadi_ya_wachezaji >= 4) { kiti_kipo[3] = 1; }
+    kama (kiti_kipo[kiti_cha_mtumiaji] == 0) { kiti_cha_mtumiaji = 0; }
+}
+
+w0 badili_rangi(n32 m) {
+    n32 r = rangi_ya_kiti[m];
+    n32 jaribu = 0;
+    wakati (jaribu < 8) {
+        r = (r + 1) % 8;
+        n32 inatumika = 0;
+        n32 x = 0;
+        wakati (x < 4) { kama (x != m && rangi_ya_kiti[x] == r) { inatumika = 1; } x = x + 1; }
+        kama (inatumika == 0) { rangi_ya_kiti[m] = r; akiba_halali = 0; rudisha; }
+        jaribu = jaribu + 1;
+    }
+}
+
+w0 anza_mchezo_wa_simu() {
+    andaa_viti_kwa_idadi();
+    n32 m = 0;
+    wakati (m < 4) {
+        ni_kompyuta[m] = 0;
+        kama (aina_ya_mchezo == HALI_YA_MCHEZO_KOMPYUTA && m != kiti_cha_mtumiaji) { ni_kompyuta[m] = 1; }
+        m = m + 1;
+    }
+    anza_mchezo_mpya();
+    kete[0] = 0;
+    kete[1] = 0;
+    uhuishaji = U_HAKUNA;
+    akiba_halali = 0;
+    hatua_iliyochaguliwa = 0;
+    toast_ujumbe = -1;
+    nenda(S_MCHEZO);
+}
+
+w0 chagua_kwa_mguso(n32 x, n32 y) {
+    n32 bora = -1;
+    n32 umbali_bora = SELI_A * SELI_A * 2;
+    n32 j = 0;
+    wakati (j < PAUNI_KWA_MCHEZAJI) {
+        n32 kk = zamu * 4 + j;
+        n32 dx = onyesho_x[kk] - x;
+        n32 dy = onyesho_y[kk] - y;
+        n32 d = dx * dx + dy * dy;
+        n32 i = 0;
+        n32 inafaa = 0;
+        wakati (i < idadi_ya_hatua) { kama (lengo_la_hatua(zamu, j, i) != HAIWEZEKANI) { inafaa = 1; } i = i + 1; }
+        kama (inafaa && d < umbali_bora) { umbali_bora = d; bora = j; }
+        j = j + 1;
+    }
+    kama (bora < 0) {
+        n32 s = gridi_kutoka_pikseli(y - ubao_y);
+        n32 w = gridi_kutoka_pikseli(x - ubao_x);
+        kama (s >= 0 && w >= 0) { bora = pauni_kwenye_seli(s, w); }
+    }
+    kama (bora < 0) { rudisha; }
+    kama (hatua_iliyochaguliwa >= idadi_ya_hatua) { hatua_iliyochaguliwa = 0; }
+    n32 i = hatua_iliyochaguliwa;
+    kama (lengo_la_hatua(zamu, bora, i) == HAIWEZEKANI) {
+        i = 0;
+        wakati (i < idadi_ya_hatua && lengo_la_hatua(zamu, bora, i) == HAIWEZEKANI) { i = i + 1; }
+        kama (i >= idadi_ya_hatua) { rudisha; }
+    }
+    kama (mtandao_ni_mteja()) { mtandao_ombi(2, bora, i); rudisha; }
+    fanya_hatua(bora, i);
+}
+
+w0 gusa_mchezo(n32 x, n32 y, n32 id) {
+    kama (mshindi >= 0) {
+        kama (id == 120) {
+            kama (aina_ya_mchezo == HALI_YA_MCHEZO_WIFI) { anza_mchezo_mpya(); kete[0] = 0; akiba_halali = 0; mtandao_tuma_hali(); }
+            sivyo { anza_mchezo_wa_simu(); }
+        }
+        kama (id == 121) { mtandao_funga(); nenda(S_MENYU); }
+        rudisha;
+    }
+    kama (uhuishaji != U_HAKUNA || ni_mchezaji_wa_simu_hii(zamu) == 0) { rudisha; }
+    kama (id == 101 && hali_ya_zamu == HALI_RUSHA) {
+        kama (mtandao_ni_mteja()) { mtandao_ombi(1, 0, 0); } sivyo { fanya_rusha(); }
+        rudisha;
+    }
+    kama (id >= 110 && id < 118) { hatua_iliyochaguliwa = id - 110; rudisha; }
+    kama (hali_ya_zamu == HALI_SOGEZA) { chagua_kwa_mguso(x, y); }
+}
+
+n32 gusa_droo(n32 id) {
+    kama (droo_iko_wazi == 0) { rudisha 0; }
+    funga_droo();
+    kama (id == 911) { anza_mchezo_wa_simu(); }
+    kama (id == 913) { mtandao_funga(); aina_ya_mchezo = HALI_YA_MCHEZO_KOMPYUTA; andaa_viti_kwa_idadi(); nenda(S_MPANGILIO); }
+    kama (id == 912) { mtandao_funga(); nenda(S_MENYU); }
+    kama (id == 914) { skrini_ya_nyuma_ya_sheria = skrini; kama (skrini == S_MCHEZO) { skrini_ya_nyuma_ya_sheria = S_MENYU; } nenda(S_SHERIA); }
+    kama (id == 915) { nenda(S_KANUNI); }
+    kama (id == 916) { nenda(S_REKODI); }
+    kama (id == 917) { lugha = 1 - lugha; hifadhi_wasifu(); }
+    kama (id == 918) { nenda(S_KUHUSU); }
+    rudisha 1;
+}
+
+w0 gusa(n32 x, n32 y) {
+    n32 id = kitufe_kilichoguswa(x, y);
+    kama (gusa_droo(id)) { rudisha; }
+    kama (id == 900) { fungua_droo(); rudisha; }
+    kama (id == 901) { sauti_badili_kipaza(); rudisha; }
+    kama (skrini == S_KAJARA) { nenda(S_KARIBU); rudisha; }
+    kama (skrini == S_KARIBU) {
+        kama (id == 1) { lugha = 0; hifadhi_wasifu(); }
+        kama (id == 2) { lugha = 1; hifadhi_wasifu(); }
+        kama (id == 3) { kama (ina_wasifu) { nenda(S_MENYU); } sivyo { nenda(S_WASIFU); } }
+        rudisha;
+    }
+    kama (skrini == S_WASIFU) {
+        kama (id >= 200 && id < 226 && urefu_wa_jina < 16) {
+            jina_la_mchezaji[urefu_wa_jina] = MIPANGILIO_YA_KIBODI[id - 200];
+            urefu_wa_jina = urefu_wa_jina + 1;
+            jina_la_mchezaji[urefu_wa_jina] = 0;
+        }
+        kama (id == 230 && urefu_wa_jina > 0 && urefu_wa_jina < 16) {
+            jina_la_mchezaji[urefu_wa_jina] = 32;
+            urefu_wa_jina = urefu_wa_jina + 1;
+            jina_la_mchezaji[urefu_wa_jina] = 0;
+        }
+        kama (id == 231 && urefu_wa_jina > 0) { urefu_wa_jina = urefu_wa_jina - 1; jina_la_mchezaji[urefu_wa_jina] = 0; }
+        kama (id == 232 && urefu_wa_jina > 0) { ina_wasifu = 1; hifadhi_wasifu(); nenda(S_MENYU); }
+        rudisha;
+    }
+    kama (skrini == S_MENYU) {
+        kama (id == 10) { aina_ya_mchezo = HALI_YA_MCHEZO_KOMPYUTA; andaa_viti_kwa_idadi(); nenda(S_MPANGILIO); }
+        kama (id == 11) { aina_ya_mchezo = HALI_YA_MCHEZO_PAMOJA; andaa_viti_kwa_idadi(); nenda(S_MPANGILIO); }
+        kama (id == 12) { aina_ya_mchezo = HALI_YA_MCHEZO_WIFI; mtandao_anza_kutafuta(); nenda(S_WIFI); }
+        rudisha;
+    }
+    kama (skrini == S_MPANGILIO) {
+        kama (id >= 22 && id <= 24) { idadi_ya_wachezaji = id - 20; andaa_viti_kwa_idadi(); }
+        kama (id >= 30 && id < 34) { badili_rangi(id - 30); }
+        kama (id >= 40 && id < 44) { kiti_cha_mtumiaji = id - 40; }
+        kama (id == 50) { skrini_ya_nyuma_ya_sheria = S_MPANGILIO; nenda(S_SHERIA); }
+        kama (id == 51) { anza_mchezo_wa_simu(); }
+        rudisha;
+    }
+    kama (skrini == S_SHERIA) {
+        kama (id == 60) { SHERIA_KUINGIA = 5; }
+        kama (id == 61) { SHERIA_KUINGIA = 6; }
+        kama (id == 62) { kama (SHERIA_ZAWADI_YA_KULA > 0) { SHERIA_ZAWADI_YA_KULA = 0; } sivyo { SHERIA_ZAWADI_YA_KULA = 20; } }
+        kama (id == 63) { kama (SHERIA_ZAWADI_YA_NYUMBANI > 0) { SHERIA_ZAWADI_YA_NYUMBANI = 0; } sivyo { SHERIA_ZAWADI_YA_NYUMBANI = 10; } }
+        kama (id == 64) { SHERIA_VIZUIZI = 1 - SHERIA_VIZUIZI; }
+        kama (id == 65) { SHERIA_SALAMA = 1 - SHERIA_SALAMA; akiba_halali = 0; }
+        kama (id == 66) { SHERIA_PACHA_TATU = 1 - SHERIA_PACHA_TATU; }
+        kama (id >= 72 && id <= 74) { PAUNI_KWA_MCHEZAJI = id - 70; }
+        kama (id == 70) { nenda(skrini_ya_nyuma_ya_sheria); }
+        rudisha;
+    }
+    kama (skrini == S_WIFI) {
+        kama (id == 140) { mtandao_anza_mwenyeji(); }
+        kama (id == 161) { mtandao_funga(); mtandao_anza_kutafuta(); }
+        kama (id >= 150 && id < 154) { mtandao_dai_kiti(id - 150); }
+        kama (id >= 170 && id < 175) { mtandao_jiunge(id - 170); }
+        kama (id == 160) {
+            n32 m = 0;
+            wakati (m < 4) { kiti_kipo[m] = 1; ni_kompyuta[m] = mmiliki_wa_kiti(m) < 0; m = m + 1; }
+            anza_mchezo_mpya();
+            kete[0] = 0; kete[1] = 0;
+            uhuishaji = U_HAKUNA; akiba_halali = 0; toast_ujumbe = -1;
+            nenda(S_MCHEZO);
+            mtandao_tuma_hali();
+        }
+        rudisha;
+    }
+    kama (skrini == S_MCHEZO) { gusa_mchezo(x, y, id); }
+}
+
+// kitufe cha nyuma: droo, kisha skrini moja nyuma; 0 = mfumo ufunge programu
+n32 nyuma() {
+    kama (droo_iko_wazi) { funga_droo(); rudisha 1; }
+    kama (skrini == S_KAJARA || skrini == S_KARIBU || skrini == S_MENYU) { rudisha 0; }
+    kama (skrini == S_MCHEZO) { fungua_droo(); rudisha 1; }
+    kama (skrini == S_WIFI) { mtandao_funga(); }
+    kama (skrini == S_SHERIA) { nenda(skrini_ya_nyuma_ya_sheria); rudisha 1; }
+    kama (skrini == S_WASIFU && ina_wasifu == 0) { nenda(S_KARIBU); rudisha 1; }
+    nenda(S_MENYU);
+    rudisha 1;
+}
