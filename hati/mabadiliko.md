@@ -1,12 +1,14 @@
-# Pachisi 0.0.2
+# Pachisi 0.0.4
 
-- Mchezo huendelea baada ya mshindi wa kwanza: nafasi 1 hadi 4, na asilimia ya
-  safari ya kila mchezaji. / Play goes on after the first winner: places 1-4,
-  plus each player's progress in percent.
-- Mandhari mapya ya Shanga, ikoni mpya. / New Shanga theme and app icon.
-- Sauti ya chumba imerekebishwa (spika kuu, hufanya kazi hata kwenye lobby).
-  / Room voice fixed (main speaker, works in the lobby too).
-- Vyumba vya Wi-Fi bila kuchelewa. / Wi-Fi rooms without lag.
-- Sasisho kutoka kwa mwenyeji wa chumba na kutoka GitHub. / Updates from the
-  room host and from GitHub.
-- Lugha huchaguliwa mara ya kwanza tu. / Language is chosen once.
+- Mchezo uliofungwa huendelea: kadi ya "Endelea na mchezo" kwenye menyu. /
+  A closed game carries on: "Resume game" card on the menu.
+- Vyumba vya Wi-Fi: aliyekatika hurudi kiti chake, mwenyeji anaweza
+  kusimamisha na kuendeleza chumba kilichohifadhiwa. / Wi-Fi rooms: a dropped
+  player gets their seat back; the host can pause and continue a saved room.
+- Anayeanza huchaguliwa kwa bahati. / A random player starts each game.
+- Pacha zenye pauni zote nje huongeza nyuso za chini (sheria inaweza kuzimwa).
+  / Doubles with every pawn out add the bottom faces (house rule, can be off).
+- Nyota kwenye seli salama, bango la zamu, mtetemo zamu yako ikifika. / Stars
+  on safe squares, a turn banner, a buzz when it is your turn.
+- Kurudi kwenye programu hakuonyeshi tena skrini iliyofifia. / Returning to
+  the app no longer shows a dimmed screen.
