@@ -90,8 +90,10 @@ w0 anza_mchezo_mpya() {
         }
         m = m + 1;
     }
-    zamu = 0;
-    wakati (kiti_kipo[zamu] == 0 && zamu < 3) { zamu = zamu + 1; }
+    // anayeanza huchaguliwa kwa bahati (kama kurusha kete kuamua anayeanza):
+    // kuanza kwanza ni faida, kwa hiyo isiwe ya rangi moja kila mara
+    zamu = kete_nasibu() - 1;
+    wakati (zamu > 3 || kiti_kipo[zamu] == 0) { zamu = kete_nasibu() - 1; }
     idadi_ya_hatua = 0;
     pacha_mfululizo = 0;
     ilikuwa_pacha = 0;
