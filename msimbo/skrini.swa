@@ -35,6 +35,9 @@ w0 mtandao_acha_kuunganisha_upya();
 w0 mtandao_kompyuta_ichukue_kiti(n32 m);
 w0 mtandao_badili_kusimamisha();
 n32 mtandao_kuna_chumba_kilichohifadhiwa();
+n32 kuna_mchezo_wa_simu_uliohifadhiwa();
+n32 aina_ya_mchezo_uliohifadhiwa();
+w0 endelea_mchezo_wa_simu();
 n8* mtandao_nambari_ya_chumba_kilichohifadhiwa();
 w0 mtandao_endelea_chumba();
 n8 nambari_ya_chumba[8];
@@ -251,6 +254,7 @@ n8* t(n32 id) {
     kama (id == 96) { kama (e) { rudisha "Game paused"; } rudisha "Mchezo umesimamishwa"; }
     kama (id == 97) { kama (e) { rudisha "Pause the game"; } rudisha "Simamisha mchezo"; }
     kama (id == 98) { kama (e) { rudisha "Resume the game"; } rudisha "Endelea na mchezo"; }
+    kama (id == 102) { kama (e) { rudisha "Resume game"; } rudisha "Endelea na mchezo"; }
     kama (id == 100) { kama (e) { rudisha "Doubles! Bottom faces added too"; } rudisha "Pacha! Nyuso za chini zimeongezwa"; }
     kama (id == 101) { kama (e) { rudisha "Doubles add bottom faces"; } rudisha "Pacha huongeza nyuso za chini"; }
     kama (id == 99) { kama (e) { rudisha "Players rejoin their seats"; } rudisha "Wachezaji hurudi viti vyao"; }
@@ -1549,6 +1553,7 @@ w0 kadi_ya_menyu(n32 id, n32 x, n32 y, n32 u, n32 h, n32 aikoni, n8* kichwa, n8*
     kama (aikoni == 0) { aikoni_kete(ix, iy, pk(34), R_MAANDISHI, R_DUARA); }
     kama (aikoni == 1) { aikoni_watu(ix, iy, pk(40), R_MAANDISHI, R_DUARA); }
     kama (aikoni == 2) { aikoni_wifi(ix, iy - pk(4), pk(38), R_MAANDISHI, R_DUARA); }
+    kama (aikoni == 3) { aikoni_cheza(ix, iy, pk(30), R_MAANDISHI); }
     andika_kushoto(kichwa, x + pk(120), iy - pk(20), F_KAWAIDA, T_WASTANI, R_MAANDISHI);
     andika_kushoto(maelezo, x + pk(120), iy + pk(24), F_KAWAIDA, pk(28), R_HAFIFU);
     aikoni_mshale(x + u - pk(48), iy, pk(28), R_HAFIFU);
@@ -1572,6 +1577,25 @@ w0 chora_menyu() {
     n32 u = w - pk(48);
     n32 ch = pk(117);
     n32 y = h - pk(48) - 3 * ch - 2 * pk(24);
+    // mchezo uliohifadhiwa (programu ilifungwa): kadi ya "Endelea" juu
+    n32 ya_simu = kuna_mchezo_wa_simu_uliohifadhiwa();
+    n32 ya_chumba = ya_simu == 0 && mtandao_kuna_chumba_kilichohifadhiwa();
+    kama (ya_simu || ya_chumba) {
+        n8* maelezo = t(48);
+        n8 chumba_s[24];
+        kama (ya_simu) {
+            maelezo = t(9);
+            kama (aina_ya_mchezo_uliohifadhiwa() == HALI_YA_MCHEZO_PAMOJA) { maelezo = t(10); }
+        } sivyo {
+            n8* c = t(51);
+            n32 a2 = urefu_wa_mfuatano(c);
+            nakili(chumba_s, c, a2);
+            chumba_s[a2] = 32;
+            nakili(chumba_s + a2 + 1, mtandao_nambari_ya_chumba_kilichohifadhiwa(), 5);
+            maelezo = chumba_s;
+        }
+        kadi_ya_menyu(13, x, y - ch - pk(24), u, ch, 3, t(102), maelezo);
+    }
     kadi_ya_menyu(10, x, y, u, ch, 0, t(9), t(71));
     kadi_ya_menyu(11, x, y + ch + pk(24), u, ch, 1, t(10), t(72));
     kadi_ya_menyu(12, x, y + 2 * (ch + pk(24)), u, ch, 2, t(11), t(73));
@@ -2001,6 +2025,7 @@ w0 anza_mchezo_wa_simu() {
     hatua_iliyochaguliwa = 0;
     toast_ujumbe = -1;
     nenda(S_MCHEZO);
+    mtandao_tuma_hali();        // akiba mpya mara moja: mchezo wa zamani haurudi
 }
 
 w0 chagua_kwa_mguso(n32 x, n32 y) {
@@ -2101,6 +2126,10 @@ w0 gusa(n32 x, n32 y) {
     }
     kama (skrini == S_MENYU) {
         kama (id == 10) { aina_ya_mchezo = HALI_YA_MCHEZO_KOMPYUTA; andaa_viti_kwa_idadi(); nenda(S_MPANGILIO); }
+        kama (id == 13) {
+            kama (kuna_mchezo_wa_simu_uliohifadhiwa()) { endelea_mchezo_wa_simu(); }
+            sivyo { mtandao_endelea_chumba(); }
+        }
         kama (id == 11) { aina_ya_mchezo = HALI_YA_MCHEZO_PAMOJA; andaa_viti_kwa_idadi(); nenda(S_MPANGILIO); }
         kama (id == 12) { aina_ya_mchezo = HALI_YA_MCHEZO_WIFI; mtandao_anza_kutafuta(); nenda(S_WIFI); }
         rudisha;

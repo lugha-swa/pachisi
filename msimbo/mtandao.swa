@@ -342,6 +342,7 @@ w0 jaza_hali(n32 kwa_mteja) {
     v[76] = waliomaliza;
     v[77] = chumba_kimesimamishwa;
     v[78] = SHERIA_NYUSO_ZA_CHINI;
+    v[79] = aina_ya_mchezo;
     nakili(chombo_cha_hali + 320, majina_ya_viti, 64);
     nakili(chombo_cha_hali + 384, vitambulisho_vya_viti, 48);
 }
@@ -349,8 +350,11 @@ w0 jaza_hali(n32 kwa_mteja) {
 // ---------------------------------------------------------------- akiba ya chumba
 n8 chombo_cha_akiba[448];
 
-w0 hifadhi_chumba() {
-    kama (njia_ya("chumba") == 0) { rudisha; }
+// akiba mbili: "chumba" (mwenyeji wa Wi-Fi) na "mchezo" (kompyuta au simu
+// moja). Huandikwa kila hali inapobadilika, kwa hiyo mfumo ukiifunga programu
+// mchezo hauyeyuki: menyu huonyesha "Endelea" programu ikifunguliwa tena.
+w0 hifadhi_hali(n8* faili) {
+    kama (njia_ya(faili) == 0) { rudisha; }
     kama (mshindi >= 0) { wito_wa_mfumo(87, njia_ya_faili, 0, 0, 0, 0, 0); rudisha; }   // umekwisha: futa
     jaza_hali(0);
     n64 fd = wito_wa_mfumo(2, njia_ya_faili, 577, 384, 0, 0, 0);
@@ -359,9 +363,9 @@ w0 hifadhi_chumba() {
     wito_wa_mfumo(3, fd, 0, 0, 0, 0, 0);
 }
 
-// 1 kama kuna mchezo wa chumba uliohifadhiwa na haujaisha (huusoma kwenye chombo_cha_akiba)
-n32 mtandao_kuna_chumba_kilichohifadhiwa() {
-    kama (njia_ya("chumba") == 0) { rudisha 0; }
+// 1 kama faili lina mchezo uliohifadhiwa ambao haujaisha (huusomwa kwenye chombo_cha_akiba)
+n32 soma_akiba(n8* faili) {
+    kama (njia_ya(faili) == 0) { rudisha 0; }
     n64 fd = wito_wa_mfumo(2, njia_ya_faili, 0, 0, 0, 0, 0);
     kama (fd < 0) { rudisha 0; }
     n64 n = wito_wa_mfumo(0, fd, chombo_cha_akiba, HALI_UREFU, 0, 0, 0);
@@ -369,6 +373,10 @@ n32 mtandao_kuna_chumba_kilichohifadhiwa() {
     n32* v = chombo_cha_akiba;
     rudisha n == HALI_UREFU && v[0] == 1346913107 && v[67] && v[56] < 0;
 }
+
+n32 mtandao_kuna_chumba_kilichohifadhiwa() { rudisha soma_akiba("chumba"); }
+n32 kuna_mchezo_wa_simu_uliohifadhiwa() { rudisha soma_akiba("mchezo"); }
+n32 aina_ya_mchezo_uliohifadhiwa() { n32* v = chombo_cha_akiba; rudisha v[79]; }
 
 n8 nambari_ya_akiba[5];
 n8* mtandao_nambari_ya_chumba_kilichohifadhiwa() {
@@ -380,7 +388,10 @@ n8* mtandao_nambari_ya_chumba_kilichohifadhiwa() {
 }
 
 w0 mtandao_tuma_hali() {
-    kama (jukumu_la_mtandao != 1) { rudisha; }
+    kama (jukumu_la_mtandao != 1) {
+        kama (aina_ya_mchezo != HALI_YA_MCHEZO_WIFI && skrini == S_MCHEZO) { hifadhi_hali("mchezo"); }
+        rudisha;
+    }
     n32 i = 0;
     wakati (i < 3) {
         kama (tundu_la_mteja[i] >= 0) {
@@ -389,7 +400,7 @@ w0 mtandao_tuma_hali() {
         }
         i = i + 1;
     }
-    kama (skrini == S_MCHEZO) { hifadhi_chumba(); }
+    kama (skrini == S_MCHEZO) { hifadhi_hali("chumba"); }
 }
 
 // endeleza mchezo uliohifadhiwa: chumba kilekile (nambari ileile), viti vya
@@ -411,6 +422,20 @@ w0 mtandao_endelea_chumba() {
     aina_ya_mchezo = HALI_YA_MCHEZO_WIFI;
     akiba_halali = 0;
     uhuishaji = U_HAKUNA;
+    toast_ujumbe = -1;
+    nenda(S_MCHEZO);
+    omba_fremu_ijayo();
+}
+
+// endeleza mchezo wa kompyuta au wa simu moja uliohifadhiwa
+w0 endelea_mchezo_wa_simu() {
+    kama (kuna_mchezo_wa_simu_uliohifadhiwa() == 0) { rudisha; }
+    mtandao_funga();
+    soma_hali(chombo_cha_akiba);
+    aina_ya_mchezo = aina_ya_mchezo_uliohifadhiwa();
+    akiba_halali = 0;
+    uhuishaji = U_HAKUNA;
+    hatua_iliyochaguliwa = 0;
     toast_ujumbe = -1;
     nenda(S_MCHEZO);
     omba_fremu_ijayo();
