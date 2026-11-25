@@ -113,7 +113,9 @@ w0 kompyuta_hatua() {
 }
 
 // zamu ni ya kompyuta inayoendeshwa na simu hii
+n32 iko_nyuma = 0;
 n32 zamu_ya_kompyuta() {
+    kama (iko_nyuma) { rudisha 0; }
     kama (skrini != S_MCHEZO || droo_iko_wazi || mshindi >= 0 || mtandao_ni_mteja()) { rudisha 0; }
     // chumba: mwenyeji pekee huendesha kompyuta, na si wakati kimesimamishwa
     // (mteja anayeunganisha upya hana jukumu la mteja kwa muda)
@@ -172,9 +174,10 @@ n32 mguso(n32 kishikio, n32 matukio, n8* data) {
 w0 dirisha_limeundwa(n8* shughuli, n8* dirisha) { dirisha_hili = dirisha; akiba_halali = 0; omba_fremu_ijayo(); }
 w0 dirisha_chora_tena(n8* shughuli, n8* dirisha) { dirisha_hili = dirisha; chora(); }
 w0 dirisha_limeharibiwa(n8* shughuli, n8* dirisha) { dirisha_hili = 0; }
-w0 imesitishwa(n8* shughuli) {
-    kama (skrini == S_MCHEZO && mshindi < 0 && aina_ya_mchezo != HALI_YA_MCHEZO_WIFI) { droo_iko_wazi = 1; droo_akiba_halali = 0; droo_muda = 0; }
-}
+// programu ikienda nyuma kompyuta husimama (mchezo umehifadhiwa tayari kila
+// hatua); ikirudi, skrini huchorwa upya na mchezo huendelea pale pale
+w0 imesitishwa(n8* shughuli) { iko_nyuma = 1; }
+w0 imerudi(n8* shughuli) { iko_nyuma = 0; akiba_halali = 0; omba_fremu_ijayo(); }
 
 w0 foleni_imeundwa(n8* shughuli, n8* foleni) {
     foleni_hii = foleni;
@@ -276,6 +279,7 @@ n32 anza(n8* shughuli, n8* hali_iliyohifadhiwa, n64 ukubwa) {
     fuata_mandhari_ya_mfumo();
     n64* sh = shughuli;
     n64* vitendo = sh[0];
+    vitendo[1] = &imerudi;                 // onResume
     vitendo[3] = &imesitishwa;             // onPause
     vitendo[7] = &dirisha_limeundwa;       // onNativeWindowCreated
     vitendo[9] = &dirisha_chora_tena;      // onNativeWindowRedrawNeeded
