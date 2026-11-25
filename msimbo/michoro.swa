@@ -232,20 +232,21 @@ n32 RANGI_YA_NUKTA = 0;
 n32 RANGI_YA_UKINGO_WA_PAUNI = 0;
 
 // kete: mraba bapa wenye pembe za mviringo na ukingo mwembamba; nukta za mviringo
-w0 chora_kete(n32 x, n32 y, n32 u, n32 thamani, n32 hai) {
+// kete: nukta huwa za rangi ya mwenye zamu, ili kete zenyewe zionyeshe zamu
+w0 chora_kete(n32 x, n32 y, n32 u, n32 thamani, n32 hai, n32 nukta) {
     n32 p = u * 22 / 100;
     n32 mwili = RANGI_YA_KETE;
-    kama (hai == 0) { mwili = RANGI_YA_KETE_ZIMA; }
+    kama (hai == 0) { mwili = RANGI_YA_KETE_ZIMA; nukta = RANGI_YA_NUKTA; }
     mviringo(x, y, u, u, p, RANGI_YA_KETE_UKINGO);
     mviringo(x + 1, y + 1, u - 2, u - 2, p - 1, mwili);
     n32 d = u * 26 / 100;
     n32 r = u * 9 / 100;
     n32 cx = x + u / 2;
     n32 cy = y + u / 2;
-    kama (thamani % 2 == 1) { duara(cx, cy, r, RANGI_YA_NUKTA); }
-    kama (thamani >= 2) { duara(cx - d, cy - d, r, RANGI_YA_NUKTA); duara(cx + d, cy + d, r, RANGI_YA_NUKTA); }
-    kama (thamani >= 4) { duara(cx + d, cy - d, r, RANGI_YA_NUKTA); duara(cx - d, cy + d, r, RANGI_YA_NUKTA); }
-    kama (thamani == 6) { duara(cx - d, cy, r, RANGI_YA_NUKTA); duara(cx + d, cy, r, RANGI_YA_NUKTA); }
+    kama (thamani % 2 == 1) { duara(cx, cy, r, nukta); }
+    kama (thamani >= 2) { duara(cx - d, cy - d, r, nukta); duara(cx + d, cy + d, r, nukta); }
+    kama (thamani >= 4) { duara(cx + d, cy - d, r, nukta); duara(cx - d, cy + d, r, nukta); }
+    kama (thamani == 6) { duara(cx - d, cy, r, nukta); duara(cx + d, cy, r, nukta); }
 }
 
 // pauni: diski bapa ya rangi yenye pete ya kutenganisha na kivuli laini chini

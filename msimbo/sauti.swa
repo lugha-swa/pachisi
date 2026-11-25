@@ -127,7 +127,7 @@ n8* fungua_mkondo(n32 kuingiza) {
     aaudio_umbo(mjenzi, 1);                          // PCM_I16
     aaudio_kasi(mjenzi, 12);                         // LOW_LATENCY
     kama (kuingiza) { aaudio_chanzo(mjenzi, 7); }    // VOICE_COMMUNICATION
-    sivyo { aaudio_matumizi(mjenzi, 2); }            // USAGE_VOICE_COMMUNICATION
+    sivyo { aaudio_matumizi(mjenzi, 14); }           // USAGE_GAME: spika kuu, si sikio
     n8* mkondo = 0;
     n32 jibu = aaudio_fungua(mjenzi, &mkondo);
     aaudio_futa_mjenzi(mjenzi);
@@ -138,6 +138,7 @@ n8* fungua_mkondo(n32 kuingiza) {
 
 w0 funga_sauti() {
     kama (mkondo_wa_kipaza != 0) { aaudio_funga(mkondo_wa_kipaza); mkondo_wa_kipaza = 0; }
+    kiasi_cha_kipaza = 0;
     kama (mkondo_wa_spika != 0) { aaudio_funga(mkondo_wa_spika); mkondo_wa_spika = 0; }
     kipaza_kimewashwa = 0;
 }
@@ -146,6 +147,7 @@ w0 sauti_badili_kipaza() {
     kama (kipaza_kimewashwa) {
         kipaza_kimewashwa = 0;
         kama (mkondo_wa_kipaza != 0) { aaudio_funga(mkondo_wa_kipaza); mkondo_wa_kipaza = 0; }
+        kiasi_cha_kipaza = 0;
         rudisha;
     }
     kama (ruhusa_ipo() == 0) {
@@ -181,10 +183,12 @@ w0 sauti_pokea(n32 kiti, n8* data, n32 urefu) {
 }
 
 n8 chombo_cha_kipaza[1280];
+n32 kiasi_cha_kipaza = 0;          // sampuli zilizokwisha somwa kwenye kipande hiki
 n8 chombo_cha_spika[2048];
 
 w0 sauti_kila_fremu() {
-    n32 hai = aina_ya_mchezo == HALI_YA_MCHEZO_WIFI && (mtandao_ni_mwenyeji() || mtandao_ni_mteja());
+    // sauti iko hai muda wote mtu yuko chumbani, hata kabla mchezo haujaanza
+    n32 hai = mtandao_ni_mwenyeji() || mtandao_ni_mteja();
     kama (hai == 0) {
         kama (mkondo_wa_kipaza != 0 || mkondo_wa_spika != 0) { funga_sauti(); }
         rudisha;
@@ -195,8 +199,12 @@ w0 sauti_kila_fremu() {
     kama (kipaza_kimewashwa && mkondo_wa_kipaza == 0 && ruhusa_ipo()) { mkondo_wa_kipaza = fungua_mkondo(1); }
     kama (kipaza_kimewashwa && mkondo_wa_kipaza != 0) {
         n32 kiti = kiti_changu();
-        n32 n = aaudio_soma(mkondo_wa_kipaza, chombo_cha_kipaza, KIPANDE, 0);
-        wakati (n == KIPANDE) {
+        // usomaji bila kusubiri hurudisha kilichopo tu, mara nyingi chini ya
+        // kipande kizima: hujazwa kidogo kidogo, kisha hutumwa kikijaa
+        n32 n = aaudio_soma(mkondo_wa_kipaza, chombo_cha_kipaza + kiasi_cha_kipaza * 2, KIPANDE - kiasi_cha_kipaza, 0);
+        kama (n > 0) { kiasi_cha_kipaza = kiasi_cha_kipaza + n; }
+        wakati (kiasi_cha_kipaza == KIPANDE) {
+            kiasi_cha_kipaza = 0;
             n32 kubwa = 0;
             n32 i = 0;
             wakati (i < KIPANDE) {
@@ -205,10 +213,16 @@ w0 sauti_kila_fremu() {
                 kama (s > kubwa) { kubwa = s; }
                 i = i + 1;
             }
-            kama (kubwa > 1200 && kiti >= 0) { muda_wa_kuongea[kiti] = sasa_ms(); }
+            // spika kuu inapocheza sauti ya mwenzako, kipaza huisikia tena; mtu
+            // mmoja huongea kwa wakati mmoja ili mwangwi usirudi kama mlio
+            n32 mwingine = 0;
+            n32 m = 0;
+            wakati (m < 4) { kama (m != kiti && sauti_anaongea(m)) { mwingine = 1; } m = m + 1; }
+            kama (kubwa > 1200 && kiti >= 0 && mwingine == 0) { muda_wa_kuongea[kiti] = sasa_ms(); }
             // kimya hakitumwi: sauti hupita tu mtu akiongea na ms 400 baadaye
-            kama (kiti >= 0 && sasa_ms() - muda_wa_kuongea[kiti] < 400) { mtandao_tuma_sauti(kiti, chombo_cha_kipaza, KIPANDE * 2); }
+            kama (kiti >= 0 && mwingine == 0 && sasa_ms() - muda_wa_kuongea[kiti] < 400) { mtandao_tuma_sauti(kiti, chombo_cha_kipaza, KIPANDE * 2); }
             n = aaudio_soma(mkondo_wa_kipaza, chombo_cha_kipaza, KIPANDE, 0);
+            kama (n > 0) { kiasi_cha_kipaza = n; }
         }
     }
     // spika: andika kilichochanganywa hadi kishale cha mbali zaidi

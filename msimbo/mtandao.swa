@@ -12,9 +12,12 @@
 //
 // Kila ujumbe wa TCP ni fremu: [aina, kiti, urefu (baiti 2, LE)] + data.
 //   aina 1: hali kutoka kwa mwenyeji (baiti 384: n32[80] + majina 4 x 16)
-//   aina 2: ombi la mteja (baiti 20): [ombi, a, b, 0] + jina (baiti 16);
-//           ombi 1 = rusha, 2 = sogeza pauni a kwa hatua b, 3 = dai kiti a, 4 = salamu
+//   aina 2: ombi la mteja (baiti 20): [ombi, a, b, toleo] + jina (baiti 16);
+//           ombi 1 = rusha, 2 = sogeza pauni a kwa hatua b, 3 = dai kiti a,
+//           4 = salamu, 5 = nitumie APK
 //   aina 3: sauti: PCM i16 ya 16 kHz ya kiti `kiti` (mwenyeji huipeleka kwa wengine)
+//   aina 4: ofa ya sasisho: n32 toleo, n32 ukubwa wa APK
+//   aina 5: kipande cha APK (hadi baiti 4096, kwa mpangilio)
 // Mteja hulinganisha hali mpya na ya zamani ili kuhuisha kete na hatua kama
 // mchezo wa simu moja.
 
@@ -75,6 +78,17 @@ n32 FOLENI = 16384;
 n8 foleni_ya_kutuma[49152];     // 3 x 16384
 n32 kiasi_cha_foleni[3];
 n32 muunganiko_umevunjika[3];   // foleni ilijaa: mwenzake hapokei tena
+
+// toleo la programu hii (pia versionCode ya APK, jenga-apk.sh). Mteja hulituma
+// kwenye salamu; mwenyeji mwenye toleo jipya zaidi humpa ofa ya kusasisha na,
+// akikubali, humtumia APK yake mwenyewe vipande vipande (aina 4 na 5).
+n32 TOLEO_LA_PROGRAMU = 2;
+n32 upakiaji[3];                // mwenyeji: baiti za APK zilizotumwa kwa mteja i, au -1
+n8 kipande_cha_apk[4096];
+n32 apk_ukubwa_wangu();
+n32 apk_soma(n32 nafasi, n8* chombo, n32 urefu);
+w0 sasisho_ofa(n32 toleo, n32 ukubwa);
+w0 sasisho_kipande(n8* data, n32 urefu);
 
 w0 sukuma_foleni(n32 i) {
     kama (tundu_la_mteja[i] < 0 || kiasi_cha_foleni[i] == 0) { rudisha; }
@@ -168,6 +182,21 @@ w0 anza_muunganiko(n32 i, n32 tundu) {
     kiasi_cha_mapokezi[i] = 0;
     kiasi_cha_foleni[i] = 0;
     muunganiko_umevunjika[i] = 0;
+    upakiaji[i] = -1;
+}
+
+// mwenyeji: jaza foleni ya mteja i kwa vipande vya APK, bila kuzidi nafasi yake
+w0 tuma_vipande_vya_apk(n32 i) {
+    kama (tundu_la_mteja[i] < 0 || upakiaji[i] < 0) { rudisha; }
+    n32 u = apk_ukubwa_wangu();
+    wakati (upakiaji[i] < u && kiasi_cha_foleni[i] + 4100 <= FOLENI) {
+        n32 n = u - upakiaji[i];
+        kama (n > 4096) { n = 4096; }
+        kama (apk_soma(upakiaji[i], kipande_cha_apk, n) != n) { upakiaji[i] = -1; rudisha; }
+        tuma_fremu(i, 5, 0, kipande_cha_apk, n);
+        upakiaji[i] = upakiaji[i] + n;
+    }
+    kama (upakiaji[i] >= u) { upakiaji[i] = -1; }
 }
 
 w0 mtandao_funga() {
@@ -272,7 +301,8 @@ w0 jaza_hali(n32 kwa_mteja) {
     v[66] = kwa_mteja;
     v[67] = skrini == S_MCHEZO;
     i = 0;
-    wakati (i < 4) { v[68 + i] = nambari_ya_chumba[i]; i = i + 1; }
+    wakati (i < 4) { v[68 + i] = nambari_ya_chumba[i]; v[72 + i] = nafasi_ya_kumaliza[i]; i = i + 1; }
+    v[76] = waliomaliza;
     nakili(chombo_cha_hali + 320, majina_ya_viti, 64);
 }
 
@@ -306,6 +336,14 @@ w0 shughulikia_ombi(n32 mteja, n8* o) {
     n32 aina = o[0] & 255;
     n32 a = o[1] & 255;
     n32 b = o[2] & 255;
+    kama (aina == 4 && (o[3] & 255) < TOLEO_LA_PROGRAMU) {
+        // mteja ana toleo la zamani: mpe ofa ya toleo hili
+        n32 ofa[2];
+        ofa[0] = TOLEO_LA_PROGRAMU;
+        ofa[1] = apk_ukubwa_wangu();
+        kama (ofa[1] > 0) { tuma_fremu(mteja - 1, 4, 0, ofa, 8); }
+    }
+    kama (aina == 5) { upakiaji[mteja - 1] = 0; }
     kama (aina == 4) {
         // salamu: kiti cha kwanza kilicho wazi
         n32 m = 0;
@@ -341,6 +379,7 @@ w0 mwenyeji_kila_fremu() {
     wakati (i < 3) {
         sukuma_foleni(i);
         kama (tundu_la_mteja[i] >= 0 && muunganiko_umevunjika[i]) { ondoa_mteja(i); }
+        tuma_vipande_vya_apk(i);
         kama (tundu_la_mteja[i] >= 0) {
             n8* c = chombo_cha_mapokezi + i * MAPOKEZI;
             n64 n = tundu_pokea(tundu_la_mteja[i], c + kiasi_cha_mapokezi[i], MAPOKEZI - kiasi_cha_mapokezi[i], MSG_DONTWAIT);
@@ -464,7 +503,7 @@ w0 kutafuta_kila_fremu() {
 w0 tuma_ombi(n32 aina, n32 a, n32 b) {
     kama (tundu_la_mteja[0] < 0) { rudisha; }
     n8 o[20];
-    o[0] = aina; o[1] = a; o[2] = b; o[3] = 0;
+    o[0] = aina; o[1] = a; o[2] = b; o[3] = TOLEO_LA_PROGRAMU;
     n32 i = 0;
     wakati (i < 16) { o[4 + i] = jina_la_mchezaji[i]; i = i + 1; }
     tuma_fremu(0, 2, 0, o, 20);
@@ -608,6 +647,9 @@ w0 pokea_hali(n8* c) {
     SHERIA_KUINGIA = v[59]; SHERIA_ZAWADI_YA_KULA = v[60]; SHERIA_ZAWADI_YA_NYUMBANI = v[61];
     SHERIA_VIZUIZI = v[62]; SHERIA_SALAMA = v[63]; SHERIA_PACHA_TATU = v[64]; PAUNI_KWA_MCHEZAJI = v[65];
     nafasi_ya_mteja = v[66];
+    i = 0;
+    wakati (i < 4) { nafasi_ya_kumaliza[i] = v[72 + i]; i = i + 1; }
+    waliomaliza = v[76];
     nakili(majina_ya_viti, c + 320, 64);
     kama (v[67] && ilikuwa_mchezoni == 0) {
         akiba_halali = 0;
@@ -650,6 +692,8 @@ w0 mteja_kila_fremu() {
         n32 aina = c[0] & 255;
         kama (aina == 1 && urefu >= 388) { pokea_hali(c + 4); omba_fremu_ijayo(); }
         kama (aina == 3) { sauti_pokea(c[1] & 255, c + 4, urefu - 4); }
+        kama (aina == 4 && urefu >= 12) { n32* ofa = c + 4; sasisho_ofa(ofa[0], ofa[1]); }
+        kama (aina == 5) { sasisho_kipande(c + 4, urefu - 4); }
         nakili(c, c + urefu, kiasi_cha_mapokezi[0] - urefu);
         kiasi_cha_mapokezi[0] = kiasi_cha_mapokezi[0] - urefu;
         urefu = fremu_kamili(c, kiasi_cha_mapokezi[0]);

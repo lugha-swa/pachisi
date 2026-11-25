@@ -19,7 +19,10 @@
 //   - pacha: rusha tena. Pacha na pauni zote nje ya kiota: hatua nne
 //     (k, k, 7 - k, 7 - k). Pacha tatu mfululizo: pauni iliyoendelea zaidi
 //     (si iliyofika nyumbani) hurudi kiotani na zamu inaisha.
-//   - mshindi ni wa kwanza kufikisha pauni zake zote nyumbani.
+//   - mchezaji anayefikisha pauni zote nyumbani hupata nafasi (1, 2, 3...) na
+//     mchezo huendelea kwa waliobaki; huisha akibaki mmoja tu, au waliobaki
+//     wote wakiwa kompyuta (hao hupangwa kwa asilimia ya safari).
+//     mshindi ni aliyemaliza wa kwanza.
 //   Sheria za nyumbani (SHERIA_*) huzima au kubadilisha zawadi, vizuizi, seli
 //   salama, adhabu ya pacha tatu na idadi ya pauni.
 
@@ -44,6 +47,7 @@ n32 UJ_PACHA_RUSHA_TENA = 2;
 n32 UJ_PACHA_TATU = 3;
 n32 UJ_AMELIWA = 4;
 n32 UJ_AMEFIKA = 5;
+n32 UJ_AMEMALIZA = 6;
 
 // sheria za nyumbani (huwekwa kabla ya anza_mchezo_mpya)
 n32 SHERIA_KUINGIA = 5;          // namba inayotoa pauni kiotani: 5 au 6
@@ -64,7 +68,9 @@ n32 hatua_ni_kete[8];      // 1 = kutoka kete (inaweza kuungana kwa kuingia), 0 
 n32 idadi_ya_hatua = 0;
 n32 pacha_mfululizo = 0;
 n32 ilikuwa_pacha = 0;
-n32 mshindi = -1;
+n32 mshindi = -1;               // huwekwa mchezo wote ukiisha
+n32 nafasi_ya_kumaliza[4];      // 0 bado anacheza; 1..4 nafasi aliyomaliza
+n32 waliomaliza = 0;
 n32 hali_ya_zamu = 0;
 n32 ujumbe = 0;
 n32 ujumbe_wa_mchezaji = 0;
@@ -88,6 +94,9 @@ w0 anza_mchezo_mpya() {
     pacha_mfululizo = 0;
     ilikuwa_pacha = 0;
     mshindi = 0 - 1;
+    waliomaliza = 0;
+    m = 0;
+    wakati (m < 4) { nafasi_ya_kumaliza[m] = 0; m = m + 1; }
     hali_ya_zamu = HALI_RUSHA;
     ujumbe = UJ_HAKUNA;
     idadi_ya_zamu = 0;
@@ -200,17 +209,55 @@ n32 hatua_ina_pauni(n32 i) {
     rudisha 0;
 }
 
+// asilimia 0..100 ya safari: kila pauni huanzia kiotani (0) hadi nyumbani
+n32 asilimia_ya_mchezaji(n32 m) {
+    n32 jumla = 0;
+    n32 j = 0;
+    wakati (j < PAUNI_KWA_MCHEZAJI) { jumla = jumla + pauni[m * 4 + j] + 1; j = j + 1; }
+    rudisha jumla * 100 / (PAUNI_KWA_MCHEZAJI * (NYUMBANI + 1));
+}
+
+n32 bado_anacheza(n32 m) { rudisha kiti_kipo[m] && nafasi_ya_kumaliza[m] == 0; }
+
+// m amefikisha pauni zote nyumbani: anapewa nafasi inayofuata. Mchezo huisha
+// akibaki mmoja, au waliobaki wote ni kompyuta: hao hupangwa kwa asilimia.
+w0 maliza_mchezaji(n32 m) {
+    waliomaliza = waliomaliza + 1;
+    nafasi_ya_kumaliza[m] = waliomaliza;
+    n32 wengine = 0;
+    n32 binadamu = 0;
+    n32 x = 0;
+    wakati (x < 4) {
+        kama (bado_anacheza(x)) { wengine = wengine + 1; kama (ni_kompyuta[x] == 0) { binadamu = binadamu + 1; } }
+        x = x + 1;
+    }
+    kama (wengine > 1 && binadamu > 0) { rudisha; }
+    wakati (wengine > 0) {
+        n32 bora = -1;
+        x = 0;
+        wakati (x < 4) {
+            kama (bado_anacheza(x) && (bora < 0 || asilimia_ya_mchezaji(x) > asilimia_ya_mchezaji(bora))) { bora = x; }
+            x = x + 1;
+        }
+        waliomaliza = waliomaliza + 1;
+        nafasi_ya_kumaliza[bora] = waliomaliza;
+        wengine = wengine - 1;
+    }
+    x = 0;
+    wakati (x < 4) { kama (kiti_kipo[x] && nafasi_ya_kumaliza[x] == 1) { mshindi = x; } x = x + 1; }
+}
+
 w0 maliza_zamu() {
     idadi_ya_hatua = 0;
     kama (mshindi >= 0) { hali_ya_zamu = HALI_MSHINDI; rudisha; }
-    kama (ilikuwa_pacha && pacha_mfululizo > 0) {
+    kama (ilikuwa_pacha && pacha_mfululizo > 0 && nafasi_ya_kumaliza[zamu] == 0) {
         hali_ya_zamu = HALI_RUSHA;
         kama (ujumbe == UJ_HAKUNA) { ujumbe = UJ_PACHA_RUSHA_TENA; ujumbe_wa_mchezaji = zamu; }
         rudisha;
     }
     pacha_mfululizo = 0;
     n32 m = (zamu + 1) % 4;
-    wakati (kiti_kipo[m] == 0) { m = (m + 1) % 4; }
+    wakati (bado_anacheza(m) == 0) { m = (m + 1) % 4; }
     zamu = m;
     hali_ya_zamu = HALI_RUSHA;
     idadi_ya_zamu = idadi_ya_zamu + 1;
@@ -302,7 +349,13 @@ n32 sogeza(n32 j, n32 i) {
         n32 wote = 1;
         n32 k2 = 0;
         wakati (k2 < 4) { kama (pauni[m * 4 + k2] != NYUMBANI) { wote = 0; } k2 = k2 + 1; }
-        kama (wote) { mshindi = m; maliza_zamu(); rudisha 1; }
+        kama (wote) {
+            maliza_mchezaji(m);
+            ujumbe = UJ_AMEMALIZA;
+            ujumbe_wa_mchezaji = m;
+            maliza_zamu();
+            rudisha 1;
+        }
         kama (SHERIA_ZAWADI_YA_NYUMBANI > 0) { ongeza_hatua(SHERIA_ZAWADI_YA_NYUMBANI, 0); }
         ujumbe = UJ_AMEFIKA;
         ujumbe_wa_mchezaji = m;

@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Pachisi ya Swa: hakuna Java; NativeActivity hupakia libswa.so na kuita anza -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="io.github.lugha_swa.pachisi"
-    android:versionCode="1"
-    android:versionName="0.0.1">
+    package="io.github.lugha_swa.pachisi">
+    <!-- versionCode hutoka TOLEO_LA_PROGRAMU kwenye msimbo/mtandao.swa (jenga-apk.sh) -->
     <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="36" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- sasisho kutoka kwa mwenyeji wa chumba: kisakinishi cha mfumo huuliza mtumiaji -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application
         android:label="Pachisi"
         android:hasCode="false"

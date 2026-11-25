@@ -1,0 +1,263 @@
+// sasisho.swa -- kusasisha kutoka kwa mwenyeji wa chumba, bila mtandao wa nje.
+//
+// Mwenyeji husoma APK yake mwenyewe (getPackageCodePath) na mtandao.swa huituma
+// vipande vipande kwa mteja mwenye toleo la zamani aliyekubali ofa. Mteja
+// huiandika kwenye Downloads kupitia MediaStore (haihitaji ruhusa ya hifadhi,
+// na nakala hubaki ya kuwapa wengine), kisha hufungua kisakinishi cha mfumo
+// kwa ACTION_VIEW; mfumo huuliza mtumiaji kuthibitisha. Sasisho hukubaliwa tu
+// likiwa limesainiwa kwa ufunguo uleule, kwa hiyo data ya mchezaji hubaki.
+//
+// JNI (jni.h): ExceptionClear 17, NewGlobalRef 21, DeleteGlobalRef 22,
+// DeleteLocalRef 23, NewObject 28, GetObjectClass 31, GetMethodID 33,
+// CallObjectMethod 34, CallVoidMethod 61, GetStaticFieldID 144,
+// GetStaticObjectField 145, NewStringUTF 167, GetStringUTFChars 169,
+// ReleaseStringUTFChars 170, NewByteArray 176, SetByteArrayRegion 208,
+// ExceptionCheck 228. Marejeo ya ndani hufutwa kila mara: mzunguko wa fremu
+// haurudi Java, kwa hiyo hayajifuti yenyewe.
+
+n8* MIME_YA_APK = "application/vnd.android.package-archive";
+
+// ---------------------------------------------------------------- mwenyeji
+n8 njia_ya_apk[512];
+n32 apk_fd = -1;
+n32 apk_ukubwa = 0;
+
+w0 fungua_apk_yangu() {
+    kama (apk_fd >= 0 || sauti_shughuli == 0) { rudisha; }
+    n8* env = jni_env();
+    n8* shughuli = jni_shughuli();
+    n64 pata_darasa = jni_kazi(31);
+    n64 pata_njia = jni_kazi(33);
+    n64 ita_kitu = jni_kazi(34);
+    n64 soma_utf = jni_kazi(169);
+    n64 achia_utf = jni_kazi(170);
+    n64 futa = jni_kazi(23);
+    n8* darasa = pata_darasa(env, shughuli);
+    n8* njia = pata_njia(env, darasa, "getPackageCodePath", "()Ljava/lang/String;");
+    n8* s = ita_kitu(env, shughuli, njia);
+    futa(env, darasa);
+    kama (s == 0) { rudisha; }
+    n8* herufi = soma_utf(env, s, 0);
+    n32 n = urefu_wa_mfuatano(herufi);
+    kama (n > 510) { n = 510; }
+    nakili(njia_ya_apk, herufi, n);
+    njia_ya_apk[n] = 0;
+    achia_utf(env, s, herufi);
+    futa(env, s);
+    n64 fd = wito_wa_mfumo(2, njia_ya_apk, 0, 0, 0, 0, 0);
+    kama (fd < 0) { rudisha; }
+    apk_ukubwa = wito_wa_mfumo(8, fd, 0, 2, 0, 0, 0);          // lseek SEEK_END
+    apk_fd = fd;
+}
+
+n32 apk_ukubwa_wangu() {
+    fungua_apk_yangu();
+    kama (apk_fd < 0 || apk_ukubwa <= 0) { rudisha 0; }
+    rudisha apk_ukubwa;
+}
+
+n32 apk_soma(n32 nafasi, n8* chombo, n32 urefu) {
+    kama (apk_fd < 0) { rudisha -1; }
+    rudisha wito_wa_mfumo(17, apk_fd, chombo, urefu, nafasi, 0, 0);   // pread64
+}
+
+// ---------------------------------------------------------------- mteja
+n32 SAS_HAKUNA = 0;
+n32 SAS_OFA = 1;
+n32 SAS_INAPAKUA = 2;
+n32 SAS_TAYARI = 3;
+n32 SAS_IMEFICHWA = 4;
+n32 SAS_KOSA = 5;
+n32 sasisho_hali = 0;
+n32 sasisho_toleo = 0;
+n32 sasisho_ukubwa = 0;
+n32 sasisho_pokelewa = 0;
+n8* mkondo_wa_apk = 0;          // OutputStream (rejeo la kudumu)
+n8* uri_ya_apk = 0;             // Uri ya Downloads (rejeo la kudumu)
+n8* njia_ya_andika = 0;         // OutputStream.write([BII)V
+n8* njia_ya_funga = 0;          // OutputStream.close()V
+
+n32 jni_kosa_lipo() {
+    n64 angalia = jni_kazi(228);
+    n64 safisha = jni_kazi(17);
+    n8* env = jni_env();
+    kama ((angalia(env) & 255) != 0) { safisha(env); rudisha 1; }
+    rudisha 0;
+}
+
+w0 sasisho_ofa(n32 toleo, n32 ukubwa) {
+    kama (toleo <= TOLEO_LA_PROGRAMU || ukubwa <= 0 || sasisho_hali != SAS_HAKUNA) { rudisha; }
+    sasisho_toleo = toleo;
+    sasisho_ukubwa = ukubwa;
+    sasisho_hali = SAS_OFA;
+    omba_fremu_ijayo();
+}
+
+// Downloads/Pachisi.apk kupitia MediaStore; hurudisha 1 mkondo ukifunguka
+n32 fungua_apk_ya_kupokea() {
+    n8* env = jni_env();
+    n8* shughuli = jni_shughuli();
+    n64 tafuta_darasa = jni_kazi(6);
+    n64 rejeo_la_kudumu = jni_kazi(21);
+    n64 futa = jni_kazi(23);
+    n64 kitu_kipya = jni_kazi(28);
+    n64 pata_darasa = jni_kazi(31);
+    n64 pata_njia = jni_kazi(33);
+    n64 ita_kitu = jni_kazi(34);
+    n64 ita_tupu = jni_kazi(61);
+    n64 pata_uga_tuli = jni_kazi(144);
+    n64 soma_uga_tuli = jni_kazi(145);
+    n64 mfuatano_mpya = jni_kazi(167);
+
+    n8* d_thamani = tafuta_darasa(env, "android/content/ContentValues");
+    n8* thamani = kitu_kipya(env, d_thamani, pata_njia(env, d_thamani, "<init>", "()V"));
+    n8* weka = pata_njia(env, d_thamani, "put", "(Ljava/lang/String;Ljava/lang/String;)V");
+    n8* k1 = mfuatano_mpya(env, "_display_name");
+    n8* v1 = mfuatano_mpya(env, "Pachisi.apk");
+    n8* k2 = mfuatano_mpya(env, "mime_type");
+    n8* v2 = mfuatano_mpya(env, MIME_YA_APK);
+    ita_tupu(env, thamani, weka, k1, v1);
+    ita_tupu(env, thamani, weka, k2, v2);
+    futa(env, k1); futa(env, v1); futa(env, k2); futa(env, v2);
+
+    n8* d_downloads = tafuta_darasa(env, "android/provider/MediaStore$Downloads");
+    n8* uga = pata_uga_tuli(env, d_downloads, "EXTERNAL_CONTENT_URI", "Landroid/net/Uri;");
+    n8* mkusanyiko = soma_uga_tuli(env, d_downloads, uga);
+
+    n8* d_shughuli = pata_darasa(env, shughuli);
+    n8* msuluhishi = ita_kitu(env, shughuli, pata_njia(env, d_shughuli, "getContentResolver", "()Landroid/content/ContentResolver;"));
+    n8* d_msuluhishi = pata_darasa(env, msuluhishi);
+    n8* uri = ita_kitu(env, msuluhishi, pata_njia(env, d_msuluhishi, "insert", "(Landroid/net/Uri;Landroid/content/ContentValues;)Landroid/net/Uri;"), mkusanyiko, thamani);
+    n32 sawa = jni_kosa_lipo() == 0 && uri != 0;
+    n8* mkondo = 0;
+    kama (sawa) {
+        mkondo = ita_kitu(env, msuluhishi, pata_njia(env, d_msuluhishi, "openOutputStream", "(Landroid/net/Uri;)Ljava/io/OutputStream;"), uri);
+        sawa = jni_kosa_lipo() == 0 && mkondo != 0;
+    }
+    kama (sawa) {
+        n8* d_mkondo = pata_darasa(env, mkondo);
+        njia_ya_andika = pata_njia(env, d_mkondo, "write", "([BII)V");
+        njia_ya_funga = pata_njia(env, d_mkondo, "close", "()V");
+        futa(env, d_mkondo);
+        mkondo_wa_apk = rejeo_la_kudumu(env, mkondo);
+        uri_ya_apk = rejeo_la_kudumu(env, uri);
+    }
+    kama (mkondo != 0) { futa(env, mkondo); }
+    kama (uri != 0) { futa(env, uri); }
+    futa(env, d_msuluhishi); futa(env, msuluhishi); futa(env, d_shughuli);
+    futa(env, mkusanyiko); futa(env, d_downloads);
+    futa(env, thamani); futa(env, d_thamani);
+    rudisha sawa;
+}
+
+// kisakinishi cha mfumo: ACTION_VIEW ya Uri yenye ruhusa ya kusoma
+w0 fungua_kisakinishi() {
+    kama (uri_ya_apk == 0) { rudisha; }
+    n8* env = jni_env();
+    n8* shughuli = jni_shughuli();
+    n64 tafuta_darasa = jni_kazi(6);
+    n64 futa = jni_kazi(23);
+    n64 kitu_kipya = jni_kazi(28);
+    n64 pata_darasa = jni_kazi(31);
+    n64 pata_njia = jni_kazi(33);
+    n64 ita_kitu = jni_kazi(34);
+    n64 ita_tupu = jni_kazi(61);
+    n64 mfuatano_mpya = jni_kazi(167);
+    n8* d_nia = tafuta_darasa(env, "android/content/Intent");
+    n8* kitendo = mfuatano_mpya(env, "android.intent.action.VIEW");
+    n8* nia = kitu_kipya(env, d_nia, pata_njia(env, d_nia, "<init>", "(Ljava/lang/String;)V"), kitendo);
+    n8* aina = mfuatano_mpya(env, MIME_YA_APK);
+    n8* r1 = ita_kitu(env, nia, pata_njia(env, d_nia, "setDataAndType", "(Landroid/net/Uri;Ljava/lang/String;)Landroid/content/Intent;"), uri_ya_apk, aina);
+    // FLAG_GRANT_READ_URI_PERMISSION | FLAG_ACTIVITY_NEW_TASK
+    n8* r2 = ita_kitu(env, nia, pata_njia(env, d_nia, "addFlags", "(I)Landroid/content/Intent;"), 268435457);
+    n8* d_shughuli = pata_darasa(env, shughuli);
+    ita_tupu(env, shughuli, pata_njia(env, d_shughuli, "startActivity", "(Landroid/content/Intent;)V"), nia);
+    kama (jni_kosa_lipo()) { sasisho_hali = SAS_KOSA; }
+    kama (r1 != 0) { futa(env, r1); }
+    kama (r2 != 0) { futa(env, r2); }
+    futa(env, d_shughuli); futa(env, aina); futa(env, nia); futa(env, kitendo); futa(env, d_nia);
+}
+
+w0 maliza_kupokea() {
+    n8* env = jni_env();
+    n64 ita_tupu = jni_kazi(61);
+    n64 futa_kudumu = jni_kazi(22);
+    ita_tupu(env, mkondo_wa_apk, njia_ya_funga);
+    n32 kosa = jni_kosa_lipo();
+    futa_kudumu(env, mkondo_wa_apk);
+    mkondo_wa_apk = 0;
+    kama (kosa) { sasisho_hali = SAS_KOSA; rudisha; }
+    sasisho_hali = SAS_TAYARI;
+    fungua_kisakinishi();
+}
+
+w0 sasisho_kipande(n8* data, n32 urefu) {
+    kama (sasisho_hali != SAS_INAPAKUA || mkondo_wa_apk == 0 || urefu <= 0) { rudisha; }
+    n8* env = jni_env();
+    n64 safu_mpya = jni_kazi(176);
+    n64 weka_safu = jni_kazi(208);
+    n64 ita_tupu = jni_kazi(61);
+    n64 futa = jni_kazi(23);
+    n8* safu = safu_mpya(env, urefu);
+    weka_safu(env, safu, 0, urefu, data);
+    ita_tupu(env, mkondo_wa_apk, njia_ya_andika, safu, 0, urefu);
+    futa(env, safu);
+    kama (jni_kosa_lipo()) { sasisho_hali = SAS_KOSA; omba_fremu_ijayo(); rudisha; }
+    sasisho_pokelewa = sasisho_pokelewa + urefu;
+    kama (sasisho_pokelewa >= sasisho_ukubwa) { maliza_kupokea(); }
+    omba_fremu_ijayo();
+}
+
+// ---------------------------------------------------------------- kadi
+// kadi inayoelea chini ya skrini yoyote, mteja akiwa chumbani
+w0 chora_sasisho() {
+    kama (mtandao_ni_mteja() == 0) { rudisha; }
+    kama (sasisho_hali == SAS_HAKUNA || sasisho_hali == SAS_IMEFICHWA) { rudisha; }
+    n32 w = upana_wa_skrini;
+    n32 h = urefu_wa_skrini;
+    n32 kh = pk(300);
+    n32 x = pk(24);
+    n32 u = w - pk(48);
+    n32 y = h - kh - pk(40);
+    mviringo(x - 1, y - 1, u + 2, kh + 2, pk(32) + 1, R_MSTARI);
+    mviringo(x, y, u, kh, pk(32), R_KADI);
+    andika_kushoto(t(81), x + pk(32), y + pk(56), F_SERIF, T_WASTANI, R_MAANDISHI);
+    n32 maelezo = 82;
+    kama (sasisho_hali == SAS_INAPAKUA) { maelezo = 85; }
+    kama (sasisho_hali == SAS_TAYARI) { maelezo = 86; }
+    kama (sasisho_hali == SAS_KOSA) { maelezo = 87; }
+    andika_kushoto(t(maelezo), x + pk(32), y + pk(110), F_KAWAIDA, T_NDOGO, R_HAFIFU);
+    n32 by = y + kh - pk(120);
+    kama (sasisho_hali == SAS_INAPAKUA) {
+        n32 kiwango = 0;
+        kama (sasisho_ukubwa > 0) { kiwango = sasisho_pokelewa / (sasisho_ukubwa / 100 + 1); }
+        kama (kiwango > 100) { kiwango = 100; }
+        mviringo(x + pk(32), by + pk(40), u - pk(64), pk(12), pk(6), R_KADI_JUU);
+        mviringo(x + pk(32), by + pk(40), (u - pk(64)) * kiwango / 100 + pk(12), pk(12), pk(6), R_DHAHABU);
+        rudisha;
+    }
+    n32 bu = (u - pk(80)) / 2;
+    kama (sasisho_hali == SAS_OFA) {
+        kitufe(951, x + pk(32), by, bu, pk(88), t(84), 0);
+        kitufe(950, x + pk(48) + bu, by, bu, pk(88), t(83), 1);
+    }
+    kama (sasisho_hali == SAS_TAYARI) {
+        kitufe(951, x + pk(32), by, bu, pk(88), t(84), 0);
+        kitufe(950, x + pk(48) + bu, by, bu, pk(88), t(88), 1);
+    }
+    kama (sasisho_hali == SAS_KOSA) { kitufe(951, x + pk(32), by, u - pk(64), pk(88), t(84), 0); }
+}
+
+n32 gusa_sasisho(n32 id) {
+    kama (id == 951) { sasisho_hali = SAS_IMEFICHWA; rudisha 1; }
+    kama (id != 950) { rudisha 0; }
+    kama (sasisho_hali == SAS_OFA) {
+        kama (fungua_apk_ya_kupokea()) {
+            sasisho_hali = SAS_INAPAKUA;
+            sasisho_pokelewa = 0;
+            mtandao_ombi(5, 0, 0);
+        } sivyo { sasisho_hali = SAS_KOSA; }
+    }
+    sivyo { kama (sasisho_hali == SAS_TAYARI) { fungua_kisakinishi(); } }
+    rudisha 1;
+}

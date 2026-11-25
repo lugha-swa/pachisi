@@ -63,69 +63,71 @@ n32 R_KITUFE_M = 0;
 n32 PALETI[8];
 n32 rangi_ya_kiti[4];
 
+// Mandhari ya "Shanga": usiku wa pwani (giza) na mchanga wa ufukweni (angavu),
+// dhahabu ya Kajara kama rangi kuu, na rangi za wachezaji za kanga na shanga.
 w0 andaa_mandhari(n32 giza) {
     kama (giza) {
-        R_MANDHARI = rgb(21, 21, 21);
-        R_DROO = rgb(17, 17, 17);
-        R_KADI = rgb(32, 32, 31);
-        R_KADI_JUU = rgb(49, 49, 49);
-        R_DUARA = rgb(55, 55, 54);
-        R_MSTARI = rgb(61, 60, 58);
-        R_KISHIKIO = rgb(52, 51, 50);
-        R_SWICHI = rgb(77, 77, 76);
-        R_NJIA_YA_KIDOLE = rgb(32, 32, 31);
-        R_KIDOLE = rgb(61, 60, 58);
-        R_MAANDISHI = rgb(240, 239, 236);
-        R_HAFIFU = rgb(195, 194, 183);
-        R_DOKEZO = rgb(151, 149, 141);
-        R_IKONI = rgb(195, 194, 183);
-        R_KITUFE = rgb(255, 255, 255);
-        R_KITUFE_M = rgb(11, 11, 11);
-        RANGI_YA_UBAO = rgb(32, 32, 31);
-        RANGI_YA_SELI = rgb(49, 49, 49);
-        RANGI_YA_NAMBA = rgb(140, 139, 133);
-        RANGI_YA_SALAMA = rgb(66, 66, 64);
-        RANGI_YA_KETE = rgb(240, 239, 236);
-        RANGI_YA_KETE_UKINGO = rgb(240, 239, 236);
-        RANGI_YA_KETE_ZIMA = rgb(120, 119, 115);
-        RANGI_YA_NUKTA = rgb(21, 21, 21);
-        RANGI_YA_UKINGO_WA_PAUNI = rgb(240, 239, 236);
+        R_MANDHARI = rgb(16, 22, 34);
+        R_DROO = rgb(12, 17, 27);
+        R_KADI = rgb(25, 33, 50);
+        R_KADI_JUU = rgb(36, 46, 68);
+        R_DUARA = rgb(44, 55, 80);
+        R_MSTARI = rgb(52, 64, 92);
+        R_KISHIKIO = rgb(60, 72, 100);
+        R_SWICHI = rgb(70, 82, 110);
+        R_NJIA_YA_KIDOLE = rgb(25, 33, 50);
+        R_KIDOLE = rgb(52, 64, 92);
+        R_MAANDISHI = rgb(244, 238, 226);
+        R_HAFIFU = rgb(190, 186, 176);
+        R_DOKEZO = rgb(138, 142, 156);
+        R_IKONI = rgb(200, 196, 186);
+        R_KITUFE = rgb(240, 184, 82);
+        R_KITUFE_M = rgb(22, 20, 16);
+        RANGI_YA_UBAO = rgb(25, 33, 50);
+        RANGI_YA_SELI = rgb(36, 46, 68);
+        RANGI_YA_NAMBA = rgb(122, 132, 158);
+        RANGI_YA_SALAMA = rgb(60, 74, 106);
+        RANGI_YA_KETE = rgb(244, 238, 226);
+        RANGI_YA_KETE_UKINGO = rgb(244, 238, 226);
+        RANGI_YA_KETE_ZIMA = rgb(90, 100, 124);
+        RANGI_YA_NUKTA = rgb(16, 22, 34);
+        RANGI_YA_UKINGO_WA_PAUNI = rgb(244, 238, 226);
     } sivyo {
-        R_MANDHARI = rgb(249, 249, 247);
-        R_DROO = rgb(249, 249, 247);
-        R_KADI = rgb(255, 255, 255);
-        R_KADI_JUU = rgb(240, 239, 236);
-        R_DUARA = rgb(230, 230, 230);
-        R_MSTARI = rgb(220, 220, 220);
-        R_KISHIKIO = rgb(216, 216, 214);
-        R_SWICHI = rgb(210, 210, 207);
-        R_NJIA_YA_KIDOLE = rgb(240, 239, 236);
-        R_KIDOLE = rgb(255, 255, 255);
-        R_MAANDISHI = rgb(11, 11, 11);
-        R_HAFIFU = rgb(82, 81, 78);
-        R_DOKEZO = rgb(123, 121, 116);
-        R_IKONI = rgb(56, 56, 53);
-        R_KITUFE = rgb(11, 11, 11);
-        R_KITUFE_M = rgb(255, 255, 255);
-        RANGI_YA_UBAO = rgb(255, 255, 255);
-        RANGI_YA_SELI = rgb(240, 239, 236);
-        RANGI_YA_NAMBA = rgb(138, 136, 130);
-        RANGI_YA_SALAMA = rgb(222, 221, 216);
-        RANGI_YA_KETE = rgb(255, 255, 255);
-        RANGI_YA_KETE_UKINGO = rgb(220, 220, 220);
-        RANGI_YA_KETE_ZIMA = rgb(236, 235, 231);
-        RANGI_YA_NUKTA = rgb(11, 11, 11);
-        RANGI_YA_UKINGO_WA_PAUNI = rgb(255, 255, 255);
+        R_MANDHARI = rgb(245, 238, 225);
+        R_DROO = rgb(245, 238, 225);
+        R_KADI = rgb(252, 248, 240);
+        R_KADI_JUU = rgb(236, 227, 210);
+        R_DUARA = rgb(228, 217, 198);
+        R_MSTARI = rgb(222, 210, 188);
+        R_KISHIKIO = rgb(212, 198, 175);
+        R_SWICHI = rgb(205, 192, 170);
+        R_NJIA_YA_KIDOLE = rgb(236, 227, 210);
+        R_KIDOLE = rgb(252, 248, 240);
+        R_MAANDISHI = rgb(38, 30, 24);
+        R_HAFIFU = rgb(96, 82, 70);
+        R_DOKEZO = rgb(140, 124, 108);
+        R_IKONI = rgb(70, 58, 48);
+        R_KITUFE = rgb(176, 74, 42);
+        R_KITUFE_M = rgb(255, 246, 234);
+        RANGI_YA_UBAO = rgb(252, 248, 240);
+        RANGI_YA_SELI = rgb(238, 229, 212);
+        RANGI_YA_NAMBA = rgb(150, 132, 112);
+        RANGI_YA_SALAMA = rgb(222, 208, 184);
+        RANGI_YA_KETE = rgb(255, 252, 246);
+        RANGI_YA_KETE_UKINGO = rgb(222, 210, 188);
+        RANGI_YA_KETE_ZIMA = rgb(232, 222, 204);
+        RANGI_YA_NUKTA = rgb(38, 30, 24);
+        RANGI_YA_UKINGO_WA_PAUNI = rgb(255, 252, 246);
     }
-    R_DHAHABU = rgb(217, 119, 87);
-    PALETI[0] = rgb(204, 98, 80);
-    PALETI[1] = rgb(88, 150, 110);
-    PALETI[2] = rgb(214, 168, 72);
-    PALETI[3] = rgb(84, 124, 196);
-    PALETI[4] = rgb(146, 108, 196);
-    PALETI[5] = rgb(217, 119, 87);
-    PALETI[6] = rgb(66, 150, 150);
-    PALETI[7] = rgb(204, 112, 150);
+    R_DHAHABU = rgb(232, 170, 64);
+    PALETI[0] = rgb(214, 72, 58);
+    PALETI[1] = rgb(34, 150, 100);
+    PALETI[2] = rgb(238, 170, 40);
+    PALETI[3] = rgb(60, 104, 200);
+    PALETI[4] = rgb(140, 84, 190);
+    PALETI[5] = rgb(200, 104, 60);
+    PALETI[6] = rgb(24, 150, 160);
+    PALETI[7] = rgb(220, 90, 140);
 }
 
 w0 andaa_rangi_za_viti() {
@@ -219,6 +221,17 @@ n8* t(n32 id) {
     kama (id == 75) { kama (e) { rudisha "Win rate"; } rudisha "Kiwango cha ushindi"; }
     kama (id == 76) { kama (e) { rudisha "Could not reach the room"; } rudisha "Chumba hakifikiki"; }
     kama (id == 77) { kama (e) { rudisha "Connecting..."; } rudisha "Inaunganisha..."; }
+    kama (id == 78) { kama (e) { rudisha "1st place! Play goes on"; } rudisha "Nafasi ya 1! Mchezo unaendelea"; }
+    kama (id == 79) { kama (e) { rudisha "2nd place! Play goes on"; } rudisha "Nafasi ya 2! Mchezo unaendelea"; }
+    kama (id == 80) { kama (e) { rudisha "Final standings"; } rudisha "Matokeo ya mwisho"; }
+    kama (id == 81) { kama (e) { rudisha "New version available"; } rudisha "Toleo jipya lipo"; }
+    kama (id == 82) { kama (e) { rudisha "The host has a newer Pachisi"; } rudisha "Mwenyeji ana Pachisi mpya zaidi"; }
+    kama (id == 83) { kama (e) { rudisha "Update"; } rudisha "Sasisha"; }
+    kama (id == 84) { kama (e) { rudisha "Later"; } rudisha "Baadaye"; }
+    kama (id == 85) { kama (e) { rudisha "Receiving from the host..."; } rudisha "Inapokea kutoka kwa mwenyeji..."; }
+    kama (id == 86) { kama (e) { rudisha "Allow installs from Pachisi if asked"; } rudisha "Ruhusu usakinishaji kutoka Pachisi"; }
+    kama (id == 87) { kama (e) { rudisha "Update failed. Try again later"; } rudisha "Sasisho limeshindwa. Jaribu baadaye"; }
+    kama (id == 88) { kama (e) { rudisha "Install"; } rudisha "Sakinisha"; }
     rudisha "";
 }
 
@@ -657,6 +670,8 @@ w0 anza_uhuishaji_wa_hatua(n32 m) {
         rekodi_hatua(m);
         kama (idadi_iliyoliwa > 0) { onyesha_toast(36); }
         kama (hamia_hadi == NYUMBANI) { onyesha_toast(37); }
+        n32 nafasi = nafasi_ya_kumaliza[m];
+        kama (mshindi < 0 && nafasi >= 1 && nafasi <= 2) { onyesha_toast(77 + nafasi); }
         omba_fremu_ijayo();
     }
 }
@@ -1030,6 +1045,15 @@ n8* jina_la_mchezaji_wa_kiti(n32 m) {
     rudisha jina_la_rangi(rangi_ya_kiti[m]);
 }
 
+w0 andika_asilimia(n8* s, n32 a) {
+    n32 i = 0;
+    kama (a >= 100) { s[i] = 49; i = i + 1; }
+    kama (a >= 10) { s[i] = 48 + (a / 10) % 10; i = i + 1; }
+    s[i] = 48 + a % 10;
+    s[i + 1] = 37;
+    s[i + 2] = 0;
+}
+
 // kibao cha jina kwenye pembe ya mchezaji (juu ya kiota cha juu, chini ya cha chini)
 w0 kibao_cha_mchezaji(n32 m, n32 x, n32 y, n32 u, n32 h, n32 kulia) {
     n32 hai = m == zamu && mshindi < 0;
@@ -1046,14 +1070,13 @@ w0 kibao_cha_mchezaji(n32 m, n32 x, n32 y, n32 u, n32 h, n32 kulia) {
     awali[0] = jina[0];
     awali[1] = 0;
     andika_katikati(awali, ax, y + h / 2, F_NZITO, pk(22), rgb(255, 255, 255));
-    n32 nyumbani = 0;
-    n32 j = 0;
-    wakati (j < PAUNI_KWA_MCHEZAJI) { kama (pauni[m * 4 + j] == NYUMBANI) { nyumbani = nyumbani + 1; } j = j + 1; }
-    n8 alama[4];
-    alama[0] = 48 + nyumbani;
-    alama[1] = 47;
-    alama[2] = 48 + PAUNI_KWA_MCHEZAJI;
-    alama[3] = 0;
+    // asilimia ya safari, au nafasi kwa aliyemaliza (#1, #2...)
+    n8 alama[6];
+    kama (nafasi_ya_kumaliza[m] > 0) {
+        alama[0] = 35;
+        alama[1] = 48 + nafasi_ya_kumaliza[m];
+        alama[2] = 0;
+    } sivyo { andika_asilimia(alama, asilimia_ya_mchezaji(m)); }
     n32 rm = R_HAFIFU;
     n32 fonti = F_KAWAIDA;
     kama (hai) { rm = R_MAANDISHI; fonti = F_WASTANI; }
@@ -1149,8 +1172,8 @@ w0 chora_mchezo() {
     }
     kama (a <= 0) { a = 5; b = 2; }
     n32 hai = hali_ya_zamu == HALI_SOGEZA || uhuishaji == U_KETE || inasubiri;
-    chora_kete(w / 2 - kete_u - pk(10), kete_y - ruka, kete_u, a, hai);
-    chora_kete(w / 2 + pk(10), kete_y - ruka2, kete_u, b, hai);
+    chora_kete(w / 2 - kete_u - pk(10), kete_y - ruka, kete_u, a, hai, rangi_ya_mchezaji(zamu));
+    chora_kete(w / 2 + pk(10), kete_y - ruka2, kete_u, b, hai, rangi_ya_mchezaji(zamu));
     kama (inasubiri) { sajili_kitufe(101, tx, trei_y, tu, trei_h); }
 
     n32 my = kete_y + kete_u + pk(52);
@@ -1200,8 +1223,6 @@ w0 chora_mchezo() {
 }
 
 // mshindi: karatasi inayopanda kutoka chini
-
-// mshindi: karatasi inayopanda kutoka chini
 n32 mshindi_muda = 0;
 w0 chora_mshindi() {
     n32 w = upana_wa_skrini;
@@ -1211,17 +1232,53 @@ w0 chora_mshindi() {
     n32 f = laini(muda * 1000 / 380);
     kama (muda < 380 || sasa_ms() < sherehe_mwisho) { omba_fremu_ijayo(); }
     vitufe_idadi = 0;
-    n32 sh = pk(640);
+    n32 sh = pk(1000);
     n32 y = h - sh * f / 1000;
     mviringo(0, y, w, sh + pk(64), pk(64), R_MANDHARI);
     mviringo(w / 2 - pk(36), y + pk(14), pk(72), pk(8), pk(4), R_KISHIKIO);
     aikoni_funga(pk(72), y + pk(72), pk(28), R_MAANDISHI);
     sajili_kitufe(121, pk(24), y + pk(24), pk(96), pk(96));
+    // mshindi juu, kisha orodha ya nafasi zote kwa asilimia
     n32 rangi = rangi_ya_mchezaji(mshindi);
-    duara(w / 2, y + pk(200), pk(76), R_KADI);
-    chora_pauni(w / 2, y + pk(200), pk(44), rangi);
-    andika_katikati(jina_la_mchezaji_wa_kiti(mshindi), w / 2, y + pk(330), F_SERIF, T_KICHWA, R_MAANDISHI);
-    andika_katikati(t(38), w / 2, y + pk(382), F_KAWAIDA, T_WASTANI, R_HAFIFU);
+    duara(w / 2, y + pk(150), pk(56), R_KADI);
+    chora_pauni(w / 2, y + pk(150), pk(32), rangi);
+    n8 kichwa[40];
+    n8* jina_m = jina_la_mchezaji_wa_kiti(mshindi);
+    n32 nj = urefu_wa_mfuatano(jina_m);
+    kama (nj > 17) { nj = 17; }
+    nakili(kichwa, jina_m, nj);
+    kichwa[nj] = 32;
+    n8* neno = t(38);
+    nakili(kichwa + nj + 1, neno, urefu_wa_mfuatano(neno) + 1);
+    andika_katikati(kichwa, w / 2, y + pk(250), F_SERIF, T_KICHWA, R_MAANDISHI);
+    andika_katikati(t(80), w / 2, y + pk(300), F_KAWAIDA, T_NDOGO, R_HAFIFU);
+    n32 safu_y = y + pk(340);
+    n32 nafasi = 1;
+    wakati (nafasi <= 4) {
+        n32 m = 0;
+        wakati (m < 4) {
+            kama (kiti_kipo[m] && nafasi_ya_kumaliza[m] == nafasi) {
+                n32 sx = pk(24);
+                n32 su = w - pk(48);
+                n32 sh2 = pk(84);
+                n32 rk = R_KADI;
+                kama (nafasi == 1) { rk = changanya(R_KADI, rangi_ya_mchezaji(m), 40); }
+                mviringo(sx, safu_y, su, sh2, pk(24), rk);
+                n8 nambari[2];
+                nambari[0] = 48 + nafasi;
+                nambari[1] = 0;
+                andika_katikati(nambari, sx + pk(44), safu_y + sh2 / 2, F_SERIF, pk(34), R_MAANDISHI);
+                duara(sx + pk(104), safu_y + sh2 / 2, pk(20), rangi_ya_mchezaji(m));
+                andika_kushoto(jina_la_mchezaji_wa_kiti(m), sx + pk(140), safu_y + sh2 / 2, F_WASTANI, pk(28), R_MAANDISHI);
+                n8 asl[6];
+                andika_asilimia(asl, asilimia_ya_mchezaji(m));
+                andika_kulia(asl, sx + su - pk(28), safu_y + sh2 / 2, F_KAWAIDA, pk(26), R_HAFIFU);
+                safu_y = safu_y + sh2 + pk(10);
+            }
+            m = m + 1;
+        }
+        nafasi = nafasi + 1;
+    }
     n32 x = pk(24);
     n32 bu = w - pk(48);
     kama (aina_ya_mchezo != HALI_YA_MCHEZO_WIFI || mtandao_ni_mwenyeji()) {
@@ -1230,8 +1287,6 @@ w0 chora_mshindi() {
     kitufe(121, x, y + sh - pk(112), bu, pk(88), t(40), 0);
     chora_sherehe();
 }
-
-// ---------------------------------------------------------------- skrini nyingine
 
 // ---------------------------------------------------------------- skrini nyingine
 w0 chora_nembo(n32 cx, n32 cy, n32 r) {
@@ -1269,6 +1324,11 @@ w0 alama_ya_kajara(n32 cx, n32 cy, n32 s, n32 rangi, n32 msingi) {
     mviringo(cx - s / 2, cy - s / 2, s, s, s / 4, msingi);
 }
 
+// lugha huchaguliwa mara ya kwanza tu; baadaye hubadilishwa kwenye droo
+w0 baada_ya_kajara() {
+    kama (ina_wasifu) { nenda(S_MENYU); } sivyo { nenda(S_KARIBU); }
+}
+
 w0 chora_kajara() {
     n32 w = upana_wa_skrini;
     n32 h = urefu_wa_skrini;
@@ -1281,7 +1341,7 @@ w0 chora_kajara() {
     alama_ya_kajara(w / 2, h * 42 / 100, k * 7, changanya(R_MANDHARI, R_DHAHABU, alfa), R_MANDHARI);
     andika_katikati("KAJARA", w / 2, h * 52 / 100, F_NZITO, T_KUBWA * 3 / 4, changanya(R_MANDHARI, R_MAANDISHI, alfa));
     andika_katikati("S T U D I O", w / 2, h * 52 / 100 + T_KUBWA * 3 / 4, F_WASTANI, T_NDOGO, changanya(R_MANDHARI, R_HAFIFU, alfa));
-    kama (muda > 1900) { nenda(S_KARIBU); }
+    kama (muda > 1900) { baada_ya_kajara(); }
     omba_fremu_ijayo();
 }
 
@@ -1655,6 +1715,9 @@ w0 chora_wifi() {
 }
 
 // ---------------------------------------------------------------- kuchora kila kitu
+w0 chora_sasisho();
+n32 gusa_sasisho(n32 id);
+
 w0 chora_skrini() {
     andaa_vipimo();
     vitufe_idadi = 0;
@@ -1674,6 +1737,7 @@ w0 chora_skrini() {
         chora_mchezo();
         kama (mshindi >= 0 && uhuishaji == U_HAKUNA) { chora_mshindi(); } sivyo { mshindi_muda = 0; }
     }
+    chora_sasisho();
     chora_droo();
 }
 
@@ -1786,9 +1850,10 @@ n32 gusa_droo(n32 id) {
 w0 gusa(n32 x, n32 y) {
     n32 id = kitufe_kilichoguswa(x, y);
     kama (gusa_droo(id)) { rudisha; }
+    kama (gusa_sasisho(id)) { rudisha; }
     kama (id == 900) { fungua_droo(); rudisha; }
     kama (id == 901) { sauti_badili_kipaza(); rudisha; }
-    kama (skrini == S_KAJARA) { nenda(S_KARIBU); rudisha; }
+    kama (skrini == S_KAJARA) { baada_ya_kajara(); rudisha; }
     kama (skrini == S_KARIBU) {
         kama (id == 1) { lugha = 0; hifadhi_wasifu(); }
         kama (id == 2) { lugha = 1; hifadhi_wasifu(); }

@@ -7,6 +7,7 @@ husisha { msimbo/ubao.swa }
 husisha { msimbo/skrini.swa }
 husisha { msimbo/mtandao.swa }
 husisha { msimbo/sauti.swa }
+husisha { msimbo/sasisho.swa }
 
 // pachisi.swa -- Pachisi kwa Android, imeandikwa kwa Swa (Kajara Studio).
 //
@@ -14,7 +15,8 @@ husisha { msimbo/sauti.swa }
 // `anza`. Faili hili ni gundi ya Android tu: vitendo vya dirisha, foleni ya
 // mguso, mzunguko wa fremu (Choreographer) unaoendesha uhuishaji, kompyuta na
 // mtandao. Kanuni: mantiki.swa; mchoro: michoro.swa, fonti.swa, ubao.swa;
-// skrini na mguso: skrini.swa; vyumba vya Wi-Fi: mtandao.swa; sauti: sauti.swa.
+// skrini na mguso: skrini.swa; vyumba vya Wi-Fi: mtandao.swa; sauti: sauti.swa; sasisho
+// kutoka kwa mwenyeji: sasisho.swa.
 
 nje "libandroid.so" {
     n32 dirisha_weka_umbo(n8* dirisha, n32 upana, n32 urefu, n32 umbo) = "ANativeWindow_setBuffersGeometry";

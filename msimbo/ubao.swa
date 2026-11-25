@@ -179,10 +179,39 @@ n32 pauni_kwenye_seli(n32 s, n32 w) {
 
 // ---------------------------------------------------------------- mchoro wa ubao
 // ubao mzima bila pauni (huchorwa mara moja kwenye akiba)
+// pindo la shanga kwenye ukingo wa ubao: mstari wa shanga ndogo kwa rangi za
+// wachezaji kwa zamu, kama ushanga wa mkononi; hukwepa pembe za mviringo
+w0 shanga_za_ukingo(n32 ukingo) {
+    n32 r = SELI_B / 9;
+    kama (r < 2) { rudisha; }
+    n32 hatua = SELI_B * 2 / 3;
+    n32 kati = ukingo / 2;
+    n32 x0 = ubao_x - ukingo + kati;
+    n32 y0 = ubao_y - ukingo + kati;
+    n32 urefu = ubao_ukubwa + 2 * ukingo - 2 * kati;
+    n32 idadi = (urefu - 2 * SELI_B) / hatua;
+    n32 mwanzo = (urefu - idadi * hatua) / 2;
+    n32 i = 0;
+    wakati (i <= idadi) {
+        n32 d = mwanzo + i * hatua;
+        n32 k = 0;
+        wakati (k < 4) {
+            n32 rangi = changanya(RANGI_YA_UBAO, rangi_ya_mchezaji((i + k) % 4), 190);
+            kama (k == 0) { duara(x0 + d, y0, r, rangi); }
+            kama (k == 1) { duara(x0 + urefu, y0 + d, r, rangi); }
+            kama (k == 2) { duara(x0 + urefu - d, y0 + urefu, r, rangi); }
+            kama (k == 3) { duara(x0, y0 + urefu - d, r, rangi); }
+            k = k + 1;
+        }
+        i = i + 1;
+    }
+}
+
 w0 chora_ubao() {
     n32 g = pengo_la_seli();
     n32 ukingo = SELI_B / 2;
     mviringo(ubao_x - ukingo, ubao_y - ukingo, ubao_ukubwa + 2 * ukingo, ubao_ukubwa + 2 * ukingo, SELI_B, RANGI_YA_UBAO);
+    shanga_za_ukingo(ukingo);
     n32 ukubwa_wa_namba = SELI_B * 2 / 5;
     n32 i = 0;
     wakati (i < 68) {
