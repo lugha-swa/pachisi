@@ -115,6 +115,9 @@ w0 kompyuta_hatua() {
 // zamu ni ya kompyuta inayoendeshwa na simu hii
 n32 zamu_ya_kompyuta() {
     kama (skrini != S_MCHEZO || droo_iko_wazi || mshindi >= 0 || mtandao_ni_mteja()) { rudisha 0; }
+    // chumba: mwenyeji pekee huendesha kompyuta, na si wakati kimesimamishwa
+    // (mteja anayeunganisha upya hana jukumu la mteja kwa muda)
+    kama (aina_ya_mchezo == HALI_YA_MCHEZO_WIFI && (mtandao_ni_mwenyeji() == 0 || mtandao_kimesimamishwa())) { rudisha 0; }
     rudisha ni_kompyuta[zamu];
 }
 

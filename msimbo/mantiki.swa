@@ -48,6 +48,7 @@ n32 UJ_PACHA_TATU = 3;
 n32 UJ_AMELIWA = 4;
 n32 UJ_AMEFIKA = 5;
 n32 UJ_AMEMALIZA = 6;
+n32 UJ_NYUSO_ZA_CHINI = 7;
 
 // sheria za nyumbani (huwekwa kabla ya anza_mchezo_mpya)
 n32 SHERIA_KUINGIA = 5;          // namba inayotoa pauni kiotani: 5 au 6
@@ -56,6 +57,7 @@ n32 SHERIA_ZAWADI_YA_NYUMBANI = 10;
 n32 SHERIA_VIZUIZI = 1;          // 0 = pauni zinaweza kupita jozi
 n32 SHERIA_SALAMA = 1;           // 0 = hakuna seli salama
 n32 SHERIA_PACHA_TATU = 1;       // 0 = hakuna adhabu ya pacha tatu
+n32 SHERIA_NYUSO_ZA_CHINI = 1;   // pacha, pauni zote nje: nyuso za chini (7 - juu) pia
 n32 PAUNI_KWA_MCHEZAJI = 4;      // 2..4; zisizotumika huanza nyumbani
 
 n32 kiti_kipo[4];
@@ -308,9 +310,11 @@ w0 rusha() {
     wakati (j2 < 4) { kama (pauni[zamu * 4 + j2] == KIOTANI) { wote_nje = 0; } j2 = j2 + 1; }
     ongeza_hatua(kete[0], 1);
     ongeza_hatua(kete[1], 1);
-    kama (ilikuwa_pacha && wote_nje) {
+    kama (ilikuwa_pacha && wote_nje && SHERIA_NYUSO_ZA_CHINI) {
         ongeza_hatua(7 - kete[0], 1);
         ongeza_hatua(7 - kete[0], 1);
+        ujumbe = UJ_NYUSO_ZA_CHINI;
+        ujumbe_wa_mchezaji = zamu;
     }
     hali_ya_zamu = HALI_SOGEZA;
     safisha_hatua();

@@ -29,6 +29,14 @@ n32 mtandao_kosa_la_kujiunga();
 n32 kiti_changu();
 n8* jina_la_kiti(n32 m);
 n32 mmiliki_wa_kiti(n32 m);
+n32 mtandao_kimesimamishwa();
+n32 mtandao_kinaunganisha_upya();
+w0 mtandao_acha_kuunganisha_upya();
+w0 mtandao_kompyuta_ichukue_kiti(n32 m);
+w0 mtandao_badili_kusimamisha();
+n32 mtandao_kuna_chumba_kilichohifadhiwa();
+n8* mtandao_nambari_ya_chumba_kilichohifadhiwa();
+w0 mtandao_endelea_chumba();
 n8 nambari_ya_chumba[8];
 n32 sauti_kipaza_kiko_wazi();
 w0 sauti_badili_kipaza();
@@ -209,8 +217,8 @@ n8* t(n32 id) {
     kama (id == 62) { kama (e) { rudisha "Each die moves one pawn"; } rudisha "Kila kete husogeza pauni moja"; }
     kama (id == 63) { kama (e) { rudisha "Land on a pawn to capture it"; } rudisha "Tua juu ya pauni kuila"; }
     kama (id == 64) { kama (e) { rudisha "Two pawns together block the road"; } rudisha "Pauni mbili pamoja huziba njia"; }
-    kama (id == 65) { kama (e) { rudisha "Shaded squares are safe"; } rudisha "Seli zenye kivuli ni salama"; }
-    kama (id == 66) { kama (e) { rudisha "Doubles give another roll"; } rudisha "Pacha hukupa zamu nyingine"; }
+    kama (id == 65) { kama (e) { rudisha "Star squares are safe"; } rudisha "Seli zenye nyota ni salama"; }
+    kama (id == 66) { kama (e) { rudisha "Doubles: roll again, + bottom faces"; } rudisha "Pacha: rusha tena, + nyuso za chini"; }
     kama (id == 67) { kama (e) { rudisha "Bring every pawn home to win"; } rudisha "Fikisha pauni zote nyumbani"; }
     kama (id == 68) { kama (e) { rudisha "About"; } rudisha "Kuhusu"; }
     kama (id == 69) { kama (e) { rudisha "Version"; } rudisha "Toleo"; }
@@ -235,6 +243,17 @@ n8* t(n32 id) {
     kama (id == 88) { kama (e) { rudisha "Install"; } rudisha "Sakinisha"; }
     kama (id == 89) { kama (e) { rudisha "A new version is ready to download"; } rudisha "Toleo jipya liko tayari kupakuliwa"; }
     kama (id == 90) { kama (e) { rudisha "Your turn"; } rudisha "Zamu yako"; }
+    kama (id == 91) { kama (e) { rudisha "Waiting for "; } rudisha "Tunamsubiri "; }
+    kama (id == 92) { kama (e) { rudisha "Let the computer play"; } rudisha "Kompyuta imchezee"; }
+    kama (id == 93) { kama (e) { rudisha "Connection lost. Reconnecting..."; } rudisha "Muunganiko umekatika. Tunaunganisha..."; }
+    kama (id == 94) { kama (e) { rudisha "Leave the game"; } rudisha "Ondoka mchezoni"; }
+    kama (id == 95) { kama (e) { rudisha "Continue saved game"; } rudisha "Endelea na mchezo uliohifadhiwa"; }
+    kama (id == 96) { kama (e) { rudisha "Game paused"; } rudisha "Mchezo umesimamishwa"; }
+    kama (id == 97) { kama (e) { rudisha "Pause the game"; } rudisha "Simamisha mchezo"; }
+    kama (id == 98) { kama (e) { rudisha "Resume the game"; } rudisha "Endelea na mchezo"; }
+    kama (id == 100) { kama (e) { rudisha "Doubles! Bottom faces added too"; } rudisha "Pacha! Nyuso za chini zimeongezwa"; }
+    kama (id == 101) { kama (e) { rudisha "Doubles add bottom faces"; } rudisha "Pacha huongeza nyuso za chini"; }
+    kama (id == 99) { kama (e) { rudisha "Players rejoin their seats"; } rudisha "Wachezaji hurudi viti vyao"; }
     rudisha "";
 }
 
@@ -708,6 +727,7 @@ n32 endeleza_uhuishaji() {
             uhuishaji = U_HAKUNA;
             kama (ujumbe == UJ_HAKUNA_HATUA) { onyesha_toast(33); }
             kama (ujumbe == UJ_PACHA_RUSHA_TENA) { onyesha_toast(34); }
+            kama (ujumbe == UJ_NYUSO_ZA_CHINI) { onyesha_toast(100); }
             rudisha 0;
         }
         uso_wa_kete[0] = nasibu_ya_onyesho() % 6 + 1;
@@ -817,6 +837,11 @@ w0 aikoni_ya_droo(n32 aina, n32 cx, n32 cy, n32 s, n32 rangi, n32 msingi) {
     kama (aina == 5) { aikoni_rekodi(cx, cy, s, rangi); }
     kama (aina == 6) { aikoni_dunia(cx, cy, s, rangi); }
     kama (aina == 7) { aikoni_herufi(cx, cy, s, rangi, "i"); }
+    kama (aina == 8) {
+        // simamisha: vipau viwili
+        mviringo(cx - s * 5 / 10, cy - s * 7 / 10, s * 3 / 10, s * 14 / 10, s * 3 / 20, rangi);
+        mviringo(cx + s * 2 / 10, cy - s * 7 / 10, s * 3 / 10, s * 14 / 10, s * 3 / 20, rangi);
+    }
 }
 
 n32 droo_kipengele_y = 0;
@@ -877,6 +902,10 @@ w0 chora_droo() {
     kama (skrini == S_MCHEZO && mshindi < 0) {
         kipengele_cha_droo(910, x, u, 0, t(41));
         kama (aina_ya_mchezo != HALI_YA_MCHEZO_WIFI) { kipengele_cha_droo(911, x, u, 1, t(42)); }
+        kama (aina_ya_mchezo == HALI_YA_MCHEZO_WIFI && mtandao_ni_mwenyeji()) {
+            kama (mtandao_kimesimamishwa()) { kipengele_cha_droo(919, x, u, 0, t(98)); }
+            sivyo { kipengele_cha_droo(919, x, u, 8, t(97)); }
+        }
     }
     kipengele_cha_droo(912, x, u, 2, t(40));
     kipengele_cha_droo(914, x, u, 3, t(15));
@@ -1037,7 +1066,7 @@ w0 chora_pauni_zote() {
 
 n8* jina_la_mchezaji_wa_kiti(n32 m) {
     kama (aina_ya_mchezo == HALI_YA_MCHEZO_WIFI) {
-        kama (mmiliki_wa_kiti(m) < 0) { rudisha jina_la_rangi(rangi_ya_kiti[m]); }
+        kama (mmiliki_wa_kiti(m) == -1) { rudisha jina_la_rangi(rangi_ya_kiti[m]); }
         rudisha jina_zuri(jina_la_kiti(m));
     }
     kama (aina_ya_mchezo == HALI_YA_MCHEZO_KOMPYUTA) {
@@ -1139,7 +1168,20 @@ w0 bango_la_zamu(n32 y, n32 bh) {
     n8* jina = jina_la_mchezaji_wa_kiti(zamu);
     n32 n = urefu_wa_mfuatano(jina);
     kama (n > 20) { n = 20; }
-    kama (wangu && aina_ya_mchezo != HALI_YA_MCHEZO_PAMOJA) {
+    n32 anasubiriwa = aina_ya_mchezo == HALI_YA_MCHEZO_WIFI && mmiliki_wa_kiti(zamu) == -2;
+    kama (anasubiriwa) {
+        // aliyekatika: "Tunamsubiri Jara"
+        n8* z = t(91);
+        n32 a = urefu_wa_mfuatano(z);
+        nakili(s, z, a);
+        nakili(s + a, jina, n);
+        s[a + n] = 0;
+        wangu = 0;
+    } sivyo { kama (mtandao_kimesimamishwa()) {
+        n8* z = t(96);
+        nakili(s, z, urefu_wa_mfuatano(z) + 1);
+        wangu = 0;
+    } sivyo { kama (wangu && aina_ya_mchezo != HALI_YA_MCHEZO_PAMOJA) {
         n8* z = t(90);
         nakili(s, z, urefu_wa_mfuatano(z) + 1);
     } sivyo {
@@ -1151,7 +1193,7 @@ w0 bango_la_zamu(n32 y, n32 bh) {
             nakili(s + 8, jina, n);
             s[8 + n] = 0;
         }
-    }
+    } } }
     n32 ukubwa = pk(32);
     n32 bu = upana_wa(s, F_NZITO, ukubwa) + bh + pk(48);
     n32 bx = (w - bu) / 2;
@@ -1226,7 +1268,9 @@ w0 chora_mchezo() {
     n32 trei_y = chini_y + kibao_h + pk(24);
     n32 tu = pk(400);
     n32 tx = (w - tu) / 2;
-    n32 wangu = ni_mchezaji_wa_simu_hii(zamu) && mshindi < 0;
+    // chumba kilichosimamishwa, au mteja anayeunganisha upya: hakuna hatua
+    n32 imezuiwa = mtandao_kimesimamishwa() || mtandao_kinaunganisha_upya();
+    n32 wangu = ni_mchezaji_wa_simu_hii(zamu) && mshindi < 0 && imezuiwa == 0;
     n32 inasubiri = wangu && hali_ya_zamu == HALI_RUSHA && uhuishaji == U_HAKUNA && droo_iko_wazi == 0;
     n32 msingi = R_KADI;
     kama (inasubiri && kitufe_kilichobonyezwa == 101) { msingi = R_KADI_JUU; }
@@ -1250,6 +1294,21 @@ w0 chora_mchezo() {
     kama (inasubiri) { sajili_kitufe(101, tx, trei_y, tu, trei_h); }
 
     n32 my = kete_y + kete_u + pk(52);
+    // mwenyeji: zamu ya aliyekatika inaweza kuchezwa na kompyuta
+    kama (mtandao_ni_mwenyeji() && mshindi < 0 && mmiliki_wa_kiti(zamu) == -2) {
+        n32 bu2 = upana_wa(t(92), F_WASTANI, pk(26)) + pk(64);
+        kitufe(125, (w - bu2) / 2, my - pk(30), bu2, pk(60), t(92), 0);
+    }
+    // mteja aliyekatika: kadi juu ya trei mpaka arudi chumbani
+    kama (mtandao_kinaunganisha_upya()) {
+        n32 kh = pk(200);
+        n32 ky = trei_y + trei_h / 2 - kh / 2;
+        mviringo(pk(24) - 1, ky - 1, w - pk(48) + 2, kh + 2, pk(32) + 1, R_MSTARI);
+        mviringo(pk(24), ky, w - pk(48), kh, pk(32), R_KADI);
+        andika_katikati(t(93), w / 2, ky + pk(52), F_WASTANI, pk(28), R_MAANDISHI);
+        kitufe(126, pk(56), ky + kh - pk(108), w - pk(112), pk(80), t(94), 0);
+        omba_fremu_ijayo();
+    }
     kama (inasubiri) { andika_katikati(t(30), w / 2, my, F_KAWAIDA, T_NDOGO, R_MAANDISHI); }
     kama (wangu && hali_ya_zamu == HALI_SOGEZA && uhuishaji == U_HAKUNA) {
         n32 cu = pk(88);
@@ -1612,6 +1671,7 @@ w0 chora_sheria() {
     mstari_wa_sheria(64, t(25), SHERIA_VIZUIZI);
     mstari_wa_sheria(65, t(26), SHERIA_SALAMA);
     mstari_wa_sheria(66, t(27), SHERIA_PACHA_TATU);
+    mstari_wa_sheria(67, t(101), SHERIA_NYUSO_ZA_CHINI);
     kadi(x, sheria_y, u, rh);
     andika_kushoto(t(28), x + pk(32), sheria_y + rh / 2, F_KAWAIDA, T_WASTANI, R_MAANDISHI);
     chaguo_la_namba(72, x + u - pk(24), sheria_y + rh / 2, 2, 4, PAUNI_KWA_MCHEZAJI);
@@ -1826,6 +1886,17 @@ w0 chora_wifi() {
     }
     andika_katikati(t(55), w / 2, y + pk(24), F_KAWAIDA, T_NDOGO, R_HAFIFU);
     y = y + pk(64);
+    kama (mtandao_kuna_chumba_kilichohifadhiwa()) {
+        // mchezo wa chumba uliohifadhiwa: "Endelea na mchezo" -- chumba 1234
+        n8 maelezo[48];
+        n8* c = t(51);
+        n32 a = urefu_wa_mfuatano(c);
+        nakili(maelezo, c, a);
+        maelezo[a] = 32;
+        nakili(maelezo + a + 1, mtandao_nambari_ya_chumba_kilichohifadhiwa(), 5);
+        kadi_ya_menyu(141, x, y, u, pk(117), 0, t(95), maelezo);
+        y = y + pk(117) + pk(12);
+    }
     kadi_ya_menyu(140, x, y, u, pk(117), 2, t(48), t(55));
     y = y + pk(117) + pk(48);
     andika_kushoto(t(49), x + pk(24), y, F_KAWAIDA, pk(28), R_HAFIFU);
@@ -1965,6 +2036,9 @@ w0 chagua_kwa_mguso(n32 x, n32 y) {
 }
 
 w0 gusa_mchezo(n32 x, n32 y, n32 id) {
+    kama (id == 125) { mtandao_kompyuta_ichukue_kiti(zamu); rudisha; }
+    kama (id == 126) { mtandao_acha_kuunganisha_upya(); nenda(S_MENYU); rudisha; }
+    kama (mtandao_kimesimamishwa() || mtandao_kinaunganisha_upya()) { rudisha; }
     kama (mshindi >= 0) {
         kama (id == 120) {
             kama (aina_ya_mchezo == HALI_YA_MCHEZO_WIFI) { anza_mchezo_mpya(); kete[0] = 0; akiba_halali = 0; mtandao_tuma_hali(); }
@@ -1993,6 +2067,7 @@ n32 gusa_droo(n32 id) {
     kama (id == 916) { nenda(S_REKODI); }
     kama (id == 917) { lugha = 1 - lugha; hifadhi_wasifu(); }
     kama (id == 918) { nenda(S_KUHUSU); }
+    kama (id == 919) { mtandao_badili_kusimamisha(); }
     rudisha 1;
 }
 
@@ -2046,12 +2121,14 @@ w0 gusa(n32 x, n32 y) {
         kama (id == 64) { SHERIA_VIZUIZI = 1 - SHERIA_VIZUIZI; }
         kama (id == 65) { SHERIA_SALAMA = 1 - SHERIA_SALAMA; akiba_halali = 0; }
         kama (id == 66) { SHERIA_PACHA_TATU = 1 - SHERIA_PACHA_TATU; }
+        kama (id == 67) { SHERIA_NYUSO_ZA_CHINI = 1 - SHERIA_NYUSO_ZA_CHINI; }
         kama (id >= 72 && id <= 74) { PAUNI_KWA_MCHEZAJI = id - 70; }
         kama (id == 70) { nenda(skrini_ya_nyuma_ya_sheria); }
         rudisha;
     }
     kama (skrini == S_WIFI) {
         kama (id == 140) { mtandao_anza_mwenyeji(); }
+        kama (id == 141) { mtandao_endelea_chumba(); }
         kama (id == 161) { mtandao_funga(); mtandao_anza_kutafuta(); }
         kama (id >= 150 && id < 154) { mtandao_dai_kiti(id - 150); }
         kama (id >= 170 && id < 175) { mtandao_jiunge(id - 170); }

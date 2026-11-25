@@ -11,8 +11,10 @@
 //              pekee ndiyo isiyobadilika: ni mahali pa kukutana.
 //
 // Kila ujumbe wa TCP ni fremu: [aina, kiti, urefu (baiti 2, LE)] + data.
-//   aina 1: hali kutoka kwa mwenyeji (baiti 384: n32[80] + majina 4 x 16)
-//   aina 2: ombi la mteja (baiti 20): [ombi, a, b, toleo] + jina (baiti 16);
+//   aina 1: hali kutoka kwa mwenyeji (baiti 448: n32[80] + majina 4 x 16 +
+//           vitambulisho vya wachezaji 4 x 12)
+//   aina 2: ombi la mteja (baiti 32): [ombi, a, b, toleo] + jina (baiti 16)
+//           + kitambulisho (baiti 12);
 //           ombi 1 = rusha, 2 = sogeza pauni a kwa hatua b, 3 = dai kiti a,
 //           4 = salamu, 5 = nitumie APK
 //   aina 3: sauti: PCM i16 ya 16 kHz ya kiti `kiti` (mwenyeji huipeleka kwa wengine)
@@ -53,6 +55,8 @@ n32 tundu_la_tangazo = -1;
 n32 tundu_la_kusikiliza = -1;
 n32 tundu_la_mteja[3];          // mwenyeji: wateja; mteja: [0] ni mwenyeji
 n32 nafasi_ya_mteja = -1;       // mteja: nambari yake kwa mwenyeji (1..3)
+n32 chumba_kimesimamishwa = 0;   // mwenyeji amesimamisha mchezo kwa muda
+n32 kuunganisha_upya = 0;        // mteja: muunganiko ulikatika katikati ya mchezo
 n32 mmiliki[4];                 // -1 wazi, 0 mwenyeji, 1..3 mteja
 n8 majina_ya_viti[64];
 n32 tangazo_la_mwisho = 0;
@@ -82,7 +86,7 @@ n32 muunganiko_umevunjika[3];   // foleni ilijaa: mwenzake hapokei tena
 // toleo la programu hii (pia versionCode ya APK, jenga-apk.sh). Mteja hulituma
 // kwenye salamu; mwenyeji mwenye toleo jipya zaidi humpa ofa ya kusasisha na,
 // akikubali, humtumia APK yake mwenyewe vipande vipande (aina 4 na 5).
-n32 TOLEO_LA_PROGRAMU = 2;
+n32 TOLEO_LA_PROGRAMU = 3;
 n32 toleo_la_programu() { rudisha TOLEO_LA_PROGRAMU; }
 n32 upakiaji[3];                // mwenyeji: baiti za APK zilizotumwa kwa mteja i, au -1
 n8 kipande_cha_apk[4096];
@@ -215,6 +219,8 @@ w0 mtandao_funga() {
     tundu_la_kusikiliza = -1;
     jukumu_la_mtandao = 0;
     nafasi_ya_mteja = -1;
+    kuunganisha_upya = 0;
+    chumba_kimesimamishwa = 0;
     vyumba_n = 0;
     i = 0;
     wakati (i < 4) { mmiliki[i] = -1; i = i + 1; }
@@ -250,6 +256,7 @@ w0 weka_jina_la_kiti(n32 m, n8* jina) {
 }
 
 // ---------------------------------------------------------------- mwenyeji
+w0 weka_kitambulisho_cha_kiti(n32 m, n8* kitambulisho_chake);
 w0 mtandao_anza_mwenyeji() {
     mtandao_funga();
     n8 a[16];
@@ -281,9 +288,38 @@ w0 mtandao_anza_mwenyeji() {
     wakati (i < 4) { mmiliki[i] = -1; kiti_kipo[i] = 1; i = i + 1; }
     mmiliki[0] = 0;
     weka_jina_la_kiti(0, jina_la_mchezaji);
+    i = 0;
+    wakati (i < 4) { weka_kitambulisho_cha_kiti(i, 0); i = i + 1; }
+    weka_kitambulisho_cha_kiti(0, kitambulisho);
+    chumba_kimesimamishwa = 0;
 }
 
-n8 chombo_cha_hali[384];
+
+// Mchezo wa chumba huishi hata mtu akikatika: kiti chake hushikiliwa
+// (mmiliki -2) kwa kitambulisho chake (KJ-XXXX-XXXX) mpaka arudi, na zamu yake
+// husubiri; mwenyeji anaweza kuiachia kompyuta. Mwenyeji huhifadhi hali kwenye
+// faili "chumba" kila inapobadilika, kwa hiyo hata mwenyeji akifunga programu,
+// anaweza kuendeleza chumba kilekile baadaye na wengine wakarudi viti vyao.
+n32 HALI_UREFU = 448;
+n32 KITI_KINASUBIRI = -2;
+n8 chombo_cha_hali[448];
+n8 vitambulisho_vya_viti[48];
+
+w0 weka_kitambulisho_cha_kiti(n32 m, n8* kitambulisho_chake) {
+    n32 i = 0;
+    wakati (i < 12) {
+        vitambulisho_vya_viti[m * 12 + i] = 0;
+        kama (kitambulisho_chake != 0) { vitambulisho_vya_viti[m * 12 + i] = kitambulisho_chake[i]; }
+        i = i + 1;
+    }
+}
+
+n32 kitambulisho_cha_kiti_ni(n32 m, n8* kitambulisho_chake) {
+    kama (kitambulisho_chake == 0 || vitambulisho_vya_viti[m * 12] == 0) { rudisha 0; }
+    n32 i = 0;
+    wakati (i < 12) { kama (vitambulisho_vya_viti[m * 12 + i] != kitambulisho_chake[i]) { rudisha 0; } i = i + 1; }
+    rudisha 1;
+}
 
 w0 jaza_hali(n32 kwa_mteja) {
     n32* v = chombo_cha_hali;
@@ -304,7 +340,43 @@ w0 jaza_hali(n32 kwa_mteja) {
     i = 0;
     wakati (i < 4) { v[68 + i] = nambari_ya_chumba[i]; v[72 + i] = nafasi_ya_kumaliza[i]; i = i + 1; }
     v[76] = waliomaliza;
+    v[77] = chumba_kimesimamishwa;
+    v[78] = SHERIA_NYUSO_ZA_CHINI;
     nakili(chombo_cha_hali + 320, majina_ya_viti, 64);
+    nakili(chombo_cha_hali + 384, vitambulisho_vya_viti, 48);
+}
+
+// ---------------------------------------------------------------- akiba ya chumba
+n8 chombo_cha_akiba[448];
+
+w0 hifadhi_chumba() {
+    kama (njia_ya("chumba") == 0) { rudisha; }
+    kama (mshindi >= 0) { wito_wa_mfumo(87, njia_ya_faili, 0, 0, 0, 0, 0); rudisha; }   // umekwisha: futa
+    jaza_hali(0);
+    n64 fd = wito_wa_mfumo(2, njia_ya_faili, 577, 384, 0, 0, 0);
+    kama (fd < 0) { rudisha; }
+    wito_wa_mfumo(1, fd, chombo_cha_hali, HALI_UREFU, 0, 0, 0);
+    wito_wa_mfumo(3, fd, 0, 0, 0, 0, 0);
+}
+
+// 1 kama kuna mchezo wa chumba uliohifadhiwa na haujaisha (huusoma kwenye chombo_cha_akiba)
+n32 mtandao_kuna_chumba_kilichohifadhiwa() {
+    kama (njia_ya("chumba") == 0) { rudisha 0; }
+    n64 fd = wito_wa_mfumo(2, njia_ya_faili, 0, 0, 0, 0, 0);
+    kama (fd < 0) { rudisha 0; }
+    n64 n = wito_wa_mfumo(0, fd, chombo_cha_akiba, HALI_UREFU, 0, 0, 0);
+    wito_wa_mfumo(3, fd, 0, 0, 0, 0, 0);
+    n32* v = chombo_cha_akiba;
+    rudisha n == HALI_UREFU && v[0] == 1346913107 && v[67] && v[56] < 0;
+}
+
+n8 nambari_ya_akiba[5];
+n8* mtandao_nambari_ya_chumba_kilichohifadhiwa() {
+    n32* v = chombo_cha_akiba;
+    n32 i = 0;
+    wakati (i < 4) { nambari_ya_akiba[i] = v[68 + i]; i = i + 1; }
+    nambari_ya_akiba[4] = 0;
+    rudisha nambari_ya_akiba;
 }
 
 w0 mtandao_tuma_hali() {
@@ -313,11 +385,56 @@ w0 mtandao_tuma_hali() {
     wakati (i < 3) {
         kama (tundu_la_mteja[i] >= 0) {
             jaza_hali(i + 1);
-            tuma_fremu(i, 1, 0, chombo_cha_hali, 384);
+            tuma_fremu(i, 1, 0, chombo_cha_hali, HALI_UREFU);
         }
         i = i + 1;
     }
+    kama (skrini == S_MCHEZO) { hifadhi_chumba(); }
 }
+
+// endeleza mchezo uliohifadhiwa: chumba kilekile (nambari ileile), viti vya
+// wateja vikishikiliwa mpaka warudi
+w0 soma_hali(n8* c);
+w0 mtandao_endelea_chumba() {
+    kama (mtandao_kuna_chumba_kilichohifadhiwa() == 0) { rudisha; }
+    mtandao_anza_mwenyeji();
+    kama (jukumu_la_mtandao != 1) { rudisha; }
+    soma_hali(chombo_cha_akiba);
+    n32* v = chombo_cha_akiba;
+    n32 m = 0;
+    wakati (m < 4) {
+        nambari_ya_chumba[m] = v[68 + m];
+        kama (mmiliki[m] >= 1) { mmiliki[m] = KITI_KINASUBIRI; }
+        m = m + 1;
+    }
+    nambari_ya_chumba[4] = 0;
+    aina_ya_mchezo = HALI_YA_MCHEZO_WIFI;
+    akiba_halali = 0;
+    uhuishaji = U_HAKUNA;
+    toast_ujumbe = -1;
+    nenda(S_MCHEZO);
+    omba_fremu_ijayo();
+}
+
+// mwenyeji: zamu ya aliyekatika ichezwe na kompyuta kuanzia sasa
+w0 mtandao_kompyuta_ichukue_kiti(n32 m) {
+    kama (jukumu_la_mtandao != 1 || mmiliki[m] != KITI_KINASUBIRI) { rudisha; }
+    mmiliki[m] = -1;
+    ni_kompyuta[m] = 1;
+    weka_kitambulisho_cha_kiti(m, 0);
+    mtandao_tuma_hali();
+    omba_fremu_ijayo();
+}
+
+w0 mtandao_badili_kusimamisha() {
+    kama (jukumu_la_mtandao != 1) { rudisha; }
+    chumba_kimesimamishwa = 1 - chumba_kimesimamishwa;
+    mtandao_tuma_hali();
+    omba_fremu_ijayo();
+}
+n32 mtandao_kimesimamishwa() { rudisha (jukumu_la_mtandao == 1 || jukumu_la_mtandao == 2) && chumba_kimesimamishwa; }
+n32 mtandao_kinaunganisha_upya() { rudisha kuunganisha_upya; }
+w0 mtandao_acha_kuunganisha_upya() { kuunganisha_upya = 0; mtandao_funga(); }
 
 w0 ondoa_mteja(n32 i) {
     tundu_funga(tundu_la_mteja[i]);
@@ -327,16 +444,22 @@ w0 ondoa_mteja(n32 i) {
     omba_fremu_ijayo();
     n32 m = 0;
     wakati (m < 4) {
-        kama (mmiliki[m] == i + 1) { mmiliki[m] = -1; ni_kompyuta[m] = 1; }
+        kama (mmiliki[m] == i + 1) {
+            // katikati ya mchezo kiti hushikiliwa mpaka arudi; kwenye lobby huachiwa
+            kama (skrini == S_MCHEZO && mshindi < 0) { mmiliki[m] = KITI_KINASUBIRI; }
+            sivyo { mmiliki[m] = -1; weka_kitambulisho_cha_kiti(m, 0); }
+        }
         m = m + 1;
     }
     mtandao_tuma_hali();
 }
 
-w0 shughulikia_ombi(n32 mteja, n8* o) {
+w0 shughulikia_ombi(n32 mteja, n8* o, n32 urefu) {
     n32 aina = o[0] & 255;
     n32 a = o[1] & 255;
     n32 b = o[2] & 255;
+    n8* kitambulisho_chake = 0;
+    kama (urefu >= 32 && o[20] != 0) { kitambulisho_chake = o + 20; }
     kama (aina == 4 && (o[3] & 255) < TOLEO_LA_PROGRAMU) {
         // mteja ana toleo la zamani: mpe ofa ya toleo hili
         n32 ofa[2];
@@ -346,19 +469,36 @@ w0 shughulikia_ombi(n32 mteja, n8* o) {
     }
     kama (aina == 5) { upakiaji[mteja - 1] = 0; }
     kama (aina == 4) {
-        // salamu: kiti cha kwanza kilicho wazi
+        // salamu: anayerudi hupewa viti vyake vilivyoshikiliwa; mgeni hupata
+        // kiti cha kwanza kilicho wazi (kabla mchezo haujaanza tu)
+        n32 amerudi = 0;
         n32 m = 0;
-        wakati (m < 4 && mmiliki[m] >= 0) { m = m + 1; }
-        kama (m < 4 && skrini != S_MCHEZO) { mmiliki[m] = mteja; weka_jina_la_kiti(m, o + 4); }
+        wakati (m < 4) {
+            kama (mmiliki[m] == KITI_KINASUBIRI && kitambulisho_cha_kiti_ni(m, kitambulisho_chake)) {
+                mmiliki[m] = mteja;
+                weka_jina_la_kiti(m, o + 4);
+                amerudi = 1;
+            }
+            m = m + 1;
+        }
+        m = 0;
+        wakati (m < 4 && mmiliki[m] != -1) { m = m + 1; }
+        kama (amerudi == 0 && m < 4 && skrini != S_MCHEZO) {
+            mmiliki[m] = mteja;
+            weka_jina_la_kiti(m, o + 4);
+            weka_kitambulisho_cha_kiti(m, kitambulisho_chake);
+        }
     }
-    kama (aina == 3 && a < 4 && mmiliki[a] < 0 && skrini != S_MCHEZO) {
+    kama (aina == 3 && a < 4 && mmiliki[a] == -1 && skrini != S_MCHEZO) {
         n32 m = 0;
-        wakati (m < 4) { kama (mmiliki[m] == mteja) { mmiliki[m] = -1; } m = m + 1; }
+        wakati (m < 4) { kama (mmiliki[m] == mteja) { mmiliki[m] = -1; weka_kitambulisho_cha_kiti(m, 0); } m = m + 1; }
         mmiliki[a] = mteja;
         weka_jina_la_kiti(a, o + 4);
+        weka_kitambulisho_cha_kiti(a, kitambulisho_chake);
     }
-    // hatua za mchezo hukubaliwa tu kutoka kwa mwenye zamu, uhuishaji ukiwa umekwisha
-    kama ((aina == 1 || aina == 2) && skrini == S_MCHEZO && mmiliki[zamu] == mteja && uhuishaji == U_HAKUNA) {
+    // hatua za mchezo hukubaliwa tu kutoka kwa mwenye zamu, uhuishaji ukiwa
+    // umekwisha na chumba hakijasimamishwa
+    kama ((aina == 1 || aina == 2) && skrini == S_MCHEZO && mmiliki[zamu] == mteja && uhuishaji == U_HAKUNA && chumba_kimesimamishwa == 0) {
         kama (aina == 1 && hali_ya_zamu == HALI_RUSHA) { fanya_rusha(); }
         kama (aina == 2 && hali_ya_zamu == HALI_SOGEZA) { fanya_hatua(a, b); }
     }
@@ -390,7 +530,7 @@ w0 mwenyeji_kila_fremu() {
                 n32 urefu = fremu_kamili(c, kiasi_cha_mapokezi[i]);
                 wakati (urefu > 0) {
                     n32 aina = c[0] & 255;
-                    kama (aina == 2 && urefu >= 24) { shughulikia_ombi(i + 1, c + 4); }
+                    kama (aina == 2 && urefu >= 24) { shughulikia_ombi(i + 1, c + 4, urefu - 4); }
                     kama (aina == 3) {
                         // sauti ya mteja: cheza hapa, peleka kwa wateja wengine
                         n32 kiti = c[1] & 255;
@@ -407,9 +547,9 @@ w0 mwenyeji_kila_fremu() {
         }
         i = i + 1;
     }
-    // tangazo kila sekunde (mchezo usipoanza)
+    // tangazo kila sekunde, hata mchezoni: aliyekatika hukipata chumba tena
     n32 sasa = sasa_ms();
-    kama (skrini != S_MCHEZO && sasa - tangazo_la_mwisho > 1000) {
+    kama (sasa - tangazo_la_mwisho > 1000) {
         tangazo_la_mwisho = sasa;
         n8 t[26];
         t[0] = 80; t[1] = 67; t[2] = 72; t[3] = 49;     // "PCH1"
@@ -445,6 +585,12 @@ w0 mtandao_anza_kutafuta() {
     tundu_funga_anwani(tundu_la_tangazo, a, 16);
     bila_kuzuia(tundu_la_tangazo);
     jukumu_la_mtandao = 3;
+}
+
+n32 linganisha_baiti(n8* a, n8* b, n32 n) {
+    n32 i = 0;
+    wakati (i < n) { kama (a[i] != b[i]) { rudisha 0; } i = i + 1; }
+    rudisha 1;
 }
 
 w0 kutafuta_kila_fremu() {
@@ -485,6 +631,14 @@ w0 kutafuta_kila_fremu() {
         urefu_a[0] = 16;
         n = tundu_pokea_kutoka(tundu_la_tangazo, t, 64, MSG_DONTWAIT, a, urefu_a);
     }
+    // kuunganisha upya: chumba chenye nambari ileile kikionekana, jiunge
+    kama (kuunganisha_upya) {
+        n32 r = 0;
+        wakati (r < vyumba_n) {
+            kama (linganisha_baiti(vyumba_jina + r * 24, nambari_ya_chumba, 4)) { mtandao_jiunge(r); rudisha; }
+            r = r + 1;
+        }
+    }
     // vyumba visivyotangaza kwa sekunde 4 huondolewa
     n32 i = 0;
     wakati (i < vyumba_n) {
@@ -503,11 +657,13 @@ w0 kutafuta_kila_fremu() {
 
 w0 tuma_ombi(n32 aina, n32 a, n32 b) {
     kama (tundu_la_mteja[0] < 0) { rudisha; }
-    n8 o[20];
+    n8 o[32];
     o[0] = aina; o[1] = a; o[2] = b; o[3] = TOLEO_LA_PROGRAMU;
     n32 i = 0;
     wakati (i < 16) { o[4 + i] = jina_la_mchezaji[i]; i = i + 1; }
-    tuma_fremu(0, 2, 0, o, 20);
+    i = 0;
+    wakati (i < 12) { o[20 + i] = kitambulisho[i]; i = i + 1; }
+    tuma_fremu(0, 2, 0, o, 32);
 }
 
 // sauti ya simu hii: mteja humtumia mwenyeji; mwenyeji huwatumia wateja wote
@@ -545,7 +701,9 @@ w0 kuunganisha_kumeshindwa() {
     tundu_funga(tundu_la_mteja[0]);
     tundu_la_mteja[0] = -1;
     kosa_la_kuunganisha = sasa_ms();
+    n32 upya = kuunganisha_upya;
     mtandao_anza_kutafuta();
+    kuunganisha_upya = upya;
     omba_fremu_ijayo();
 }
 
@@ -617,26 +775,21 @@ n8* mtandao_anwani_yangu() {
 
 w0 mtandao_dai_kiti(n32 m) {
     kama (jukumu_la_mtandao == 2) { tuma_ombi(3, m, 0); rudisha; }
-    kama (jukumu_la_mtandao == 1 && mmiliki[m] < 0) {
+    kama (jukumu_la_mtandao == 1 && mmiliki[m] == -1) {
         n32 x = 0;
-        wakati (x < 4) { kama (mmiliki[x] == 0) { mmiliki[x] = -1; } x = x + 1; }
+        wakati (x < 4) { kama (mmiliki[x] == 0) { mmiliki[x] = -1; weka_kitambulisho_cha_kiti(x, 0); } x = x + 1; }
         mmiliki[m] = 0;
         weka_jina_la_kiti(m, jina_la_mchezaji);
+        weka_kitambulisho_cha_kiti(m, kitambulisho);
         mtandao_tuma_hali();
     }
 }
 
 // tumia hali kutoka kwa mwenyeji, na huisha kilichobadilika
-w0 pokea_hali(n8* c) {
+// hali yote ya mchezo kutoka kwenye chombo (kutoka kwa mwenyeji, au akiba)
+w0 soma_hali(n8* c) {
     n32* v = c;
-    kama (v[0] != 1346913107) { rudisha; }
-    n32 zamu_ya_zamani = zamu;
-    n32 hali_ya_zamani = hali_ya_zamu;
-    n32 kete_za_zamani = kete[0] * 8 + kete[1];
-    n32 ilikuwa_mchezoni = skrini == S_MCHEZO;
     n32 i = 0;
-    wakati (i < 16) { pauni_kabla[i] = pauni[i]; i = i + 1; }
-    i = 0;
     wakati (i < 4) { kiti_kipo[i] = v[1 + i]; ni_kompyuta[i] = v[5 + i]; rangi_ya_kiti[i] = v[9 + i]; mmiliki[i] = v[13 + i]; i = i + 1; }
     i = 0;
     wakati (i < 16) { pauni[i] = v[17 + i]; i = i + 1; }
@@ -651,7 +804,23 @@ w0 pokea_hali(n8* c) {
     i = 0;
     wakati (i < 4) { nafasi_ya_kumaliza[i] = v[72 + i]; i = i + 1; }
     waliomaliza = v[76];
+    chumba_kimesimamishwa = v[77];
+    SHERIA_NYUSO_ZA_CHINI = v[78];
     nakili(majina_ya_viti, c + 320, 64);
+    nakili(vitambulisho_vya_viti, c + 384, 48);
+}
+
+w0 pokea_hali(n8* c) {
+    n32* v = c;
+    kama (v[0] != 1346913107) { rudisha; }
+    n32 zamu_ya_zamani = zamu;
+    n32 hali_ya_zamani = hali_ya_zamu;
+    n32 kete_za_zamani = kete[0] * 8 + kete[1];
+    n32 ilikuwa_mchezoni = skrini == S_MCHEZO;
+    n32 i = 0;
+    wakati (i < 16) { pauni_kabla[i] = pauni[i]; i = i + 1; }
+    soma_hali(c);
+    kuunganisha_upya = 0;
     kama (v[67] && ilikuwa_mchezoni == 0) {
         akiba_halali = 0;
         uhuishaji = U_HAKUNA;
@@ -682,7 +851,14 @@ w0 mteja_kila_fremu() {
     n8* c = chombo_cha_mapokezi;
     n64 n = tundu_pokea(tundu_la_mteja[0], c + kiasi_cha_mapokezi[0], MAPOKEZI - kiasi_cha_mapokezi[0], MSG_DONTWAIT);
     kama (n == 0 || muunganiko_umevunjika[0]) {
-        // mwenyeji ameondoka
+        // mwenyeji amekatika: katikati ya mchezo, tafuta chumba kilekile na
+        // urudi kiti chako (kitambulisho); vinginevyo rudi menyu
+        kama (skrini == S_MCHEZO && mshindi < 0) {
+            mtandao_anza_kutafuta();
+            kuunganisha_upya = 1;
+            omba_fremu_ijayo();
+            rudisha;
+        }
         mtandao_funga();
         nenda(S_MENYU);
         rudisha;
@@ -691,7 +867,7 @@ w0 mteja_kila_fremu() {
     n32 urefu = fremu_kamili(c, kiasi_cha_mapokezi[0]);
     wakati (urefu > 0) {
         n32 aina = c[0] & 255;
-        kama (aina == 1 && urefu >= 388) { pokea_hali(c + 4); omba_fremu_ijayo(); }
+        kama (aina == 1 && urefu >= 4 + HALI_UREFU) { pokea_hali(c + 4); omba_fremu_ijayo(); }
         kama (aina == 3) { sauti_pokea(c[1] & 255, c + 4, urefu - 4); }
         kama (aina == 4 && urefu >= 12) { n32* ofa = c + 4; sasisho_ofa(ofa[0], ofa[1]); }
         kama (aina == 5) { sasisho_kipande(c + 4, urefu - 4); }
