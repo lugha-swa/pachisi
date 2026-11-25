@@ -26,8 +26,10 @@ Bado kinahitajika: picha za skrini 2 hadi 8 kutoka kwenye simu (pembeni 1080 x
 
 ## 2. Uamuzi wa kudumu kabla ya kupakia mara ya kwanza
 
-- **Jina la kifurushi**: `io.github.lugha_swa.pachisi`. Haliwezi kubadilishwa
-  baada ya kupakia; likibadilishwa, nakala zilizopo huwa programu nyingine.
+- **Jina la kifurushi**: `com.kajara.parchisi` (limechaguliwa 2026-11-25).
+  Haliwezi kubadilishwa baada ya kupakia; likibadilishwa, nakala zilizopo huwa
+  programu nyingine. Jina la mchezo dukani na kwenye simu linabaki "Pachisi"
+  (jina la jadi lisilo na mmiliki; "Parcheesi" ni alama ya biashara ya Hasbro).
 - **Ufunguo**: `.funguo/majaribio.keystore` (RSA 2048, hadi 2054, alias `ludo`)
   ndio ufunguo wa programu kwa nakala zote. Kwenye Play App Signing chagua
   "Use existing app signing key" na upakie ufunguo huu kwa zana ya PEPK

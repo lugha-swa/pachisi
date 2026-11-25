@@ -3,10 +3,15 @@ mandhari ya Shanga (msimbo/skrini.swa). Endesha kutoka mzizi wa mradi:
 
     python3 gharama/ikoni.py
 
-Matokeo: res/mipmap-xxxhdpi/ic_launcher_fg.png (sehemu ya mbele ya ikoni
-inayobadilika, 432 px), hati/play/ikoni-512.png na hati/play/picha-kuu.png
-(1024 x 500). Nembo ni ile ya chora_nembo: pauni nne kwa msalaba, ushanga wa
-dhahabu katikati.
+Matokeo: res/mipmap-xxxhdpi/ic_launcher_fg.png (ikoni ya rangi, 432 px),
+res/mipmap-xxxhdpi/ic_launcher_mono.png (ikoni ya rangi moja kwa simu
+zinazopaka ikoni rangi ya mandhari), hati/play/ikoni-512.png na
+hati/play/picha-kuu.png (1024 x 500). Nembo ni ile ya chora_nembo: pauni nne
+kwa msalaba, ushanga wa dhahabu katikati.
+
+Ikoni ya simu haina usuli: safu ya nyuma ni wazi (res/values/rangi.xml), kwa
+hiyo nembo hukaa yenyewe juu ya mandhari ya skrini ya nyumbani, giza au angavu.
+Nembo hujaza eneo salama la ikoni inayobadilika (duara la 66% katikati).
 """
 from PIL import Image, ImageDraw, ImageFont
 
@@ -45,10 +50,23 @@ def hifadhi(im, upana, urefu, njia):
     print(njia)
 
 
-# ikoni inayobadilika: mbele yenye uwazi; eneo salama ni duara la 66% katikati
+# ikoni inayobadilika: nembo inafika ukingo wa eneo salama (nusu-kipenyo 142)
 im, d = picha(432, 432, (0, 0, 0, 0))
-nembo(d, 216 * K, 216 * K, 72 * K)
+nembo(d, 216 * K, 216 * K, 88 * K)
 hifadhi(im, 432, 432, "res/mipmap-xxxhdpi/ic_launcher_fg.png")
+
+# rangi moja: mfumo hutumia uwazi tu, kwa hiyo pauni ni pete (si diski) ili
+# umbo libaki kusomeka bila rangi
+im, d = picha(432, 432, (0, 0, 0, 0))
+r, p = 88 * K, 88 * K * 3 // 5
+for dx, dy in ((0, -r), (-r, 0), (r, 0), (0, r)):
+    cx, cy = 216 * K + dx, 216 * K + dy
+    d.ellipse((cx - p, cy - p, cx + p, cy + p), fill="white")
+    n = p * 2 // 3
+    d.ellipse((cx - n, cy - n, cx + n, cy + n), fill=(0, 0, 0, 0))
+b = r // 4
+d.ellipse((216 * K - b, 216 * K - b, 216 * K + b, 216 * K + b), fill="white")
+hifadhi(im, 432, 432, "res/mipmap-xxxhdpi/ic_launcher_mono.png")
 
 # ikoni ya duka (512, Play huzungusha pembe zenyewe)
 im, d = picha(512, 512, USIKU)

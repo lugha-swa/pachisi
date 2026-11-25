@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- usuli wa ikoni: usiku wa pwani wa mandhari ya Shanga -->
+<!-- ikoni bila usuli: safu ya nyuma ni wazi, nembo hukaa juu ya mandhari ya simu -->
 <resources>
-    <color name="usuli_wa_ikoni">#101622</color>
+    <color name="usuli_wa_ikoni">#00000000</color>
 </resources>
