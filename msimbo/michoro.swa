@@ -230,6 +230,65 @@ n32 RANGI_YA_KETE_UKINGO = 0;
 n32 RANGI_YA_KETE_ZIMA = 0;
 n32 RANGI_YA_NUKTA = 0;
 n32 RANGI_YA_UKINGO_WA_PAUNI = 0;
+n32 RANGI_YA_NYOTA = 0;
+
+// nyota ya ncha tano: vipeo 10 (nje na ndani kwa zamu, ndani = 0.382 ya nje),
+// kila pikseli hupimwa kwa sampuli 3x3 ndani ya poligoni (kanuni ya witiri)
+// kwa kingo laini. Pembe za nje huanzia juu na kuongezeka 72 digrii.
+n32 NYOTA_X[10];
+n32 NYOTA_Y[10];
+w0 andaa_nyota() {
+    NYOTA_X[0] = 0;    NYOTA_Y[0] = -1000;  NYOTA_X[1] = 225;  NYOTA_Y[1] = -309;
+    NYOTA_X[2] = 951;  NYOTA_Y[2] = -309;   NYOTA_X[3] = 363;  NYOTA_Y[3] = 118;
+    NYOTA_X[4] = 588;  NYOTA_Y[4] = 809;    NYOTA_X[5] = 0;    NYOTA_Y[5] = 382;
+    NYOTA_X[6] = -588; NYOTA_Y[6] = 809;    NYOTA_X[7] = -363; NYOTA_Y[7] = 118;
+    NYOTA_X[8] = -951; NYOTA_Y[8] = -309;   NYOTA_X[9] = -225; NYOTA_Y[9] = -309;
+}
+
+w0 nyota(n32 cx, n32 cy, n32 r, n32 rangi) {
+    kama (NYOTA_Y[0] == 0) { andaa_nyota(); }
+    // vipeo kwa theluthi za pikseli; katikati ya nyota iko kidogo chini ya cy
+    // ili nyota ionekane imekaa katikati ya seli
+    n32 vx[10];
+    n32 vy[10];
+    n32 i = 0;
+    wakati (i < 10) {
+        vx[i] = cx * 3 + 1 + NYOTA_X[i] * r * 3 / 1000;
+        vy[i] = cy * 3 + 1 + r * 3 / 10 + NYOTA_Y[i] * r * 3 / 1000;
+        i = i + 1;
+    }
+    n32 y = cy - r - 1;
+    wakati (y <= cy + r + 1) {
+        n32 x = cx - r - 1;
+        wakati (x <= cx + r + 1) {
+            n32 ndani = 0;
+            n32 sy = 0;
+            wakati (sy < 3) {
+                n32 py = y * 3 + sy;
+                n32 sx = 0;
+                wakati (sx < 3) {
+                    n32 px = x * 3 + sx;
+                    n32 witiri = 0;
+                    n32 a = 0;
+                    n32 b = 9;
+                    wakati (a < 10) {
+                        kama ((vy[a] > py) != (vy[b] > py)) {
+                            kama (px < vx[a] + (vx[b] - vx[a]) * (py - vy[a]) / (vy[b] - vy[a])) { witiri = 1 - witiri; }
+                        }
+                        b = a;
+                        a = a + 1;
+                    }
+                    ndani = ndani + witiri;
+                    sx = sx + 1;
+                }
+                sy = sy + 1;
+            }
+            kama (ndani > 0) { pikseli_alfa(x, y, rangi, ndani * 255 / 9); }
+            x = x + 1;
+        }
+        y = y + 1;
+    }
+}
 
 // kete: mraba bapa wenye pembe za mviringo na ukingo mwembamba; nukta za mviringo
 // kete: nukta huwa za rangi ya mwenye zamu, ili kete zenyewe zionyeshe zamu

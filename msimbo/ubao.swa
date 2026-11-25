@@ -218,12 +218,22 @@ w0 chora_ubao() {
         n32 mk = i / 17;
         n32 rangi = RANGI_YA_SELI;
         n32 rangi_ya_namba = RANGI_YA_NAMBA;
+        n32 rangi_ya_nyota = RANGI_YA_NYOTA;
         kama (ni_seli_salama(i)) { rangi = RANGI_YA_SALAMA; }
-        kama (i % 17 == KUINGIA && kiti_kipo[mk]) { rangi = rangi_ya_mchezaji(mk); rangi_ya_namba = rgb(255, 255, 255); }
+        kama (i % 17 == KUINGIA && kiti_kipo[mk]) { rangi = rangi_ya_mchezaji(mk); rangi_ya_namba = rgb(255, 255, 255); rangi_ya_nyota = rgb(255, 255, 255); }
         seli(NJIA_SAFU[i], NJIA_WIMA[i], rangi);
         n32 x = ubao_x + gridi_mahali(NJIA_WIMA[i]);
         n32 y = ubao_y + gridi_mahali(NJIA_SAFU[i]);
-        andika_katikati(namba_kama_maandishi(i + 1), x + gridi_ukubwa(NJIA_WIMA[i]) / 2, y + gridi_ukubwa(NJIA_SAFU[i]) / 2, 0, ukubwa_wa_namba, rangi_ya_namba);
+        n32 cu = gridi_ukubwa(NJIA_WIMA[i]);
+        n32 ch = gridi_ukubwa(NJIA_SAFU[i]);
+        // seli salama: nyota badala ya namba, ili ijulikane kwa kutazama tu
+        kama (ni_seli_salama(i)) {
+            n32 fupi = cu;
+            kama (ch < fupi) { fupi = ch; }
+            nyota(x + cu / 2, y + ch / 2, fupi * 36 / 100, rangi_ya_nyota);
+        } sivyo {
+            andika_katikati(namba_kama_maandishi(i + 1), x + cu / 2, y + ch / 2, 0, ukubwa_wa_namba, rangi_ya_namba);
+        }
         i = i + 1;
     }
     n32 m = 0;

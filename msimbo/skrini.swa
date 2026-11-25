@@ -92,6 +92,7 @@ w0 andaa_mandhari(n32 giza) {
         RANGI_YA_KETE_ZIMA = rgb(90, 100, 124);
         RANGI_YA_NUKTA = rgb(16, 22, 34);
         RANGI_YA_UKINGO_WA_PAUNI = rgb(244, 238, 226);
+        RANGI_YA_NYOTA = rgb(240, 184, 82);
     } sivyo {
         R_MANDHARI = rgb(245, 238, 225);
         R_DROO = rgb(245, 238, 225);
@@ -118,6 +119,7 @@ w0 andaa_mandhari(n32 giza) {
         RANGI_YA_KETE_ZIMA = rgb(232, 222, 204);
         RANGI_YA_NUKTA = rgb(38, 30, 24);
         RANGI_YA_UKINGO_WA_PAUNI = rgb(255, 252, 246);
+        RANGI_YA_NYOTA = rgb(196, 120, 40);
     }
     R_DHAHABU = rgb(232, 170, 64);
     PALETI[0] = rgb(214, 72, 58);
@@ -188,7 +190,6 @@ n8* t(n32 id) {
     kama (id == 40) { kama (e) { rudisha "Home"; } rudisha "Nyumbani"; }
     kama (id == 41) { kama (e) { rudisha "Resume game"; } rudisha "Endelea na mchezo"; }
     kama (id == 42) { kama (e) { rudisha "Restart game"; } rudisha "Anza upya"; }
-    kama (id == 43) { kama (e) { rudisha "is playing"; } rudisha "anacheza"; }
     kama (id == 44) { kama (e) { rudisha "Games"; } rudisha "Michezo"; }
     kama (id == 45) { kama (e) { rudisha "Wins"; } rudisha "Ushindi"; }
     kama (id == 46) { kama (e) { rudisha "Captures"; } rudisha "Uliola"; }
@@ -233,6 +234,7 @@ n8* t(n32 id) {
     kama (id == 87) { kama (e) { rudisha "Update failed. Try again later"; } rudisha "Sasisho limeshindwa. Jaribu baadaye"; }
     kama (id == 88) { kama (e) { rudisha "Install"; } rudisha "Sakinisha"; }
     kama (id == 89) { kama (e) { rudisha "A new version is ready to download"; } rudisha "Toleo jipya liko tayari kupakuliwa"; }
+    kama (id == 90) { kama (e) { rudisha "Your turn"; } rudisha "Zamu yako"; }
     rudisha "";
 }
 
@@ -1109,6 +1111,70 @@ w0 kibao_cha_mchezaji(n32 m, n32 x, n32 y, n32 u, n32 h, n32 kulia) {
 }
 
 
+// viota vya wasio na zamu hufifia, ili kiota chenye zamu kionekane mara moja
+w0 fifisha_viota_vingine() {
+    n32 g = pengo_la_seli();
+    n32 ukubwa = 8 * SELI_B - 2 * g;
+    n32 m = 0;
+    wakati (m < 4) {
+        kama (kiti_kipo[m] && m != zamu) {
+            n32 kx = ubao_x + gridi_mahali(kiota_wima(m)) + g;
+            n32 ky = ubao_y + gridi_mahali(kiota_safu(m)) + g;
+            mviringo_alfa(kx, ky, ukubwa, ukubwa, SELI_B, RANGI_YA_UBAO, 150);
+        }
+        m = m + 1;
+    }
+}
+
+// bango la zamu juu ya ubao: kidonge cha rangi ya mwenye zamu. "Zamu yako"
+// kwa mchezaji wa simu hii (isipokuwa simu moja ya kupasiana, ambapo jina
+// ndilo huonyesha nani apokee simu); simu hutetemeka zamu yake ikifika.
+n32 zamu_iliyotetemeshwa = -1;
+w0 tetemesha();
+w0 bango_la_zamu(n32 y, n32 bh) {
+    n32 w = upana_wa_skrini;
+    n32 rangi = rangi_ya_mchezaji(zamu);
+    n32 wangu = ni_mchezaji_wa_simu_hii(zamu);
+    n8 s[48];
+    n8* jina = jina_la_mchezaji_wa_kiti(zamu);
+    n32 n = urefu_wa_mfuatano(jina);
+    kama (n > 20) { n = 20; }
+    kama (wangu && aina_ya_mchezo != HALI_YA_MCHEZO_PAMOJA) {
+        n8* z = t(90);
+        nakili(s, z, urefu_wa_mfuatano(z) + 1);
+    } sivyo {
+        kama (lugha == 1) {
+            nakili(s, jina, n);
+            nakili(s + n, "'s turn", 8);
+        } sivyo {
+            nakili(s, "Zamu ya ", 8);
+            nakili(s + 8, jina, n);
+            s[8 + n] = 0;
+        }
+    }
+    n32 ukubwa = pk(32);
+    n32 bu = upana_wa(s, F_NZITO, ukubwa) + bh + pk(48);
+    n32 bx = (w - bu) / 2;
+    n32 msingi = R_KADI;
+    kama (wangu) { msingi = rangi; }
+    mviringo(bx, y, bu, bh, bh / 2, msingi);
+    n32 ax = bx + bh / 2;
+    n32 rm = R_MAANDISHI;
+    kama (wangu) {
+        // maandishi meusi juu ya rangi angavu (manjano), meupe juu ya nyingine
+        n32 mwanga = ((rangi & 255) * 299 + ((rangi >> 8) & 255) * 587 + ((rangi >> 16) & 255) * 114) / 1000;
+        rm = rgb(255, 255, 255);
+        kama (mwanga > 165) { rm = rgb(30, 24, 16); }
+        duara(ax, y + bh / 2, bh / 2 - pk(10), rm);
+        duara(ax, y + bh / 2, bh / 2 - pk(18), rangi);
+    } sivyo { chora_pauni(ax, y + bh / 2, bh / 2 - pk(12), rangi); }
+    andika_kushoto(s, ax + bh / 2 + pk(8), y + bh / 2, F_NZITO, ukubwa, rm);
+    // mtetemo mara moja kwa kila zamu ya simu hii
+    kama (wangu && ni_kompyuta[zamu] == 0) {
+        kama (zamu_iliyotetemeshwa != zamu) { zamu_iliyotetemeshwa = zamu; tetemesha(); }
+    } sivyo { zamu_iliyotetemeshwa = -1; }
+}
+
 w0 chora_mchezo() {
     n32 w = upana_wa_skrini;
     n32 h = urefu_wa_skrini;
@@ -1117,11 +1183,13 @@ w0 chora_mchezo() {
     kama (upeo > h * 50 / 100) { upeo = h * 50 / 100; }
     n32 kete_u = pk(104);
     n32 trei_h = kete_u + pk(136);
+    n32 bango_h = pk(76);
     n32 juu_ya_eneo = juu_salama + pk(112);
-    n32 jumla = kibao_h + pk(24) + upeo + pk(24) + kibao_h + pk(24) + trei_h;
+    n32 jumla = bango_h + pk(20) + kibao_h + pk(24) + upeo + pk(24) + kibao_h + pk(24) + trei_h;
+    kama (upeo > h - juu_ya_eneo - (jumla - upeo)) { upeo = h - juu_ya_eneo - (jumla - upeo); jumla = h - juu_ya_eneo; }
     n32 y0 = juu_ya_eneo + (h - juu_ya_eneo - jumla) / 2;
     kama (y0 < juu_ya_eneo) { y0 = juu_ya_eneo; }
-    weka_ukubwa_wa_ubao((w - upeo) / 2, y0 + kibao_h + pk(24), upeo);
+    weka_ukubwa_wa_ubao((w - upeo) / 2, y0 + bango_h + pk(20) + kibao_h + pk(24), upeo);
 
     // mandhari na ubao huchorwa mara moja kwenye akiba
     n64 baiti_za_skrini = hatua_ya_mstari * h * 4;
@@ -1149,6 +1217,10 @@ w0 chora_mchezo() {
     kama (kiti_kipo[2]) { kibao_cha_mchezaji(2, bx + bu - ku, chini_y, ku, kibao_h, 1); }
 
     chora_pauni_zote();
+    kama (mshindi < 0) {
+        fifisha_viota_vingine();
+        bango_la_zamu(y0, bango_h);
+    }
 
     // trei ya kete
     n32 trei_y = chini_y + kibao_h + pk(24);
@@ -1193,17 +1265,7 @@ w0 chora_mchezo() {
             i = i + 1;
         }
     }
-    kama (wangu == 0 && mshindi < 0) {
-        n8 s[40];
-        n8* jina = jina_la_mchezaji_wa_kiti(zamu);
-        n32 n = urefu_wa_mfuatano(jina);
-        kama (n > 20) { n = 20; }
-        nakili(s, jina, n);
-        s[n] = 32;
-        n8* kitenzi = t(43);
-        nakili(s + n + 1, kitenzi, urefu_wa_mfuatano(kitenzi) + 1);
-        andika_katikati(s, w / 2, my, F_KAWAIDA, T_NDOGO, R_HAFIFU);
-    }
+
 
     // arifa juu ya ubao: kidonge cha rangi ya kitufe kikuu
     kama (toast_ujumbe >= 0) {

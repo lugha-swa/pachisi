@@ -182,27 +182,36 @@ w0 foleni_imeharibiwa(n8* shughuli, n8* foleni) {
     foleni_hii = 0;
 }
 
-// aikoni za upau wa hali: nyeusi juu ya mandhari angavu, nyeupe juu ya giza:
-// getWindow().getDecorView().setSystemUiVisibility(SYSTEM_UI_FLAG_LIGHT_STATUS_BAR)
-// (JNI; anza huitwa kwenye uzi mkuu wa UI)
-w0 upau_wa_hali(n32 giza) {
+// getWindow().getDecorView().<jina>(int) kwa JNI; kazi_ya_jni ni ya aina ya
+// matokeo: 61 CallVoidMethod, 37 CallBooleanMethod (anza huitwa kwenye uzi
+// mkuu wa UI, kama mzunguko wa fremu)
+w0 ita_mwonekano(n8* jina, n8* saini, n32 kazi_ya_jni, n32 hoja) {
     n8* env = jni_env();
     n8* shughuli = jni_shughuli();
     n64 pata_darasa = jni_kazi(31);
     n64 pata_njia = jni_kazi(33);
     n64 ita_kitu = jni_kazi(34);
-    n64 ita_tupu = jni_kazi(61);
+    n64 ita = jni_kazi(kazi_ya_jni);
     n64 futa = jni_kazi(23);
     n8* d1 = pata_darasa(env, shughuli);
     n8* dirisha = ita_kitu(env, shughuli, pata_njia(env, d1, "getWindow", "()Landroid/view/Window;"));
     n8* d2 = pata_darasa(env, dirisha);
     n8* mwonekano = ita_kitu(env, dirisha, pata_njia(env, d2, "getDecorView", "()Landroid/view/View;"));
     n8* d3 = pata_darasa(env, mwonekano);
-    n32 bendera = 8192;
-    kama (giza) { bendera = 0; }
-    ita_tupu(env, mwonekano, pata_njia(env, d3, "setSystemUiVisibility", "(I)V"), bendera);
+    ita(env, mwonekano, pata_njia(env, d3, jina, saini), hoja);
     futa(env, d3); futa(env, mwonekano); futa(env, d2); futa(env, dirisha); futa(env, d1);
 }
+
+// aikoni za upau wa hali: nyeusi juu ya mandhari angavu (SYSTEM_UI_FLAG_LIGHT_STATUS_BAR), nyeupe juu ya giza
+w0 upau_wa_hali(n32 giza) {
+    n32 bendera = 8192;
+    kama (giza) { bendera = 0; }
+    ita_mwonekano("setSystemUiVisibility", "(I)V", 61, bendera);
+}
+
+// mtetemo mfupi zamu ikifika kwa mchezaji wa simu hii (HapticFeedbackConstants
+// LONG_PRESS = 0; hufuata mpangilio wa mtetemo wa mfumo, haihitaji ruhusa)
+w0 tetemesha() { ita_mwonekano("performHapticFeedback", "(I)Z", 37, 0); }
 
 // hali ya usiku ya mfumo: getResources().getConfiguration().uiMode & UI_MODE_NIGHT_MASK
 // (JNI: CallObjectMethod 34, GetFieldID 94, GetIntField 100). Huulizwa kila
