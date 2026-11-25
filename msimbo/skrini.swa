@@ -212,8 +212,8 @@ n8* t(n32 id) {
     kama (id == 65) { kama (e) { rudisha "Shaded squares are safe"; } rudisha "Seli zenye kivuli ni salama"; }
     kama (id == 66) { kama (e) { rudisha "Doubles give another roll"; } rudisha "Pacha hukupa zamu nyingine"; }
     kama (id == 67) { kama (e) { rudisha "Bring every pawn home to win"; } rudisha "Fikisha pauni zote nyumbani"; }
-    kama (id == 68) { kama (e) { rudisha "About Kajara Studio"; } rudisha "Kuhusu Kajara Studio"; }
-    kama (id == 69) { kama (e) { rudisha "Pachisi by Kajara Studio, written in Swa"; } rudisha "Pachisi ya Kajara Studio, imeandikwa kwa Swa"; }
+    kama (id == 68) { kama (e) { rudisha "About"; } rudisha "Kuhusu"; }
+    kama (id == 69) { kama (e) { rudisha "Version"; } rudisha "Toleo"; }
     kama (id == 70) { kama (e) { rudisha "New game"; } rudisha "Mchezo mpya"; }
     kama (id == 71) { kama (e) { rudisha "You against up to three computers"; } rudisha "Wewe dhidi ya kompyuta hadi tatu"; }
     kama (id == 72) { kama (e) { rudisha "Friends share one phone"; } rudisha "Marafiki kwenye simu moja"; }
@@ -1681,15 +1681,101 @@ w0 chora_rekodi() {
     andika_katikati(t(74), w / 2, urefu_wa_skrini - pk(56), F_KAWAIDA, T_NDOGO, R_DOKEZO);
 }
 
+// kuhusu: kila kinachohitajika kisheria na kwa uwazi -- mmiliki, toleo, jina la
+// mchezo, leseni za vipengele vya wengine, faragha na mawasiliano. Maandishi
+// kamili ya leseni yamo ndani ya APK (assets/leseni) na kwenye NOTICE.
+n32 KUHUSU_KADI = 6;
+n8* kuhusu_kichwa(n32 k) {
+    n32 e = lugha == 1;
+    kama (k == 0) { kama (e) { rudisha "Ownership"; } rudisha "Umiliki"; }
+    kama (k == 1) { kama (e) { rudisha "The game"; } rudisha "Mchezo"; }
+    kama (k == 2) { kama (e) { rudisha "Built with Swa"; } rudisha "Imejengwa kwa Swa"; }
+    kama (k == 3) { kama (e) { rudisha "Fonts"; } rudisha "Fonti"; }
+    kama (k == 4) { kama (e) { rudisha "Privacy"; } rudisha "Faragha"; }
+    kama (e) { rudisha "Contact"; }
+    rudisha "Mawasiliano";
+}
+n32 kuhusu_mistari(n32 k) {
+    kama (k == 0 || k == 2 || k == 4) { rudisha 2; }
+    kama (k == 5) { rudisha 1; }
+    rudisha 3;
+}
+n8* kuhusu_mstari(n32 k, n32 m) {
+    n32 e = lugha == 1;
+    kama (k == 0) {
+        kama (m == 0) { rudisha "Copyright 2026 Kajara Studio."; }
+        kama (e) { rudisha "All rights reserved."; }
+        rudisha "Haki zote zimehifadhiwa.";
+    }
+    kama (k == 1) {
+        kama (e) {
+            kama (m == 0) { rudisha "Pachisi is a traditional game from India,"; }
+            kama (m == 1) { rudisha "free for anyone to play. Not affiliated"; }
+            rudisha "with Hasbro or the Parcheesi brand.";
+        }
+        kama (m == 0) { rudisha "Pachisi ni mchezo wa jadi kutoka India,"; }
+        kama (m == 1) { rudisha "huru kwa yeyote kucheza. Hauhusiani"; }
+        rudisha "na Hasbro wala chapa ya Parcheesi.";
+    }
+    kama (k == 2) {
+        kama (m == 0) { rudisha "github.com/lugha-swa/swa"; }
+        kama (e) { rudisha "MIT or Apache-2.0 licence"; }
+        rudisha "Leseni ya MIT au Apache-2.0";
+    }
+    kama (k == 3) {
+        kama (m == 0) { rudisha "Inter, The Inter Project Authors"; }
+        kama (m == 1) { rudisha "Source Serif 4, Adobe"; }
+        rudisha "SIL Open Font License 1.1";
+    }
+    kama (k == 4) {
+        kama (e) {
+            kama (m == 0) { rudisha "No ads, no accounts, no tracking."; }
+            rudisha "Voice goes only from phone to phone.";
+        }
+        kama (m == 0) { rudisha "Hakuna matangazo, akaunti wala ufuatiliaji."; }
+        rudisha "Sauti huenda simu hadi simu tu.";
+    }
+    rudisha "github.com/lugha-swa/pachisi";
+}
+
+n32 toleo_la_programu();
 w0 chora_kuhusu() {
     n32 w = upana_wa_skrini;
-    n32 h = urefu_wa_skrini;
     upau_wa_juu(t(68), 0);
-    alama_ya_kajara(w / 2, h * 32 / 100, pk(56), R_DHAHABU, R_MANDHARI);
-    andika_katikati("Kajara Studio", w / 2, h * 44 / 100, F_SERIF, T_KICHWA, R_MAANDISHI);
-    andika_katikati(t(69), w / 2, h * 44 / 100 + pk(64), F_KAWAIDA, T_NDOGO, R_HAFIFU);
-    andika_katikati("Inter, Source Serif 4 (SIL OFL)", w / 2, h * 44 / 100 + pk(108), F_KAWAIDA, T_NDOGO, R_DOKEZO);
-    andika_katikati("v0.1.0", w / 2, h * 44 / 100 + pk(152), F_KAWAIDA, T_NDOGO, R_DOKEZO);
+    n32 y = upau_chini + pk(16);
+    chora_nembo(w / 2, y + pk(64), pk(40));
+    andika_katikati("Pachisi", w / 2, y + pk(164), F_SERIF, T_KICHWA, R_MAANDISHI);
+    // "Kajara Studio  .  Toleo 0.0.N"
+    n8 mstari[48];
+    nakili(mstari, "Kajara Studio  -  ", 18);
+    n8* neno = t(69);
+    n32 n = urefu_wa_mfuatano(neno);
+    nakili(mstari + 18, neno, n);
+    n32 i = 18 + n;
+    nakili(mstari + i, " 0.0.", 5);
+    i = i + 5;
+    n32 toleo = toleo_la_programu();
+    kama (toleo >= 10) { mstari[i] = 48 + toleo / 10 % 10; i = i + 1; }
+    mstari[i] = 48 + toleo % 10;
+    mstari[i + 1] = 0;
+    andika_katikati(mstari, w / 2, y + pk(214), F_KAWAIDA, T_NDOGO, R_HAFIFU);
+    y = y + pk(262);
+    n32 x = pk(24);
+    n32 u = w - pk(48);
+    n32 k = 0;
+    wakati (k < KUHUSU_KADI) {
+        n32 idadi = kuhusu_mistari(k);
+        n32 kh = pk(64) + idadi * pk(36);
+        kadi(x, y, u, kh);
+        andika_kushoto(kuhusu_kichwa(k), x + pk(32), y + pk(36), F_WASTANI, pk(26), R_MAANDISHI);
+        n32 m = 0;
+        wakati (m < idadi) {
+            andika_kushoto(kuhusu_mstari(k, m), x + pk(32), y + pk(78) + m * pk(36), F_KAWAIDA, pk(24), R_HAFIFU);
+            m = m + 1;
+        }
+        y = y + kh + pk(12);
+        k = k + 1;
+    }
 }
 
 w0 chora_wifi() {

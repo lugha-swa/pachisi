@@ -26,7 +26,7 @@ Bado kinahitajika: picha za skrini 2 hadi 8 kutoka kwenye simu (pembeni 1080 x
 
 ## 2. Uamuzi wa kudumu kabla ya kupakia mara ya kwanza
 
-- **Jina la kifurushi**: `com.kajara.parchisi` (limechaguliwa 2026-11-25).
+- **Jina la kifurushi**: `com.kajara.pachisi` (limechaguliwa 2026-11-25).
   Haliwezi kubadilishwa baada ya kupakia; likibadilishwa, nakala zilizopo huwa
   programu nyingine. Jina la mchezo dukani na kwenye simu linabaki "Pachisi"
   (jina la jadi lisilo na mmiliki; "Parcheesi" ni alama ya biashara ya Hasbro).

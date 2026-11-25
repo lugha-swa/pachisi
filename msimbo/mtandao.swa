@@ -83,6 +83,7 @@ n32 muunganiko_umevunjika[3];   // foleni ilijaa: mwenzake hapokei tena
 // kwenye salamu; mwenyeji mwenye toleo jipya zaidi humpa ofa ya kusasisha na,
 // akikubali, humtumia APK yake mwenyewe vipande vipande (aina 4 na 5).
 n32 TOLEO_LA_PROGRAMU = 2;
+n32 toleo_la_programu() { rudisha TOLEO_LA_PROGRAMU; }
 n32 upakiaji[3];                // mwenyeji: baiti za APK zilizotumwa kwa mteja i, au -1
 n8 kipande_cha_apk[4096];
 n32 apk_ukubwa_wangu();

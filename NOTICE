@@ -1,0 +1,24 @@
+Pachisi -- third-party components / vipengele vya wengine
+
+Every licence below is shipped in full inside the app (assets/leseni/).
+
+1. Swa programming language -- https://github.com/lugha-swa/swa
+   The Swa standard library (maktaba) is compiled into libswa.so.
+   Licence: MIT or Apache-2.0, at your option.
+   Text: assets/leseni/Swa-MIT.txt
+
+2. Inter typeface -- https://github.com/rsms/inter
+   Copyright 2020 The Inter Project Authors.
+   Licence: SIL Open Font License 1.1. Shipped subset to ASCII, unrenamed
+   (the licence declares no Reserved Font Name).
+   Text: assets/leseni/Inter-OFL.txt
+
+3. Source Serif 4 typeface -- https://github.com/adobe-fonts/source-serif
+   Copyright 2014 The Source Serif 4 Project Authors.
+   Licence: SIL Open Font License 1.1. Shipped subset to ASCII, unrenamed
+   (the licence declares no Reserved Font Name).
+   Text: assets/leseni/SourceSerif4-OFL.txt
+
+Build tools that do not ship inside the app (Android SDK aapt2, zipalign,
+apksigner, bundletool; Python Pillow for gharama/ikoni.py) are used under
+their own licences and are not redistributed.

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Pachisi ya Swa: hakuna Java; NativeActivity hupakia libswa.so na kuita anza -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.kajara.parchisi">
+    package="com.kajara.pachisi">
     <!-- versionCode hutoka TOLEO_LA_PROGRAMU kwenye msimbo/mtandao.swa (jenga-apk.sh) -->
     <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="36" />
     <uses-permission android:name="android.permission.INTERNET" />
