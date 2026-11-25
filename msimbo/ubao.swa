@@ -99,7 +99,8 @@ n32 pauni_nusu = 0;
 
 // katikati ya seli ya pauni ya mchezaji m yenye maendeleo p (j: nafasi kiotani/nyumbani)
 w0 mahali_pa_maendeleo(n32 m, n32 j, n32 p) {
-    pauni_nusu = SELI_B / 2;
+    // pauni hukaa ndani ya seli nyembamba pamoja na pete yake ya kuchagua
+    pauni_nusu = SELI_B * 2 / 5;
     kama (p == KIOTANI) {
         n32 kx = ubao_x + gridi_mahali(kiota_wima(m));
         n32 ky = ubao_y + gridi_mahali(kiota_safu(m));

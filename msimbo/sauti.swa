@@ -206,7 +206,8 @@ w0 sauti_kila_fremu() {
                 i = i + 1;
             }
             kama (kubwa > 1200 && kiti >= 0) { muda_wa_kuongea[kiti] = sasa_ms(); }
-            kama (kiti >= 0) { mtandao_tuma_sauti(kiti, chombo_cha_kipaza, KIPANDE * 2); }
+            // kimya hakitumwi: sauti hupita tu mtu akiongea na ms 400 baadaye
+            kama (kiti >= 0 && sasa_ms() - muda_wa_kuongea[kiti] < 400) { mtandao_tuma_sauti(kiti, chombo_cha_kipaza, KIPANDE * 2); }
             n = aaudio_soma(mkondo_wa_kipaza, chombo_cha_kipaza, KIPANDE, 0);
         }
     }
