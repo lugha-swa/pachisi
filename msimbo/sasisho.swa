@@ -1,4 +1,8 @@
-// sasisho.swa -- kusasisha kutoka kwa mwenyeji wa chumba, bila mtandao wa nje.
+// sasisho.swa -- masasisho ya nakala zisizo za Play: kutoka kwa mwenyeji wa
+// chumba (bila intaneti) na kutoka GitHub Releases (kukiwa na intaneti).
+//
+// Toleo la Play huweka SASISHO_HURU = 0 (jenga-apk.sh play): sera ya Play
+// hairuhusu programu kujisasisha nje ya Play, kwa hiyo njia zote mbili huzimwa.
 //
 // Mwenyeji husoma APK yake mwenyewe (getPackageCodePath) na mtandao.swa huituma
 // vipande vipande kwa mteja mwenye toleo la zamani aliyekubali ofa. Mteja
@@ -12,10 +16,15 @@
 // CallObjectMethod 34, CallVoidMethod 61, GetStaticFieldID 144,
 // GetStaticObjectField 145, NewStringUTF 167, GetStringUTFChars 169,
 // ReleaseStringUTFChars 170, NewByteArray 176, SetByteArrayRegion 208,
-// ExceptionCheck 228. Marejeo ya ndani hufutwa kila mara: mzunguko wa fremu
+// ExceptionCheck 228; kwa GitHub pia CallBooleanMethod 37, CallIntMethod 49,
+// CallLongMethod 52, GetStaticMethodID 113, CallStaticObjectMethod 114,
+// NewLongArray 180, SetLongArrayRegion 212. Marejeo ya ndani hufutwa kila mara: mzunguko wa fremu
 // haurudi Java, kwa hiyo hayajifuti yenyewe.
 
+n32 SASISHO_HURU = 1;
 n8* MIME_YA_APK = "application/vnd.android.package-archive";
+n8* ANWANI_YA_TOLEO = "https://github.com/lugha-swa/pachisi/releases/latest/download/toleo.txt";
+n8* ANWANI_YA_APK = "https://github.com/lugha-swa/pachisi/releases/latest/download/Pachisi.apk";
 
 // ---------------------------------------------------------------- mwenyeji
 n8 njia_ya_apk[512];
@@ -51,6 +60,7 @@ w0 fungua_apk_yangu() {
 }
 
 n32 apk_ukubwa_wangu() {
+    kama (SASISHO_HURU == 0) { rudisha 0; }
     fungua_apk_yangu();
     kama (apk_fd < 0 || apk_ukubwa <= 0) { rudisha 0; }
     rudisha apk_ukubwa;
@@ -68,6 +78,9 @@ n32 SAS_INAPAKUA = 2;
 n32 SAS_TAYARI = 3;
 n32 SAS_IMEFICHWA = 4;
 n32 SAS_KOSA = 5;
+n32 CHANZO_MWENYEJI = 1;
+n32 CHANZO_GITHUB = 2;
+n32 sasisho_chanzo = 0;
 n32 sasisho_hali = 0;
 n32 sasisho_toleo = 0;
 n32 sasisho_ukubwa = 0;
@@ -86,7 +99,8 @@ n32 jni_kosa_lipo() {
 }
 
 w0 sasisho_ofa(n32 toleo, n32 ukubwa) {
-    kama (toleo <= TOLEO_LA_PROGRAMU || ukubwa <= 0 || sasisho_hali != SAS_HAKUNA) { rudisha; }
+    kama (SASISHO_HURU == 0 || toleo <= TOLEO_LA_PROGRAMU || ukubwa <= 0 || sasisho_hali != SAS_HAKUNA) { rudisha; }
+    sasisho_chanzo = CHANZO_MWENYEJI;
     sasisho_toleo = toleo;
     sasisho_ukubwa = ukubwa;
     sasisho_hali = SAS_OFA;
@@ -208,10 +222,239 @@ w0 sasisho_kipande(n8* data, n32 urefu) {
     omba_fremu_ijayo();
 }
 
+// ---------------------------------------------------------------- GitHub
+// Kila uzinduzi, mtumiaji akifika menyu, DownloadManager hupakua toleo.txt ya
+// toleo la mwisho (faili la programu, bila arifa). Likiwa kubwa kuliko toleo
+// hili, kadi hutoa ofa; ikikubaliwa, Pachisi.apk hupakuliwa kwenye Downloads
+// na kisakinishi hufunguliwa. DownloadManager hushughulikia HTTPS na hufanya
+// kazi pembeni, kwa hiyo mzunguko wa fremu huuliza hali yake tu (kila ms 400).
+n8* meneja_wa_upakuaji = 0;     // DownloadManager (rejeo la kudumu)
+n64 upakuaji_wa_toleo = 0;      // nambari za DownloadManager; 0 = hakuna
+n64 upakuaji_wa_apk = 0;
+n32 github_imeangaliwa = 0;
+n32 ulizo_la_mwisho = 0;
+n32 upakuaji_umepokelewa = 0;
+n32 upakuaji_jumla = 0;
+n8 njia_ya_toleo[512];
+
+n8* mfuatano_wa_java(n8* s) { n64 mpya = jni_kazi(167); rudisha mpya(jni_env(), s); }
+w0 futa_rejeo(n8* r) { kama (r != 0) { n64 futa = jni_kazi(23); futa(jni_env(), r); } }
+
+n8* pata_meneja() {
+    kama (meneja_wa_upakuaji != 0) { rudisha meneja_wa_upakuaji; }
+    n8* env = jni_env();
+    n8* shughuli = jni_shughuli();
+    n64 pata_darasa = jni_kazi(31);
+    n64 pata_njia = jni_kazi(33);
+    n64 ita_kitu = jni_kazi(34);
+    n64 rejeo_la_kudumu = jni_kazi(21);
+    n8* d = pata_darasa(env, shughuli);
+    n8* jina = mfuatano_wa_java("download");
+    n8* m = ita_kitu(env, shughuli, pata_njia(env, d, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;"), jina);
+    kama (jni_kosa_lipo() == 0 && m != 0) { meneja_wa_upakuaji = rejeo_la_kudumu(env, m); }
+    futa_rejeo(m); futa_rejeo(jina); futa_rejeo(d);
+    rudisha meneja_wa_upakuaji;
+}
+
+// <getExternalFilesDir(null)>/toleo.txt -- faili la programu hii pekee
+n32 andaa_njia_ya_toleo() {
+    n8* env = jni_env();
+    n8* shughuli = jni_shughuli();
+    n64 pata_darasa = jni_kazi(31);
+    n64 pata_njia = jni_kazi(33);
+    n64 ita_kitu = jni_kazi(34);
+    n64 soma_utf = jni_kazi(169);
+    n64 achia_utf = jni_kazi(170);
+    n8* d = pata_darasa(env, shughuli);
+    n8* saraka = ita_kitu(env, shughuli, pata_njia(env, d, "getExternalFilesDir", "(Ljava/lang/String;)Ljava/io/File;"), 0);
+    futa_rejeo(d);
+    kama (jni_kosa_lipo() || saraka == 0) { rudisha 0; }
+    n8* d_faili = pata_darasa(env, saraka);
+    n8* s = ita_kitu(env, saraka, pata_njia(env, d_faili, "getAbsolutePath", "()Ljava/lang/String;"));
+    futa_rejeo(d_faili); futa_rejeo(saraka);
+    kama (s == 0) { rudisha 0; }
+    n8* herufi = soma_utf(env, s, 0);
+    n32 n = urefu_wa_mfuatano(herufi);
+    kama (n > 490) { n = 490; }
+    nakili(njia_ya_toleo, herufi, n);
+    nakili(njia_ya_toleo + n, "/toleo.txt", 11);
+    achia_utf(env, s, herufi);
+    futa_rejeo(s);
+    rudisha 1;
+}
+
+// huanza upakuaji; kwa_umma = 1: Downloads/<jina> yenye arifa, 0: faili la
+// programu bila arifa. Hurudisha nambari ya upakuaji au 0.
+n64 anza_upakuaji(n8* anwani, n32 kwa_umma, n8* jina) {
+    n8* meneja = pata_meneja();
+    kama (meneja == 0) { rudisha 0; }
+    n8* env = jni_env();
+    n8* shughuli = jni_shughuli();
+    n64 tafuta_darasa = jni_kazi(6);
+    n64 kitu_kipya = jni_kazi(28);
+    n64 pata_njia = jni_kazi(33);
+    n64 ita_kitu = jni_kazi(34);
+    n64 ita_ndefu = jni_kazi(52);
+    n64 pata_njia_tuli = jni_kazi(113);
+    n64 ita_kitu_tuli = jni_kazi(114);
+    n8* d_uri = tafuta_darasa(env, "android/net/Uri");
+    n8* s_anwani = mfuatano_wa_java(anwani);
+    n8* uri = ita_kitu_tuli(env, d_uri, pata_njia_tuli(env, d_uri, "parse", "(Ljava/lang/String;)Landroid/net/Uri;"), s_anwani);
+    n8* d_ombi = tafuta_darasa(env, "android/app/DownloadManager$Request");
+    n8* ombi = kitu_kipya(env, d_ombi, pata_njia(env, d_ombi, "<init>", "(Landroid/net/Uri;)V"), uri);
+    n8* s_jina = mfuatano_wa_java(jina);
+    n8* s_aina = mfuatano_wa_java(MIME_YA_APK);
+    n8* s_saraka = mfuatano_wa_java("Download");
+    kama (kwa_umma) {
+        futa_rejeo(ita_kitu(env, ombi, pata_njia(env, d_ombi, "setDestinationInExternalPublicDir", "(Ljava/lang/String;Ljava/lang/String;)Landroid/app/DownloadManager$Request;"), s_saraka, s_jina));
+        futa_rejeo(ita_kitu(env, ombi, pata_njia(env, d_ombi, "setMimeType", "(Ljava/lang/String;)Landroid/app/DownloadManager$Request;"), s_aina));
+    } sivyo {
+        wito_wa_mfumo(87, njia_ya_toleo, 0, 0, 0, 0, 0);       // unlink: jina lisipate kiambishi -1
+        futa_rejeo(ita_kitu(env, ombi, pata_njia(env, d_ombi, "setDestinationInExternalFilesDir", "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Landroid/app/DownloadManager$Request;"), shughuli, 0, s_jina));
+        futa_rejeo(ita_kitu(env, ombi, pata_njia(env, d_ombi, "setNotificationVisibility", "(I)Landroid/app/DownloadManager$Request;"), 2));
+    }
+    n64 id = 0;
+    kama (jni_kosa_lipo() == 0) {
+        n8* d_meneja = tafuta_darasa(env, "android/app/DownloadManager");
+        id = ita_ndefu(env, meneja, pata_njia(env, d_meneja, "enqueue", "(Landroid/app/DownloadManager$Request;)J"), ombi);
+        kama (jni_kosa_lipo()) { id = 0; }
+        futa_rejeo(d_meneja);
+    }
+    futa_rejeo(s_saraka); futa_rejeo(s_aina); futa_rejeo(s_jina);
+    futa_rejeo(ombi); futa_rejeo(d_ombi); futa_rejeo(uri); futa_rejeo(s_anwani); futa_rejeo(d_uri);
+    rudisha id;
+}
+
+// safu ya Java long[] { id }, kwa setFilterById na remove
+n8* safu_ya_id(n64 id) {
+    n64 safu_mpya = jni_kazi(180);
+    n64 weka_safu = jni_kazi(212);
+    n64 thamani[1];
+    thamani[0] = id;
+    n8* safu = safu_mpya(jni_env(), 1);
+    weka_safu(jni_env(), safu, 0, 1, thamani);
+    rudisha safu;
+}
+
+// 8 = imekamilika, 16 = imeshindwa, vinginevyo bado; pia baiti zilizofika
+n32 hali_ya_upakuaji(n64 id) {
+    n8* env = jni_env();
+    n64 tafuta_darasa = jni_kazi(6);
+    n64 kitu_kipya = jni_kazi(28);
+    n64 pata_njia = jni_kazi(33);
+    n64 ita_kitu = jni_kazi(34);
+    n64 ita_ndiyo = jni_kazi(37);
+    n64 ita_namba = jni_kazi(49);
+    n64 ita_tupu = jni_kazi(61);
+    n8* d_swali = tafuta_darasa(env, "android/app/DownloadManager$Query");
+    n8* swali = kitu_kipya(env, d_swali, pata_njia(env, d_swali, "<init>", "()V"));
+    n8* safu = safu_ya_id(id);
+    futa_rejeo(ita_kitu(env, swali, pata_njia(env, d_swali, "setFilterById", "([J)Landroid/app/DownloadManager$Query;"), safu));
+    n8* d_meneja = tafuta_darasa(env, "android/app/DownloadManager");
+    n8* kishale = ita_kitu(env, meneja_wa_upakuaji, pata_njia(env, d_meneja, "query", "(Landroid/app/DownloadManager$Query;)Landroid/database/Cursor;"), swali);
+    n32 matokeo = 16;
+    kama (jni_kosa_lipo() == 0 && kishale != 0) {
+        n8* d_k = tafuta_darasa(env, "android/database/Cursor");
+        n8* safu_ya_jina = pata_njia(env, d_k, "getColumnIndex", "(Ljava/lang/String;)I");
+        n8* soma_namba = pata_njia(env, d_k, "getInt", "(I)I");
+        kama ((ita_ndiyo(env, kishale, pata_njia(env, d_k, "moveToFirst", "()Z")) & 255) != 0) {
+            n8* s1 = mfuatano_wa_java("status");
+            n8* s2 = mfuatano_wa_java("bytes_so_far");
+            n8* s3 = mfuatano_wa_java("total_size");
+            matokeo = ita_namba(env, kishale, soma_namba, ita_namba(env, kishale, safu_ya_jina, s1));
+            upakuaji_umepokelewa = ita_namba(env, kishale, soma_namba, ita_namba(env, kishale, safu_ya_jina, s2));
+            upakuaji_jumla = ita_namba(env, kishale, soma_namba, ita_namba(env, kishale, safu_ya_jina, s3));
+            futa_rejeo(s1); futa_rejeo(s2); futa_rejeo(s3);
+        }
+        ita_tupu(env, kishale, pata_njia(env, d_k, "close", "()V"));
+        kama (jni_kosa_lipo()) { matokeo = 16; }
+        futa_rejeo(d_k);
+    }
+    futa_rejeo(kishale); futa_rejeo(d_meneja); futa_rejeo(safu); futa_rejeo(swali); futa_rejeo(d_swali);
+    rudisha matokeo;
+}
+
+// rekodi ya upakuaji wa toleo.txt huondolewa pamoja na faili lake
+w0 ondoa_upakuaji(n64 id) {
+    n8* env = jni_env();
+    n64 tafuta_darasa = jni_kazi(6);
+    n64 pata_njia = jni_kazi(33);
+    n64 ita_namba = jni_kazi(49);
+    n8* d_meneja = tafuta_darasa(env, "android/app/DownloadManager");
+    n8* safu = safu_ya_id(id);
+    ita_namba(env, meneja_wa_upakuaji, pata_njia(env, d_meneja, "remove", "([J)I"), safu);
+    jni_kosa_lipo();
+    futa_rejeo(safu); futa_rejeo(d_meneja);
+}
+
+n32 soma_toleo_lililopakuliwa() {
+    n8 t[16];
+    n64 fd = wito_wa_mfumo(2, njia_ya_toleo, 0, 0, 0, 0, 0);
+    kama (fd < 0) { rudisha 0; }
+    n64 n = wito_wa_mfumo(0, fd, t, 15, 0, 0, 0);
+    wito_wa_mfumo(3, fd, 0, 0, 0, 0, 0);
+    n32 toleo = 0;
+    n32 i = 0;
+    wakati (i < n && t[i] >= 48 && t[i] <= 57) { toleo = toleo * 10 + t[i] - 48; i = i + 1; }
+    rudisha toleo;
+}
+
+w0 sasisho_kila_fremu() {
+    kama (SASISHO_HURU == 0 || sauti_shughuli == 0) { rudisha; }
+    kama (github_imeangaliwa == 0 && skrini == S_MENYU) {
+        github_imeangaliwa = 1;
+        kama (andaa_njia_ya_toleo()) { upakuaji_wa_toleo = anza_upakuaji(ANWANI_YA_TOLEO, 0, "toleo.txt"); }
+    }
+    kama (upakuaji_wa_toleo == 0 && upakuaji_wa_apk == 0) { rudisha; }
+    omba_tiki();
+    n32 sasa = sasa_ms();
+    kama (sasa - ulizo_la_mwisho < 400) { rudisha; }
+    ulizo_la_mwisho = sasa;
+    kama (upakuaji_wa_toleo != 0) {
+        n32 h = hali_ya_upakuaji(upakuaji_wa_toleo);
+        kama (h == 8 || h == 16) {
+            n32 toleo = 0;
+            kama (h == 8) { toleo = soma_toleo_lililopakuliwa(); }
+            ondoa_upakuaji(upakuaji_wa_toleo);
+            upakuaji_wa_toleo = 0;
+            kama (toleo > TOLEO_LA_PROGRAMU && sasisho_hali == SAS_HAKUNA) {
+                sasisho_chanzo = CHANZO_GITHUB;
+                sasisho_toleo = toleo;
+                sasisho_hali = SAS_OFA;
+                omba_fremu_ijayo();
+            }
+        }
+    }
+    kama (upakuaji_wa_apk != 0) {
+        n32 h2 = hali_ya_upakuaji(upakuaji_wa_apk);
+        sasisho_pokelewa = upakuaji_umepokelewa;
+        sasisho_ukubwa = upakuaji_jumla;
+        omba_fremu_ijayo();
+        kama (h2 == 16) { sasisho_hali = SAS_KOSA; upakuaji_wa_apk = 0; rudisha; }
+        kama (h2 == 8) {
+            n8* env = jni_env();
+            n64 tafuta_darasa = jni_kazi(6);
+            n64 pata_njia = jni_kazi(33);
+            n64 ita_kitu = jni_kazi(34);
+            n64 rejeo_la_kudumu = jni_kazi(21);
+            n8* d_meneja = tafuta_darasa(env, "android/app/DownloadManager");
+            n8* uri = ita_kitu(env, meneja_wa_upakuaji, pata_njia(env, d_meneja, "getUriForDownloadedFile", "(J)Landroid/net/Uri;"), upakuaji_wa_apk);
+            upakuaji_wa_apk = 0;
+            futa_rejeo(d_meneja);
+            kama (jni_kosa_lipo() || uri == 0) { sasisho_hali = SAS_KOSA; rudisha; }
+            uri_ya_apk = rejeo_la_kudumu(env, uri);
+            futa_rejeo(uri);
+            sasisho_hali = SAS_TAYARI;
+            fungua_kisakinishi();
+        }
+    }
+}
+
 // ---------------------------------------------------------------- kadi
 // kadi inayoelea chini ya skrini yoyote, mteja akiwa chumbani
 w0 chora_sasisho() {
-    kama (mtandao_ni_mteja() == 0) { rudisha; }
+    kama (sasisho_chanzo == CHANZO_MWENYEJI && mtandao_ni_mteja() == 0) { rudisha; }
+    kama (sasisho_chanzo == CHANZO_GITHUB && skrini == S_MCHEZO) { rudisha; }
     kama (sasisho_hali == SAS_HAKUNA || sasisho_hali == SAS_IMEFICHWA) { rudisha; }
     n32 w = upana_wa_skrini;
     n32 h = urefu_wa_skrini;
@@ -223,6 +466,7 @@ w0 chora_sasisho() {
     mviringo(x, y, u, kh, pk(32), R_KADI);
     andika_kushoto(t(81), x + pk(32), y + pk(56), F_SERIF, T_WASTANI, R_MAANDISHI);
     n32 maelezo = 82;
+    kama (sasisho_chanzo == CHANZO_GITHUB) { maelezo = 89; }
     kama (sasisho_hali == SAS_INAPAKUA) { maelezo = 85; }
     kama (sasisho_hali == SAS_TAYARI) { maelezo = 86; }
     kama (sasisho_hali == SAS_KOSA) { maelezo = 87; }
@@ -251,6 +495,12 @@ w0 chora_sasisho() {
 n32 gusa_sasisho(n32 id) {
     kama (id == 951) { sasisho_hali = SAS_IMEFICHWA; rudisha 1; }
     kama (id != 950) { rudisha 0; }
+    kama (sasisho_hali == SAS_OFA && sasisho_chanzo == CHANZO_GITHUB) {
+        upakuaji_wa_apk = anza_upakuaji(ANWANI_YA_APK, 1, "Pachisi.apk");
+        kama (upakuaji_wa_apk != 0) { sasisho_hali = SAS_INAPAKUA; sasisho_pokelewa = 0; sasisho_ukubwa = 0; }
+        sivyo { sasisho_hali = SAS_KOSA; }
+        rudisha 1;
+    }
     kama (sasisho_hali == SAS_OFA) {
         kama (fungua_apk_ya_kupokea()) {
             sasisho_hali = SAS_INAPAKUA;

@@ -132,6 +132,7 @@ w0 fremu(n64 wakati_wa_fremu, n8* data) {
     fremu_imeombwa = 0;
     mtandao_kila_fremu();
     sauti_kila_fremu();
+    sasisho_kila_fremu();
     endesha_kompyuta();
     kama (chora_inahitajika) { chora_inahitajika = 0; chora(); }
     // uhuishaji ukiisha kwenye fremu hii, tiki zinaendelea ili kompyuta icheze

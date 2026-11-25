@@ -232,6 +232,7 @@ n8* t(n32 id) {
     kama (id == 86) { kama (e) { rudisha "Allow installs from Pachisi if asked"; } rudisha "Ruhusu usakinishaji kutoka Pachisi"; }
     kama (id == 87) { kama (e) { rudisha "Update failed. Try again later"; } rudisha "Sasisho limeshindwa. Jaribu baadaye"; }
     kama (id == 88) { kama (e) { rudisha "Install"; } rudisha "Sakinisha"; }
+    kama (id == 89) { kama (e) { rudisha "A new version is ready to download"; } rudisha "Toleo jipya liko tayari kupakuliwa"; }
     rudisha "";
 }
 
